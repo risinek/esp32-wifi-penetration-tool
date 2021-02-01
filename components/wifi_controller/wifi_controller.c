@@ -1,3 +1,5 @@
+#include "wifi_controller.h"
+
 #include <stdio.h>
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
