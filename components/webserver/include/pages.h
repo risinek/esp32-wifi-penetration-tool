@@ -7,7 +7,7 @@ const char page_root[] =
     "<title>ESP32 Management AP</title>"
 "<body onLoad=\"refreshAps()\">"
     "Available APs:"
-    "<div id=\"aps-list\">Loading...</div>"
+    "<div id=\"aps-list\">Loading (this make take a while)...</div>"
     "<button type=\"button\" onClick=\"refreshAps()\">Refresh</button>"
     "<script>"
     "function refreshAps() {"

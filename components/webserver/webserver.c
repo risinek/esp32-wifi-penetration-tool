@@ -35,18 +35,14 @@ static esp_err_t uri_aps_get_handler(httpd_req_t *req) {
     char resp_chunk[34];
     resp_chunk[0] = ';';
 
-    ESP_LOGI(TAG, "Got %u APs.", ap_max_count);
+    ESP_LOGI(TAG, "Found %u APs.", ap_max_count);
     for(unsigned i = 0; i < ap_max_count; i++){
-        ESP_LOGD(TAG, "AP#%u: %s", i, ap_records[i].ssid);
         for(unsigned j = 0; j < 33; j++){
             resp_chunk[j+1] = ap_records[i].ssid[j];
         }
         httpd_resp_sendstr_chunk(req, resp_chunk);
     }
     return httpd_resp_sendstr_chunk(req, NULL);
-
-    // const char resp_ok[] = "OK";
-    // return httpd_resp_send(req, resp_ok, HTTPD_RESP_USE_STRLEN);
 }
 
 static httpd_uri_t uri_aps_get = {
