@@ -12,5 +12,6 @@ void app_main(void)
 {
     ESP_LOGD(TAG, "app_main started");
     wifictl_mgmt_ap_start();
+    wifictl_scan_nearby_aps();
     webserver_run();
 }

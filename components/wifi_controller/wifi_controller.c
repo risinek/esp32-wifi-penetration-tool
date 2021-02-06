@@ -30,8 +30,8 @@ static void wifi_init(){
 
 }
 
-static void wifi_init_ap(wifi_config_t *wifi_config){
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+static void wifi_init_apsta(wifi_config_t *wifi_config){
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
 }
 
@@ -50,9 +50,29 @@ void wifictl_mgmt_ap_start(){
     };
 
     wifi_init();
-    wifi_init_ap(&mgmt_wifi_config);
+    wifi_init_apsta(&mgmt_wifi_config);
 
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "AP started with SSID=%s", CONFIG_MGMT_AP_SSID);
+}
+
+void wifictl_scan_nearby_aps(){
+    ESP_LOGD(TAG, "Scanning nearby APs...");
+
+    uint16_t ap_max_count = 20;
+    wifi_ap_record_t ap_records[ap_max_count];
+
+    wifi_scan_config_t scan_config = {
+        .ssid = NULL,
+        .bssid = NULL,
+        .channel = 0,
+        .scan_type = WIFI_SCAN_TYPE_ACTIVE
+    };
+    ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_max_count, ap_records));
+    ESP_LOGI(TAG, "Got %u APs.", ap_max_count);
+    for(unsigned i = 0; i < ap_max_count; i++){
+        ESP_LOGD(TAG, "AP#%u: %s", i, ap_records[i].ssid);
+    }
 }
