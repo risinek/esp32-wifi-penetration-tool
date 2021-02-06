@@ -1,5 +1,5 @@
-#ifndef PAGES_INDEX_H
-#define PAGES_INDEX_H
+#ifndef PAGES_H
+#define PAGES_H
 
 const char page_root[] = 
 "<!DOCTYPE html>"
