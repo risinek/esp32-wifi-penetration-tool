@@ -69,6 +69,7 @@ void wifictl_scan_nearby_aps(){
         .channel = 0,
         .scan_type = WIFI_SCAN_TYPE_ACTIVE
     };
+    
     ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_max_count, ap_records));
     ESP_LOGI(TAG, "Got %u APs.", ap_max_count);
