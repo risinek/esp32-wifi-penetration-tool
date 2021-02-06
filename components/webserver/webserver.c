@@ -15,33 +15,41 @@
 
 static const char* TAG = "webserver";
 
-esp_err_t uri_root_get_handler(httpd_req_t *req) {
+static esp_err_t uri_root_get_handler(httpd_req_t *req) {
     return httpd_resp_send(req, page_root, HTTPD_RESP_USE_STRLEN);
 }
 
-httpd_uri_t uri_root_get = {
+static httpd_uri_t uri_root_get = {
     .uri = "/",
     .method = HTTP_GET,
     .handler = uri_root_get_handler,
     .user_ctx = NULL
 };
 
-esp_err_t uri_aps_get_handler(httpd_req_t *req) {
+static esp_err_t uri_aps_get_handler(httpd_req_t *req) {
     uint16_t ap_max_count = 20;
     wifi_ap_record_t ap_records[ap_max_count];
 
     wifictl_scan_nearby_aps(&ap_max_count, ap_records);
-    
+
+    char resp_chunk[34];
+    resp_chunk[0] = ';';
+
     ESP_LOGI(TAG, "Got %u APs.", ap_max_count);
     for(unsigned i = 0; i < ap_max_count; i++){
         ESP_LOGD(TAG, "AP#%u: %s", i, ap_records[i].ssid);
+        for(unsigned j = 0; j < 33; j++){
+            resp_chunk[j+1] = ap_records[i].ssid[j];
+        }
+        httpd_resp_sendstr_chunk(req, resp_chunk);
     }
+    return httpd_resp_sendstr_chunk(req, NULL);
 
-    const char resp_ok[] = "OK";
-    return httpd_resp_send(req, resp_ok, HTTPD_RESP_USE_STRLEN);
+    // const char resp_ok[] = "OK";
+    // return httpd_resp_send(req, resp_ok, HTTPD_RESP_USE_STRLEN);
 }
 
-httpd_uri_t uri_aps_get = {
+static httpd_uri_t uri_aps_get = {
     .uri = "/aps",
     .method = HTTP_GET,
     .handler = uri_aps_get_handler,
