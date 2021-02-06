@@ -30,29 +30,29 @@ static void wifi_init(){
 
 }
 
-static void wifi_init_ap(){
-    wifi_config_t wifi_config = {
+static void wifi_init_ap(wifi_config_t *wifi_config){
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
+}
+
+void wifi_ctl_mgmt_ap_start(){
+    ESP_LOGD(TAG, "Starting management AP");
+
+    wifi_config_t mgmt_wifi_config = {
         .ap = {
-            .ssid = "Test1",
-            .ssid_len = strlen("Test1"),
-            .channel = 3,
-            .password = "testtest",
-            .max_connection = 2,
-            .authmode = WIFI_AUTH_OPEN
+            .ssid = CONFIG_MGMT_AP_SSID,
+            .ssid_len = strlen(CONFIG_MGMT_AP_SSID),
+            .channel = CONFIG_MGMT_AP_CHANNEL,
+            .password = CONFIG_MGMT_AP_PASSWORD,
+            .max_connection = CONFIG_MGMT_AP_MAX_CONNECTIONS,
+            .authmode = WIFI_AUTH_WPA2_PSK
         },
     };
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-}
-
-void wifi_ctl_ap_start(){
-    ESP_LOGD(TAG, "starting wifi AP");
-
     wifi_init();
-    wifi_init_ap();
+    wifi_init_ap(&mgmt_wifi_config);
 
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "AP started with SSID=%s", "Test1");
+    ESP_LOGI(TAG, "AP started with SSID=%s", CONFIG_MGMT_AP_SSID);
 }

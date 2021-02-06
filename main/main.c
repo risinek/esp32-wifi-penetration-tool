@@ -10,5 +10,5 @@ static const char* TAG = "main";
 void app_main(void)
 {
     ESP_LOGD(TAG, "app_main started");
-    wifi_ctl_ap_start();
+    wifi_ctl_mgmt_ap_start();
 }
