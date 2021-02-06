@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
+#include "esp_wifi_types.h"
 
 #include "wifi_controller.h"
 
@@ -26,7 +27,16 @@ httpd_uri_t uri_root_get = {
 };
 
 esp_err_t uri_aps_get_handler(httpd_req_t *req) {
-    wifictl_scan_nearby_aps();
+    uint16_t ap_max_count = 20;
+    wifi_ap_record_t ap_records[ap_max_count];
+
+    wifictl_scan_nearby_aps(&ap_max_count, ap_records);
+    
+    ESP_LOGI(TAG, "Got %u APs.", ap_max_count);
+    for(unsigned i = 0; i < ap_max_count; i++){
+        ESP_LOGD(TAG, "AP#%u: %s", i, ap_records[i].ssid);
+    }
+
     const char resp_ok[] = "OK";
     return httpd_resp_send(req, resp_ok, HTTPD_RESP_USE_STRLEN);
 }

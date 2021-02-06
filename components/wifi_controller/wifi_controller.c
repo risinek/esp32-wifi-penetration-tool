@@ -57,11 +57,8 @@ void wifictl_mgmt_ap_start(){
     ESP_LOGI(TAG, "AP started with SSID=%s", CONFIG_MGMT_AP_SSID);
 }
 
-void wifictl_scan_nearby_aps(){
+void wifictl_scan_nearby_aps(uint16_t *ap_max_count, wifi_ap_record_t *ap_records){
     ESP_LOGD(TAG, "Scanning nearby APs...");
-
-    uint16_t ap_max_count = 20;
-    wifi_ap_record_t ap_records[ap_max_count];
 
     wifi_scan_config_t scan_config = {
         .ssid = NULL,
@@ -71,9 +68,7 @@ void wifictl_scan_nearby_aps(){
     };
     
     ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_max_count, ap_records));
-    ESP_LOGI(TAG, "Got %u APs.", ap_max_count);
-    for(unsigned i = 0; i < ap_max_count; i++){
-        ESP_LOGD(TAG, "AP#%u: %s", i, ap_records[i].ssid);
-    }
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(ap_max_count, ap_records));
+    
+    ESP_LOGD(TAG, "Scan done.");
 }
