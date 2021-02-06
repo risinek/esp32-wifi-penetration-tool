@@ -32,13 +32,12 @@ static esp_err_t uri_aps_get_handler(httpd_req_t *req) {
 
     wifictl_scan_nearby_aps(&ap_max_count, ap_records);
 
-    char resp_chunk[34];
-    resp_chunk[0] = ';';
+    char resp_chunk[37] = "<br>";
 
     ESP_LOGI(TAG, "Found %u APs.", ap_max_count);
     for(unsigned i = 0; i < ap_max_count; i++){
         for(unsigned j = 0; j < 33; j++){
-            resp_chunk[j+1] = ap_records[i].ssid[j];
+            resp_chunk[j+4] = ap_records[i].ssid[j];
         }
         httpd_resp_sendstr_chunk(req, resp_chunk);
     }
