@@ -1,4 +1,5 @@
 .vscode
+.local_files
 build
 sdkconfig
 sdkconfig.old
