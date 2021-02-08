@@ -31,17 +31,19 @@ static esp_err_t uri_aps_get_handler(httpd_req_t *req) {
     wifi_ap_record_t ap_records[ap_max_count];
 
     wifictl_scan_nearby_aps(&ap_max_count, ap_records);
-
-    char resp_chunk[37] = "<br>";
-
     ESP_LOGI(TAG, "Found %u APs.", ap_max_count);
+
+    // 33 SSID + 6 BSSID + 1 RSSI
+    char resp_chunk[40];
+    
+    ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     for(unsigned i = 0; i < ap_max_count; i++){
-        for(unsigned j = 0; j < 33; j++){
-            resp_chunk[j+4] = ap_records[i].ssid[j];
-        }
-        httpd_resp_sendstr_chunk(req, resp_chunk);
+        memcpy(resp_chunk, ap_records[i].ssid, 33);
+        memcpy(&resp_chunk[33], ap_records[i].bssid, 6);
+        memcpy(&resp_chunk[39], &ap_records[i].rssi, 1);
+        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, resp_chunk, 40));
     }
-    return httpd_resp_sendstr_chunk(req, NULL);
+    return httpd_resp_send_chunk(req, resp_chunk, 0);
 }
 
 static httpd_uri_t uri_aps_get = {
