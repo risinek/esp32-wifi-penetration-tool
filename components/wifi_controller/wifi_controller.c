@@ -18,6 +18,11 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 }
 
 static void wifi_init_apsta(){
+    if (esp_wifi_get_mode(NULL) == ESP_OK) {
+        ESP_LOGD(TAG, "APSTA already initialised. Skipping.");
+        return;
+    }
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
