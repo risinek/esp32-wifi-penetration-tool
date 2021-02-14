@@ -26,7 +26,7 @@ static httpd_uri_t uri_root_get = {
     .user_ctx = NULL
 };
 
-static esp_err_t uri_aps_get_handler(httpd_req_t *req) {
+static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
     uint16_t ap_max_count = 20;
     wifi_ap_record_t ap_records[ap_max_count];
 
@@ -46,10 +46,10 @@ static esp_err_t uri_aps_get_handler(httpd_req_t *req) {
     return httpd_resp_send_chunk(req, resp_chunk, 0);
 }
 
-static httpd_uri_t uri_aps_get = {
-    .uri = "/aps",
+static httpd_uri_t uri_ap_list_get = {
+    .uri = "/ap-list",
     .method = HTTP_GET,
-    .handler = uri_aps_get_handler,
+    .handler = uri_ap_list_get_handler,
     .user_ctx = NULL
 };
 
@@ -76,6 +76,6 @@ void webserver_run(){
 
     ESP_ERROR_CHECK(httpd_start(&server, &config));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_aps_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_select_get));
 }
