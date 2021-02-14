@@ -1,0 +1,42 @@
+# put here your custom config value
+menu "Wi-Fi Controller"
+    config SCAN_MAX_AP
+        int "Maximun AP scanned"
+        default 20
+        help
+        Maximum number of scanned nearby AP
+    menu "Management AP"
+        config MGMT_AP_SSID
+            string "Management AP SSID"
+            default "ManagementAP"
+            help
+            SSID of management AP
+
+        config MGMT_AP_PASSWORD
+            string "Management AP Password"
+            default "mgmtadmin"
+            help
+            Password for management AP WPA2 (minimum 8 characters)
+
+        config MGMT_AP_CHANNEL
+            int "Management AP channel"
+            range 1 13
+            default 3
+            help
+            Channel on which management AP should run
+            
+        config MGMT_AP_MAX_CONNECTIONS
+            int "Maximum number of connected clients"
+            range 0 10
+            default 1
+            help
+            Password for management AP
+
+        config MGMT_AP_AUTH_ON
+            bool "Password protected management AP"
+            default y
+            help
+                If set to true, WPA2-PSK will be used. Otherwise authentication will be open
+                and anyone can connect to this management AP.
+    endmenu
+endmenu

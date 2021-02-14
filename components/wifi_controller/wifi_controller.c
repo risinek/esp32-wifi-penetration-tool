@@ -30,12 +30,12 @@ static void wifi_init(){
 
 }
 
-static void wifi_init_ap(wifi_config_t *wifi_config){
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+static void wifi_init_apsta(wifi_config_t *wifi_config){
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
 }
 
-void wifi_ctl_mgmt_ap_start(){
+void wifictl_mgmt_ap_start(){
     ESP_LOGD(TAG, "Starting management AP");
 
     wifi_config_t mgmt_wifi_config = {
@@ -50,7 +50,7 @@ void wifi_ctl_mgmt_ap_start(){
     };
 
     wifi_init();
-    wifi_init_ap(&mgmt_wifi_config);
+    wifi_init_apsta(&mgmt_wifi_config);
 
     ESP_ERROR_CHECK(esp_wifi_start());
 
