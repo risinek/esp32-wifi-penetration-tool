@@ -27,6 +27,6 @@ void wifictl_scan_nearby_aps(){
     ESP_LOGD(TAG, "Scan done.");
 }
 
-wifictl_ap_records_t *wifictl_get_ap_records() {
+const wifictl_ap_records_t *wifictl_get_ap_records() {
     return &ap_records;
 }

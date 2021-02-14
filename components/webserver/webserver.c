@@ -26,9 +26,9 @@ static httpd_uri_t uri_root_get = {
 };
 
 static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
-    wifictl_ap_records_t *ap_records;
-
     wifictl_scan_nearby_aps();
+
+    const wifictl_ap_records_t *ap_records;
     ap_records = wifictl_get_ap_records();
     
     // 33 SSID + 6 BSSID + 1 RSSI
