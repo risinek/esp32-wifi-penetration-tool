@@ -1,5 +1,10 @@
 # put here your custom config value
 menu "Wi-Fi Controller"
+    config SCAN_MAX_AP
+        int "Maximun AP scanned"
+        default 20
+        help
+        Maximum number of scanned nearby AP
     menu "Management AP"
         config MGMT_AP_SSID
             string "Management AP SSID"
