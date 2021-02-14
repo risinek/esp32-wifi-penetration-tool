@@ -10,7 +10,7 @@
 
 #include "wifi_controller.h"
 
-#include "include/pages.h"
+#include "pages.h"
 
 static const char* TAG = "webserver";
 
