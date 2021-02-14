@@ -27,20 +27,19 @@ static httpd_uri_t uri_root_get = {
 };
 
 static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
-    uint16_t ap_max_count = 20;
-    wifi_ap_record_t ap_records[ap_max_count];
+    wifictl_ap_records_t *ap_records;
 
-    wifictl_scan_nearby_aps(&ap_max_count, ap_records);
-    ESP_LOGI(TAG, "Found %u APs.", ap_max_count);
-
+    wifictl_scan_nearby_aps();
+    ap_records = wifictl_get_ap_records();
+    
     // 33 SSID + 6 BSSID + 1 RSSI
     char resp_chunk[40];
     
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
-    for(unsigned i = 0; i < ap_max_count; i++){
-        memcpy(resp_chunk, ap_records[i].ssid, 33);
-        memcpy(&resp_chunk[33], ap_records[i].bssid, 6);
-        memcpy(&resp_chunk[39], &ap_records[i].rssi, 1);
+    for(unsigned i = 0; i < ap_records->count; i++){
+        memcpy(resp_chunk, ap_records->records[i].ssid, 33);
+        memcpy(&resp_chunk[33], ap_records->records[i].bssid, 6);
+        memcpy(&resp_chunk[39], &ap_records->records[i].rssi, 1);
         ESP_ERROR_CHECK(httpd_resp_send_chunk(req, resp_chunk, 40));
     }
     return httpd_resp_send_chunk(req, resp_chunk, 0);
