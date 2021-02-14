@@ -53,6 +53,21 @@ static httpd_uri_t uri_aps_get = {
     .user_ctx = NULL
 };
 
+static esp_err_t uri_ap_select_get_handler(httpd_req_t *req) {
+    char ap_record_id;
+    // TODO - returns number of bytes
+    httpd_req_recv(req, &ap_record_id, 1);
+    ESP_LOGI(TAG, "Using AP with ID %u", ap_record_id);
+    return httpd_resp_send(req, NULL, 0);
+}
+
+static httpd_uri_t uri_ap_select_get = {
+    .uri = "/ap-select",
+    .method = HTTP_POST,
+    .handler = uri_ap_select_get_handler,
+    .user_ctx = NULL
+};
+
 void webserver_run(){
     ESP_LOGD(TAG, "Running webserver");
 
@@ -62,4 +77,5 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_start(&server, &config));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_aps_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_select_get));
 }
