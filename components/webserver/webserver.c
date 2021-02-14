@@ -55,6 +55,7 @@ static esp_err_t uri_ap_select_post_handler(httpd_req_t *req) {
     char ap_record_id;
     // TODO - returns number of bytes
     httpd_req_recv(req, &ap_record_id, 1);
+    // TODO send ID to event loop
     ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
     return httpd_resp_send(req, NULL, 0);
 }
