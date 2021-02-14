@@ -13,8 +13,6 @@
 
 static const char* TAG = "wifi_controller";
 
-static wifictl_ap_records_t ap_records;
-
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
 
 }
@@ -57,26 +55,4 @@ void wifictl_mgmt_ap_start(){
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "AP started with SSID=%s", CONFIG_MGMT_AP_SSID);
-}
-
-void wifictl_scan_nearby_aps(){
-    ESP_LOGD(TAG, "Scanning nearby APs...");
-
-    ap_records.count = CONFIG_SCAN_MAX_AP;
-
-    wifi_scan_config_t scan_config = {
-        .ssid = NULL,
-        .bssid = NULL,
-        .channel = 0,
-        .scan_type = WIFI_SCAN_TYPE_ACTIVE
-    };
-    
-    ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_records.count, ap_records.records));
-    ESP_LOGI(TAG, "Found %u APs.", ap_records.count);
-    ESP_LOGD(TAG, "Scan done.");
-}
-
-wifictl_ap_records_t *wifictl_get_ap_records() {
-    return &ap_records;
 }
