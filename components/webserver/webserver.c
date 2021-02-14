@@ -12,7 +12,6 @@
 
 #include "include/pages.h"
 
-
 static const char* TAG = "webserver";
 
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
