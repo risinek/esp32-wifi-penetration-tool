@@ -17,27 +17,35 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 
 }
 
-static void wifi_init(){
+static void wifi_init_apsta(){
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_netif_create_default_wifi_ap();
+    esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+
+    ESP_ERROR_CHECK(esp_wifi_start());
+    
 }
 
-static void wifi_init_apsta(wifi_config_t *wifi_config){
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+void wifictl_ap_start(wifi_config_t *wifi_config) {
+    ESP_LOGD(TAG, "Starting AP...");
+    
+    wifi_init_apsta();
+    
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
+
+    ESP_LOGI(TAG, "AP started with SSID=%s", wifi_config->ap.ssid);
 }
 
 void wifictl_mgmt_ap_start(){
-    ESP_LOGD(TAG, "Starting management AP");
-
     wifi_config_t mgmt_wifi_config = {
         .ap = {
             .ssid = CONFIG_MGMT_AP_SSID,
@@ -48,11 +56,5 @@ void wifictl_mgmt_ap_start(){
             .authmode = WIFI_AUTH_WPA2_PSK
         },
     };
-
-    wifi_init();
-    wifi_init_apsta(&mgmt_wifi_config);
-
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_LOGI(TAG, "AP started with SSID=%s", CONFIG_MGMT_AP_SSID);
+    wifictl_ap_start(&mgmt_wifi_config);
 }
