@@ -9,6 +9,7 @@
 #include "esp_wifi_types.h"
 
 #include "wifi_controller.h"
+#include "attack.h"
 
 #include "pages.h"
 
@@ -78,6 +79,22 @@ static httpd_uri_t uri_result_get = {
     .user_ctx = NULL
 };
 
+static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
+    const attack_result_t *attack_result;
+    attack_result = attack_get_result();
+
+    char resp[1];
+    resp[0] = attack_result->status;
+    return httpd_resp_send(req, resp, 1);
+}
+
+static httpd_uri_t uri_get_result_get = {
+    .uri = "/get-result",
+    .method = HTTP_GET,
+    .handler = uri_get_result_get_handler,
+    .user_ctx = NULL
+};
+
 void webserver_run(){
     ESP_LOGD(TAG, "Running webserver");
 
@@ -89,4 +106,5 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_select_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_result_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_get_result_get));
 }
