@@ -1,10 +1,11 @@
 #ifndef ATTACK_H
 #define ATTACK_H
 
-// typedef enum attack_type_t
-    // PMKID
-    // HANDSHAKE
-    // PASSIVE
+typedef enum {
+    PASSIVE,
+    HANDSHAKE,
+    PMKID
+} attack_type_t;
 
 typedef enum {
     IDLE,
