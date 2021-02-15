@@ -27,6 +27,6 @@ typedef struct {
 
 const attack_result_t *attack_get_result();
 // void attack_set_result()
-// void attack_run(attack_config_t *attack_config)
+void attack_run(const attack_config_t *attack_config);
 
 #endif
