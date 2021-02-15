@@ -74,4 +74,6 @@ const char page_root[] =
 "</html>"
 ;
 
+const char page_result[] = "Result page";
+
 #endif

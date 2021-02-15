@@ -67,6 +67,17 @@ static httpd_uri_t uri_ap_select_post = {
     .user_ctx = NULL
 };
 
+static esp_err_t uri_result_get_handler(httpd_req_t *req) {
+    return httpd_resp_send(req, page_result, HTTPD_RESP_USE_STRLEN);
+}
+
+static httpd_uri_t uri_result_get = {
+    .uri = "/result",
+    .method = HTTP_GET,
+    .handler = uri_result_get_handler,
+    .user_ctx = NULL
+};
+
 void webserver_run(){
     ESP_LOGD(TAG, "Running webserver");
 
@@ -77,4 +88,5 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_select_post));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_result_get));
 }
