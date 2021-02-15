@@ -5,6 +5,13 @@
     // PMKID
     // HANDSHAKE
     // PASSIVE
+
+typedef enum {
+    IDLE,
+    RUNNING,
+    FINISHED
+} attack_status_t;
+
 // typedef struct attack_config_t
     // ap_record_t *
     // attack_type_t
