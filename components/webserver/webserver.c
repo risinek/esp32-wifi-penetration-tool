@@ -80,6 +80,7 @@ static httpd_uri_t uri_result_get = {
 };
 
 static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
+    ESP_LOGD(TAG, "Fetching attack result...");
     const attack_result_t *attack_result;
     attack_result = attack_get_result();
 
