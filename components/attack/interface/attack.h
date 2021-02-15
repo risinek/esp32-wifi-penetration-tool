@@ -1,6 +1,8 @@
 #ifndef ATTACK_H
 #define ATTACK_H
 
+#include "esp_wifi_types.h"
+
 typedef enum {
     PASSIVE,
     HANDSHAKE,
@@ -13,10 +15,11 @@ typedef enum {
     FINISHED
 } attack_status_t;
 
-// typedef struct attack_config_t
-    // ap_record_t *
-    // attack_type_t
-    // timeout
+typedef struct {
+    attack_type_t type;
+    int timeout;
+    const wifi_ap_record_t *ap_record;
+} attack_config_t;
 
 typedef struct {
     attack_status_t status;
