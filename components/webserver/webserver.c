@@ -52,19 +52,20 @@ static httpd_uri_t uri_ap_list_get = {
     .user_ctx = NULL
 };
 
-static esp_err_t uri_ap_select_post_handler(httpd_req_t *req) {
+static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     char ap_record_id;
     // TODO - returns number of bytes
+    // TODO - parse response to attack_config_t
     httpd_req_recv(req, &ap_record_id, 1);
-    // TODO send ID to event loop
+    // TODO call attack_run()
     ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
     return httpd_resp_send(req, NULL, 0);
 }
 
-static httpd_uri_t uri_ap_select_post = {
-    .uri = "/ap-select",
+static httpd_uri_t uri_run_attack_post = {
+    .uri = "/run-attack",
     .method = HTTP_POST,
-    .handler = uri_ap_select_post_handler,
+    .handler = uri_run_attack_post_handler,
     .user_ctx = NULL
 };
 
@@ -105,7 +106,7 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_start(&server, &config));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_select_post));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_run_attack_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_result_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_get_result_get));
 }
