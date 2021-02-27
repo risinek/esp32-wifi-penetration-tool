@@ -2,7 +2,7 @@
 #define WIFI_CONTROLLER_H
 
 #include "../ap_scanner.h"
-#include "../frame_analyzer.h"
+#include "../sniffer.h"
 
 #include "esp_wifi_types.h"
 
