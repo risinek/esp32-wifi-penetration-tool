@@ -1,5 +1,5 @@
-#ifndef FRAME_ANALYZER_H
-#define FRAME_ANALYZER_H
+#ifndef SNIFFER_H
+#define SNIFFER_H
 
 #include <stdbool.h>
 #include "esp_event.h"
