@@ -31,3 +31,8 @@ void wifictl_frame_analyzer_start() {
     esp_wifi_set_promiscuous(true);
     esp_wifi_set_promiscuous_rx_cb(&frame_handler);
 }
+
+void wifictl_frame_analyzer_stop() {
+    ESP_LOGI(TAG, "Stopping frame analyzer...");
+    esp_wifi_set_promiscuous(false);
+}
