@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-void wifictl_frame_analyzer_filter_frame_types(bool data, bool mgmt, bool ctrl);
-void wifictl_frame_analyzer_start();
-void wifictl_frame_analyzer_stop();
+void wifictl_sniffer_filter_frame_types(bool data, bool mgmt, bool ctrl);
+void wifictl_sniffer_start();
+void wifictl_sniffer_stop();
 
 #endif

@@ -6,13 +6,13 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
-static const char *TAG = "frame_analyzer"; 
+static const char *TAG = "sniffer"; 
 
 static void frame_handler(void *buf, wifi_promiscuous_pkt_type_t type) {
     ESP_LOGD(TAG, "Captured frame %d.", (int) type);
 }
 
-void wifictl_frame_analyzer_filter_frame_types(bool data, bool mgmt, bool ctrl) {
+void wifictl_sniffer_filter_frame_types(bool data, bool mgmt, bool ctrl) {
     wifi_promiscuous_filter_t filter = { .filter_mask = 0 };
     if(data) {
         filter.filter_mask |= WIFI_PROMIS_FILTER_MASK_DATA;
@@ -26,13 +26,13 @@ void wifictl_frame_analyzer_filter_frame_types(bool data, bool mgmt, bool ctrl) 
     esp_wifi_set_promiscuous_filter(&filter);
 }
 
-void wifictl_frame_analyzer_start() {
-    ESP_LOGI(TAG, "Initialising frame analyzer...");
+void wifictl_sniffer_start() {
+    ESP_LOGI(TAG, "Starting promiscuous mode...");
     esp_wifi_set_promiscuous(true);
     esp_wifi_set_promiscuous_rx_cb(&frame_handler);
 }
 
-void wifictl_frame_analyzer_stop() {
-    ESP_LOGI(TAG, "Stopping frame analyzer...");
+void wifictl_sniffer_stop() {
+    ESP_LOGI(TAG, "Stopping promiscuous mode...");
     esp_wifi_set_promiscuous(false);
 }
