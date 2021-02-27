@@ -6,11 +6,13 @@
 #include "esp_event.h"
 
 #include "wifi_controller.h"
+#include "data_frame_parser.h"
 
 static const char *TAG = "frame_analyzer";
 
 static void data_frame_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGD(TAG, "Handling DATA frame");
+    parse_data_frame(event_data);
 }
 
 void frame_analyzer_capture_wpa_handshake(){
