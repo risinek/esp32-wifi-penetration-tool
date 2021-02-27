@@ -12,6 +12,20 @@ static void frame_handler(void *buf, wifi_promiscuous_pkt_type_t type) {
     ESP_LOGD(TAG, "Captured frame.");
 }
 
+void wifictl_frame_analyzer_filter_frame_types(bool data, bool mgmt, bool ctrl) {
+    wifi_promiscuous_filter_t filter = { .filter_mask = 0 };
+    if(data) {
+        filter.filter_mask |= WIFI_PROMIS_FILTER_MASK_DATA;
+    }
+    else if(mgmt) {
+        filter.filter_mask |= WIFI_PROMIS_FILTER_MASK_MGMT;
+    }
+    else if(ctrl) {
+        filter.filter_mask |= WIFI_PROMIS_FILTER_MASK_CTRL;
+    }
+    esp_wifi_set_promiscuous_filter(&filter);
+}
+
 void wifictl_frame_analyzer_start() {
     ESP_LOGI(TAG, "Initialising frame analyzer...");
     esp_wifi_set_promiscuous(true);
