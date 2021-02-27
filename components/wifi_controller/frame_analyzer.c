@@ -9,7 +9,7 @@
 static const char *TAG = "frame_analyzer"; 
 
 static void frame_handler(void *buf, wifi_promiscuous_pkt_type_t type) {
-    ESP_LOGD(TAG, "Captured frame.");
+    ESP_LOGD(TAG, "Captured frame %d.", (int) type);
 }
 
 void wifictl_frame_analyzer_filter_frame_types(bool data, bool mgmt, bool ctrl) {
