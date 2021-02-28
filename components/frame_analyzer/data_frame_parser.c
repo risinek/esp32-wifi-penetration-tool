@@ -8,9 +8,14 @@
 
 const char *TAG = "frame_analyzer:data_frame_parser";
 
+void print_raw_frame(wifi_promiscuous_pkt_t *frame){
+    for(unsigned i = 0; i < frame->rx_ctrl.sig_len; i++) {
+        printf("%02x", frame->payload[i]);
+    }
+    printf("\n");
+}
 
 void parse_data_frame(void *frame) {
     wifi_promiscuous_pkt_t *pframe = (wifi_promiscuous_pkt_t *) frame;
-    data_frame_t *rframe = (data_frame_t *) pframe->payload;
-    ESP_LOGD(TAG, "Got %02x", rframe->header.frame_ctrl);
+    print_raw_frame(pframe);
 }
