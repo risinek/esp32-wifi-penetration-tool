@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
     data_frame_mac_header_t header;
     uint16_t etherType;
-    uint8_t payload[0];
+    uint8_t payload[];
 } data_frame_t;
 
 typedef struct {
