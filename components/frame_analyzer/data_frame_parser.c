@@ -6,6 +6,18 @@
 
 const char *TAG = "frame_analyzer:data_frame_parser";
 
+typedef enum {
+	ETHER_TYPE_EAPOL = 0x888e
+} ether_types_t;
+
+typedef enum {
+    EAPOL_EAP_PACKET,
+	EAPOL_START,
+	EAPOL_LOGOFF,
+	EAPOL_KEY,
+	EAPOL_ENCAPSULATED_ASF_ALERT
+} eapol_packet_types_t;
+
 typedef struct {
     uint16_t frame_ctrl;
     uint16_t duration;
@@ -24,7 +36,7 @@ typedef struct {
 
 typedef struct {
 	uint8_t version;
-	uint8_t packet_type;
+	eapol_packet_types_t packet_type:8;
 	uint16_t packet_body_length;
 } eapol_header_t;
 
@@ -32,18 +44,6 @@ typedef struct {
 	eapol_header_t hdr;
 	uint8_t payload[];
 } eapol_packet_t;
-
-typedef enum {
-    EAPOL_EAP_PACKET,
-	EAPOL_START,
-	EAPOL_LOGOFF,
-	EAPOL_KEY,
-	EAPOL_ENCAPSULATED_ASF_ALERT
-} eapol_packet_types_t;
-
-typedef enum {
-	ETHER_TYPE_EAPOL = 0x888e
-} ether_types_t;
 
 void parse_data_frame(void *frame) {
     wifi_promiscuous_pkt_t *pframe = (wifi_promiscuous_pkt_t *) frame;
