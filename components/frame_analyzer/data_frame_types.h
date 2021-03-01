@@ -2,9 +2,7 @@
 #define DATA_FRAME_TYPES_H
 
 
-typedef enum {
-	ETHER_TYPE_EAPOL = 0x888e
-} ether_types_t;
+#define ETHER_TYPE_EAPOL 0x888e
 
 typedef enum {
     EAPOL_EAP_PACKET,
