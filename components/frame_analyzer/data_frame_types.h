@@ -37,10 +37,12 @@ typedef struct {
 } data_frame_mac_header_t;
 
 typedef struct {
-    data_frame_mac_header_t header;
-    uint16_t etherType;
-    uint8_t payload[];
-} data_frame_t;
+    uint8_t snap_dsap;
+    uint8_t snap_ssap;
+    uint8_t control;
+    uint8_t encapsulation[3];
+} llc_snap_header_t;
+
 
 typedef struct {
 	uint8_t version;
