@@ -5,7 +5,7 @@
 #define ETHER_TYPE_EAPOL 0x888e
 
 typedef enum {
-    EAPOL_EAP_PACKET,
+    EAPOL_EAP_PACKET = 0,
 	EAPOL_START,
 	EAPOL_LOGOFF,
 	EAPOL_KEY,
@@ -32,8 +32,7 @@ typedef struct {
     uint8_t addr1[6];
     uint8_t addr2[6];
     uint8_t addr3[6];
-    uint16_t sequence_ctrl;
-    uint8_t addr4[6];
+    uint16_t sequence_control;
 } data_frame_mac_header_t;
 
 typedef struct {
@@ -46,12 +45,12 @@ typedef struct {
 
 typedef struct {
 	uint8_t version;
-	eapol_packet_types_t packet_type:8;
+	uint8_t packet_type;
 	uint16_t packet_body_length;
-} eapol_header_t;
+} eapol_packet_header_t;
 
 typedef struct {
-	eapol_header_t hdr;
+	eapol_packet_header_t hdr;
 	uint8_t payload[];
 } eapol_packet_t;
 
