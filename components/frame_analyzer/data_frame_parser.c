@@ -15,6 +15,11 @@ void print_raw_frame(wifi_promiscuous_pkt_t *frame){
     printf("\n");
 }
 
+void print_mac_address(uint8_t *a){
+    printf("%02x:%02x:%02x:%02x:%02x:%02x",
+    a[0], a[1], a[2], a[3], a[4], a[5]);
+}
+
 void parse_data_frame(void *frame) {
     wifi_promiscuous_pkt_t *pframe = (wifi_promiscuous_pkt_t *) frame;
     print_raw_frame(pframe);
