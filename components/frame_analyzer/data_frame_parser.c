@@ -3,6 +3,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 #include "esp_wifi.h"
+#include "esp_wifi_types.h"
 
 #include "data_frame_types.h"
 
@@ -20,7 +21,7 @@ void print_mac_address(uint8_t *a){
     a[0], a[1], a[2], a[3], a[4], a[5]);
 }
 
-void parse_data_frame(void *frame) {
+void parse_data_frame(wifi_promiscuous_pkt_t *frame) {
     uint8_t *frame_buffer = ((wifi_promiscuous_pkt_t *) frame)->payload;
 
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
