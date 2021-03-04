@@ -51,7 +51,7 @@ void parse_data_frame(void *frame) {
     printf("\n");
     print_raw_frame(frame);
 
-    // Check if frame_data is type of EAPoL
+    // Check if frame is type of EAPoL
     if(ntohs(*(uint16_t *) frame_buffer) == ETHER_TYPE_EAPOL) {
         frame_buffer += 2;
         ESP_LOGD(TAG, "EAPOL packet");
