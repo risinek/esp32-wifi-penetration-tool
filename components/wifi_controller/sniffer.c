@@ -1,6 +1,6 @@
 #include "sniffer.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_event.h"
@@ -12,7 +12,7 @@ static const char *TAG = "sniffer";
 ESP_EVENT_DEFINE_BASE(SNIFFER_EVENTS);
 
 static void frame_handler(void *buf, wifi_promiscuous_pkt_type_t type) {
-    ESP_LOGD(TAG, "Captured frame %d.", (int) type);
+    ESP_LOGV(TAG, "Captured frame %d.", (int) type);
 
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) buf;
 
