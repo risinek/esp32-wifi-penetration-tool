@@ -9,6 +9,6 @@ enum {
     DATA_FRAME_EVENT_CAPTURED_EAPOLKEY
 };
 
-void parse_data_frame(wifi_promiscuous_pkt_t *frame);
+void parse_eapol_packet(wifi_promiscuous_pkt_t *frame);
 
 #endif

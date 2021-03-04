@@ -25,7 +25,7 @@ void print_mac_address(uint8_t *a){
     a[0], a[1], a[2], a[3], a[4], a[5]);
 }
 
-void parse_data_frame(wifi_promiscuous_pkt_t *frame) {
+void parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     uint8_t *frame_buffer = ((wifi_promiscuous_pkt_t *) frame)->payload;
 
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
