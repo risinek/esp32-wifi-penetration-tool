@@ -12,7 +12,10 @@ static const char *TAG = "frame_analyzer";
 
 static void data_frame_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGV(TAG, "Handling DATA frame");
+    wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) frame;
     if(parse_eapol_packet(event_data) != NULL){
+        ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
+    }
 }
 
 void frame_analyzer_capture_wpa_handshake(){

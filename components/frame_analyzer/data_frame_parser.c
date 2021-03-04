@@ -2,9 +2,7 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
-#include "esp_err.h"
-#include "esp_event.h"
-#include "esp_wifi.h"
+#include "arpa/inet.h"
 #include "esp_wifi_types.h"
 
 #include "data_frame_types.h"
@@ -25,20 +23,21 @@ void print_mac_address(uint8_t *a){
     a[0], a[1], a[2], a[3], a[4], a[5]);
 }
 
-void parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
+// returns NULL if no EAPOL packet found, otherwise returns pointer to whole raw frame
+uint8_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     uint8_t *frame_buffer = ((wifi_promiscuous_pkt_t *) frame)->payload;
 
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
     frame_buffer += sizeof(data_frame_mac_header_t);
 
-
+    // TODO only for debug purposes
     if((mac_header->addr1[0] != 0x04) && (mac_header->addr2[0] != 0x04)) {
-        return;
+        return NULL;
     }
 
     if(mac_header->frame_control.protected_frame == 1) {
         ESP_LOGV(TAG, "Protected frame, skipping...");
-        return;
+        return NULL;
     }
 
     if(mac_header->frame_control.subtype > 7) {
@@ -64,7 +63,8 @@ void parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
         frame_buffer += sizeof(eapol_packet_header_t);
         if(eapol_packet_header->packet_type == EAPOL_KEY) {
             ESP_LOGD(TAG, "EAPOL-Key");
-            ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
+            return frame->payload;
         }
     }
+    return NULL;
 }
