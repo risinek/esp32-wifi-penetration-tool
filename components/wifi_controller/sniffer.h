@@ -13,7 +13,7 @@ enum {
 };
 
 void wifictl_sniffer_filter_frame_types(bool data, bool mgmt, bool ctrl);
-void wifictl_sniffer_start();
+void wifictl_sniffer_start(uint8_t channel);
 void wifictl_sniffer_stop();
 
 #endif
