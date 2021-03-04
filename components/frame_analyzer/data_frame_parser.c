@@ -2,12 +2,16 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
+#include "esp_err.h"
+#include "esp_event.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
 #include "data_frame_types.h"
 
 const char *TAG = "frame_analyzer:data_frame_parser";
+
+ESP_EVENT_DEFINE_BASE(DATA_FRAME_EVENTS);
 
 void print_raw_frame(wifi_promiscuous_pkt_t *frame){
     for(unsigned i = 0; i < frame->rx_ctrl.sig_len; i++) {
@@ -60,6 +64,7 @@ void parse_data_frame(wifi_promiscuous_pkt_t *frame) {
         frame_buffer += sizeof(eapol_packet_header_t);
         if(eapol_packet_header->packet_type == EAPOL_KEY) {
             ESP_LOGD(TAG, "EAPOL-Key");
+            ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
         }
     }
 }
