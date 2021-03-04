@@ -1,6 +1,6 @@
 #include "frame_analyzer.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_event.h"
@@ -11,8 +11,8 @@
 static const char *TAG = "frame_analyzer";
 
 static void data_frame_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    ESP_LOGD(TAG, "Handling DATA frame");
-    parse_eapol_packet(event_data);
+    ESP_LOGV(TAG, "Handling DATA frame");
+    if(parse_eapol_packet(event_data) != NULL){
 }
 
 void frame_analyzer_capture_wpa_handshake(){
