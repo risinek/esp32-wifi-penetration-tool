@@ -56,10 +56,43 @@ typedef struct {
 	uint16_t packet_body_length;
 } eapol_packet_header_t;
 
-// Ref: 802.1X-2020 [11.3]
+// Ref: 802.1X-2020 [11.3], 802.11-2016 [12.7.2]
 typedef struct {
 	eapol_packet_header_t header;
 	uint8_t payload[];
 } eapol_packet_t;
+
+// Ref: 802.11-2016 [12.7.2]
+// unnamed fields are "reserved"
+typedef struct {
+    uint8_t key_descriptor_version:2;
+    uint8_t key_type:1;
+    uint8_t :2;
+    uint8_t install:1;
+    uint8_t key_ack:1;
+    uint8_t key_mic:1;
+    uint8_t secure:1;
+    uint8_t error:1;
+    uint8_t request:1;
+    uint8_t encrypted_key_data:1;
+    uint8_t smk_message:1;
+    uint8_t :2;
+} key_information_t;
+
+// Ref: 802.11-2016 [12.7.2]
+typedef struct {
+    uint8_t descriptor_type;
+    key_information_t key_information;
+    uint16_t key_length;
+    uint8_t key_replay_counter[8];
+    uint8_t key_nonce[32];
+    uint8_t key_iv[16];
+    uint8_t key_rsc[8];
+    uint8_t reserved[8];
+    // TODO MIC lenght is dependent on 802.11-2016 [12.7.3] - key_infromation.descrptor_version
+    uint8_t key_mic[16];
+    uint16_t key_data_length;
+    uint8_t key_data[];
+} eapol_key_packet_t;
 
 #endif
