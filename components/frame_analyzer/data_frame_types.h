@@ -3,14 +3,20 @@
 
 #include <stdint.h>
 
+// Ref: 802.1X-2020 [11.1.4]
 #define ETHER_TYPE_EAPOL 0x888e
 
+// Ref: 802.1X-2020 [11.3.2]
 typedef enum {
     EAPOL_EAP_PACKET = 0,
 	EAPOL_START,
 	EAPOL_LOGOFF,
 	EAPOL_KEY,
-	EAPOL_ENCAPSULATED_ASF_ALERT
+	EAPOL_ENCAPSULATED_ASF_ALERT,
+    EAPOL_MKA,
+    EAPOL_ANNOUNCEMENT_GENERIC,
+    EAPOL_ANNOUNCEMENT_SPECIFIC,
+    EAPOL_ANNOUNCEMENT_REQ
 } eapol_packet_types_t;
 
 typedef struct {
@@ -43,13 +49,14 @@ typedef struct {
     uint8_t encapsulation[3];
 } llc_snap_header_t;
 
-
+// Ref: 802.1X-2020 [11.3]
 typedef struct {
 	uint8_t version;
 	uint8_t packet_type;
 	uint16_t packet_body_length;
 } eapol_packet_header_t;
 
+// Ref: 802.1X-2020 [11.3]
 typedef struct {
 	eapol_packet_header_t header;
 	uint8_t payload[];
