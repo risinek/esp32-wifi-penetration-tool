@@ -81,6 +81,15 @@ typedef struct {
 
 // Ref: 802.11-2016 [12.7.2]
 typedef struct {
+    uint8_t type;
+    uint8_t length;
+    uint32_t oui:24;
+    uint32_t data_type:8;
+    uint8_t data[];
+} key_data_field_t;
+
+// Ref: 802.11-2016 [12.7.2]
+typedef struct {
     uint8_t descriptor_type;
     key_information_t key_information;
     uint16_t key_length;
