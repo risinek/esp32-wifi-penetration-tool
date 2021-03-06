@@ -1,6 +1,7 @@
 #ifndef DATA_FRAME_TYPES_H
 #define DATA_FRAME_TYPES_H
 
+#include <stdint.h>
 
 #define ETHER_TYPE_EAPOL 0x888e
 
@@ -50,7 +51,7 @@ typedef struct {
 } eapol_packet_header_t;
 
 typedef struct {
-	eapol_packet_header_t hdr;
+	eapol_packet_header_t header;
 	uint8_t payload[];
 } eapol_packet_t;
 

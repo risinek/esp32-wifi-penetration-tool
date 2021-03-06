@@ -1,8 +1,10 @@
 #include "data_frame_parser.h"
 
+#include <stdint.h>
+#include "arpa/inet.h"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
-#include "arpa/inet.h"
 #include "esp_wifi_types.h"
 
 #include "data_frame_types.h"
