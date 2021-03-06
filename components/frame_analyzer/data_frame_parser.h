@@ -3,6 +3,8 @@
 
 #include "esp_wifi_types.h"
 
-uint8_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame);
+#include "data_frame_types.h"
+
+eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame);
 
 #endif

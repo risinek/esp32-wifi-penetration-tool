@@ -24,8 +24,8 @@ void print_mac_address(uint8_t *a){
 }
 
 // returns NULL if no EAPOL packet found, otherwise returns pointer to whole raw frame
-uint8_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
-    uint8_t *frame_buffer = ((wifi_promiscuous_pkt_t *) frame)->payload;
+eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
+    uint8_t *frame_buffer = frame->payload;
 
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
     frame_buffer += sizeof(data_frame_mac_header_t);
@@ -49,21 +49,15 @@ uint8_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     // Skipping LLC SNAP header (6 bytes)
     frame_buffer += sizeof(llc_snap_header_t);
 
-    print_mac_address(mac_header->addr1);
-    printf("; ");
-    print_mac_address(mac_header->addr2);
-    printf("\n");
-    print_raw_frame(frame);
-
     // Check if frame is type of EAPoL
     if(ntohs(*(uint16_t *) frame_buffer) == ETHER_TYPE_EAPOL) {
-        frame_buffer += 2;
         ESP_LOGD(TAG, "EAPOL packet");
-        eapol_packet_header_t *eapol_packet_header = (eapol_packet_header_t *) frame_buffer;
-        frame_buffer += sizeof(eapol_packet_header_t);
-        if(eapol_packet_header->packet_type == EAPOL_KEY) {
+        frame_buffer += 2;
+        eapol_packet_t *eapol_packet = (eapol_packet_t *) frame_buffer; 
+        if(eapol_packet->header.packet_type == EAPOL_KEY) {
             ESP_LOGD(TAG, "EAPOL-Key");
-            return frame->payload;
+            print_raw_frame(frame);
+            return eapol_packet;
         }
     }
     return NULL;
