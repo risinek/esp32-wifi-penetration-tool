@@ -6,5 +6,6 @@
 #include "data_frame_types.h"
 
 eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame);
+void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet);
 
 #endif

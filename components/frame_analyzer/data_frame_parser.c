@@ -64,3 +64,7 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     }
     return NULL;
 }
+
+void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
+
+}
