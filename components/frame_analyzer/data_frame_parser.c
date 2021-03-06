@@ -72,4 +72,9 @@ void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
     }
     eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
 
+    if(eapol_key->key_data_length == 0){
+        ESP_LOGD(TAG, "No key data");
+        return;
+    }
+
 }
