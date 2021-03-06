@@ -66,5 +66,10 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
 }
 
 void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
+    if(eapol_packet->header.packet_type != EAPOL_KEY){
+        ESP_LOGE(TAG, "Not an EAPoL-Key packet!");
+        return;
+    }
+    eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
 
 }
