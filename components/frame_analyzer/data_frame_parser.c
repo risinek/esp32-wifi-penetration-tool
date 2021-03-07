@@ -82,6 +82,8 @@ void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
     uint8_t *key_data_index = eapol_key->key_data;
     uint8_t *key_data_max_index = eapol_key->key_data + ntohs(eapol_key->key_data_length);
     key_data_field_t *key_data_field;
+
+    pmkid_item_t *pmkid_item_head = NULL;
     do{
         key_data_field = (key_data_field_t *) key_data_index;
 
@@ -107,12 +109,15 @@ void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
         }
 
         ESP_LOGI(TAG, "Found PMKID: ");
-        uint8_t pmkid[16];
+        pmkid_item_t *pmkid_item = (pmkid_item_t *) malloc(sizeof(pmkid_item_t));
+        pmkid_item->next = pmkid_item_head;
+        pmkid_item_head = pmkid_item;
         for(unsigned i = 0; i < 16; i++){
-            pmkid[i] = key_data_field->data[i];
-            printf("%02x", pmkid[i]);
+            pmkid_item->pmkid[i] = key_data_field->data[i];
+            printf("%02x", pmkid_item->pmkid[i]);
         }
         printf("\n");
+
     } while((key_data_index = key_data_field->data + key_data_field->length - 4 + 1) < key_data_max_index); 
 
 }
