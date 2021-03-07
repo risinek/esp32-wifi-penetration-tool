@@ -32,10 +32,6 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
     frame_buffer += sizeof(data_frame_mac_header_t);
 
-    // TODO only for debug purposes
-    if((mac_header->addr1[0] != 0x04) && (mac_header->addr2[0] != 0x04)) {
-        return NULL;
-    }
 
     if(mac_header->frame_control.protected_frame == 1) {
         ESP_LOGV(TAG, "Protected frame, skipping...");
@@ -43,7 +39,7 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     }
 
     if(mac_header->frame_control.subtype > 7) {
-        ESP_LOGD(TAG, "QoS data frame");
+        ESP_LOGV(TAG, "QoS data frame");
         // Skipping QoS field (2 bytes)
         frame_buffer += 2;
     }
@@ -63,4 +59,70 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
         }
     }
     return NULL;
+}
+
+pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){
+    uint8_t *key_data_index = key_data;
+    uint8_t *key_data_max_index = key_data + length;
+
+    pmkid_item_t *pmkid_item_head = NULL;
+    key_data_field_t *key_data_field;
+    do{
+        key_data_field = (key_data_field_t *) key_data_index;
+
+        ESP_LOGV(TAG, "EAPOL-Key -> Key-Data -> type=%x; length=%x; oui=%x; data_type=%x",
+                    key_data_field->type, 
+                    key_data_field->length, 
+                    key_data_field->oui,
+                    key_data_field->data_type);
+        
+        if(key_data_field->type != KEY_DATA_TYPE){
+            ESP_LOGD(TAG, "Wrong type %x (expected %x)", key_data_field->type, KEY_DATA_TYPE);
+            continue;
+        }
+
+        if(ntohl(key_data_field->oui) != KEY_DATA_OUI_IEEE80211){
+            ESP_LOGD(TAG, "Wrong OUI %x (expected %x)", key_data_field->oui, KEY_DATA_OUI_IEEE80211);
+            continue;
+        }
+
+        if(key_data_field->data_type != KEY_DATA_DATA_TYPE_PMKID_KDE){
+            ESP_LOGD(TAG, "Wrong data type %x (expected %x)", key_data_field->data_type, KEY_DATA_DATA_TYPE_PMKID_KDE);
+            continue;
+        }
+
+        ESP_LOGI(TAG, "Found PMKID: ");
+        pmkid_item_t *pmkid_item = (pmkid_item_t *) malloc(sizeof(pmkid_item_t));
+        pmkid_item->next = pmkid_item_head;
+        pmkid_item_head = pmkid_item;
+        for(unsigned i = 0; i < 16; i++){
+            pmkid_item->pmkid[i] = key_data_field->data[i];
+            printf("%02x", pmkid_item->pmkid[i]);
+        }
+        printf("\n");
+
+    } while((key_data_index = key_data_field->data + key_data_field->length - 4 + 1) < key_data_max_index); 
+
+    return pmkid_item_head;
+}
+
+pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
+    if(eapol_packet->header.packet_type != EAPOL_KEY){
+        ESP_LOGE(TAG, "Not an EAPoL-Key packet.");
+        return NULL;
+    }
+
+    eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
+
+    if(eapol_key->key_data_length == 0){
+        ESP_LOGD(TAG, "Empty Key Data");
+        return NULL;
+    }
+
+    if(eapol_key->key_information.encrypted_key_data == 1){
+        ESP_LOGD(TAG, "Key Data encrypted");
+        return NULL;
+    }
+
+    return parse_pmkid_from_key_data(eapol_key->key_data, ntohs(eapol_key->key_data_length));
 }
