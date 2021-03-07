@@ -31,7 +31,7 @@ static void frame_handler(void *buf, wifi_promiscuous_pkt_type_t type) {
             return;
     }
 
-    ESP_ERROR_CHECK(esp_event_post(SNIFFER_EVENTS, event_id, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
+    ESP_ERROR_CHECK(esp_event_post(SNIFFER_EVENTS, event_id, frame, frame->rx_ctrl.sig_len + sizeof(wifi_promiscuous_pkt_t), portMAX_DELAY));
 }
 
 void wifictl_sniffer_filter_frame_types(bool data, bool mgmt, bool ctrl) {
