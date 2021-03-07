@@ -61,7 +61,7 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     return NULL;
 }
 
-pmkid_item_t *parse_pmkid_from_key_data(const uint8_t *key_data, const uint16_t length){
+pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){
     uint8_t *key_data_index = key_data;
     uint8_t *key_data_max_index = key_data + length;
 
