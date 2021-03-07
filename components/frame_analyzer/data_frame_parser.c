@@ -70,8 +70,48 @@ void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
     eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
 
     if(eapol_key->key_data_length == 0){
-        ESP_LOGD(TAG, "No key data");
+        ESP_LOGD(TAG, "No Key Data");
         return;
     }
+
+    if(eapol_key->key_information.encrypted_key_data == 1){
+        ESP_LOGD(TAG, "Key Data encrypted");
+        return;
+    }
+
+    uint8_t *key_data_index = eapol_key->key_data;
+    key_data_field_t *key_data_field = (key_data_field_t *) key_data_index;
+
+    ESP_LOGV(TAG, "EAPOL-Key -> Key-Data -> type=%x; length=%x; oui=%x; data_type=%x",
+                key_data_field->type, 
+                key_data_field->length, 
+                key_data_field->oui,
+                key_data_field->data_type);
+    
+    if(key_data_field->type != KEY_DATA_TYPE){
+        ESP_LOGD(TAG, "Wrong type %x (expected %x)", key_data_field->type, KEY_DATA_TYPE);
+        return;
+    }
+
+    if(ntohl(key_data_field->oui) != KEY_DATA_OUI_IEEE80211){
+        ESP_LOGD(TAG, "Wrong OUI %x (expected %x)", key_data_field->oui, KEY_DATA_OUI_IEEE80211);
+        return;
+    }
+
+    if(key_data_field->data_type != KEY_DATA_DATA_TYPE_PMKID_KDE){
+        ESP_LOGD(TAG, "Wrong data type %x (expected %x)", key_data_field->data_type, KEY_DATA_DATA_TYPE_PMKID_KDE);
+        return;
+    }
+
+    uint8_t pmkid[16];
+
+    ESP_LOGI(TAG, "Found PMKID: ");
+    for(unsigned i = 0; i < 16; i++){
+        pmkid[i] = key_data_field->data[i];
+        printf("%02x", pmkid[i]);
+    }
+    printf("\n");
+
+    key_data_index += sizeof(key_data_field_t) + 16; 
 
 }
