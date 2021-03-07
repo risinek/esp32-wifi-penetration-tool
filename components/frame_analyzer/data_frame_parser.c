@@ -61,22 +61,22 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     return NULL;
 }
 
-void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
+pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
     if(eapol_packet->header.packet_type != EAPOL_KEY){
         ESP_LOGE(TAG, "Not an EAPoL-Key packet.");
-        return;
+        return NULL;
     }
 
     eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
 
     if(eapol_key->key_data_length == 0){
         ESP_LOGD(TAG, "No Key Data");
-        return;
+        return NULL;
     }
 
     if(eapol_key->key_information.encrypted_key_data == 1){
         ESP_LOGD(TAG, "Key Data encrypted");
-        return;
+        return NULL;
     }
 
     uint8_t *key_data_index = eapol_key->key_data;
@@ -120,4 +120,5 @@ void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
 
     } while((key_data_index = key_data_field->data + key_data_field->length - 4 + 1) < key_data_max_index); 
 
+    return pmkid_item_head;
 }
