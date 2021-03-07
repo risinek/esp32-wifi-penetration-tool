@@ -18,7 +18,10 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
     eapol_packet_t *eapol_packet;
     if((eapol_packet = parse_eapol_packet(frame)) != NULL){
         ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
-        parse_pmkid_from_eapol_packet(eapol_packet);
+        pmkid_item_t *pmkid_items;
+        if((pmkid_items = parse_pmkid_from_eapol_packet(eapol_packet)) != NULL){
+            ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_FOUND_PMKID, pmkid_items, sizeof(pmkid_item_t *), portMAX_DELAY));
+        }
     }
 }
 
