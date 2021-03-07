@@ -95,6 +95,14 @@ typedef struct __attribute__((__packed__)) {
     uint8_t key_data[];
 } eapol_key_packet_t;
 
+// Ref: 802.11-2016 [12.7.2, Table 12-6]
+#define KEY_DATA_TYPE 0xdd
+// Ref: 802.11-2016 [12.7.2, Table 12-6]
+// Needs trailing byte due to casting to uint32_t and converting from netlong
+#define KEY_DATA_OUI_IEEE80211 0x00fac00
+// Ref: 802.11-2016 [12.7.2, Table 12-6]
+#define KEY_DATA_DATA_TYPE_PMKID_KDE 4
+
 // Ref: 802.11-2016 [12.7.2]
 typedef struct __attribute__((__packed__)) {
     uint8_t type;
