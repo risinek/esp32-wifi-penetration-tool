@@ -65,7 +65,7 @@ typedef struct {
 // Ref: 802.11-2016 [12.7.2]
 // unnamed fields are "reserved"
 typedef struct {
-    uint8_t key_descriptor_version:2;
+    uint8_t key_descriptor_version:3;
     uint8_t key_type:1;
     uint8_t :2;
     uint8_t install:1;
@@ -80,16 +80,7 @@ typedef struct {
 } key_information_t;
 
 // Ref: 802.11-2016 [12.7.2]
-typedef struct {
-    uint8_t type;
-    uint8_t length;
-    uint32_t oui:24;
-    uint32_t data_type:8;
-    uint8_t data[];
-} key_data_field_t;
-
-// Ref: 802.11-2016 [12.7.2]
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     uint8_t descriptor_type;
     key_information_t key_information;
     uint16_t key_length;
@@ -98,10 +89,19 @@ typedef struct {
     uint8_t key_iv[16];
     uint8_t key_rsc[8];
     uint8_t reserved[8];
-    // TODO MIC lenght is dependent on 802.11-2016 [12.7.3] - key_infromation.descrptor_version
+    // TODO MIC lenght is dependent on 802.11-2016 [12.7.3] - key_infromation_t.descrptor_version
     uint8_t key_mic[16];
     uint16_t key_data_length;
     uint8_t key_data[];
 } eapol_key_packet_t;
+
+// Ref: 802.11-2016 [12.7.2]
+typedef struct __attribute__((__packed__)) {
+    uint8_t type;
+    uint8_t length;
+    uint32_t oui:24;
+    uint32_t data_type:8;
+    uint8_t data[];
+} key_data_field_t;
 
 #endif
