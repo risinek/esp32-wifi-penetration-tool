@@ -32,10 +32,6 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
     frame_buffer += sizeof(data_frame_mac_header_t);
 
-    // TODO only for debug purposes
-    if((mac_header->addr1[0] != 0x04) && (mac_header->addr2[0] != 0x04)) {
-        return NULL;
-    }
 
     if(mac_header->frame_control.protected_frame == 1) {
         ESP_LOGV(TAG, "Protected frame, skipping...");
@@ -43,7 +39,7 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     }
 
     if(mac_header->frame_control.subtype > 7) {
-        ESP_LOGD(TAG, "QoS data frame");
+        ESP_LOGV(TAG, "QoS data frame");
         // Skipping QoS field (2 bytes)
         frame_buffer += 2;
     }
@@ -67,9 +63,10 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
 
 void parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
     if(eapol_packet->header.packet_type != EAPOL_KEY){
-        ESP_LOGE(TAG, "Not an EAPoL-Key packet!");
+        ESP_LOGE(TAG, "Not an EAPoL-Key packet.");
         return;
     }
+
     eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
 
     if(eapol_key->key_data_length == 0){
