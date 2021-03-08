@@ -54,10 +54,15 @@ static httpd_uri_t uri_ap_list_get = {
 
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     char ap_record_id;
+    attack_config_t attack_config;
     // TODO - returns number of bytes
     // TODO - parse response to attack_config_t
     httpd_req_recv(req, &ap_record_id, 1);
+    attack_config.type = ATTACK_TYPE_PMKID;
+    attack_config.timeout = 0;
+    attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
     // TODO call attack_run()
+    attack_run(&attack_config);
     ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
     return httpd_resp_send(req, NULL, 0);
 }
