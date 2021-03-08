@@ -50,6 +50,8 @@ void wifictl_sniffer_filter_frame_types(bool data, bool mgmt, bool ctrl) {
 
 void wifictl_sniffer_start(uint8_t channel) {
     ESP_LOGI(TAG, "Starting promiscuous mode...");
+    ESP_LOGD(TAG, "Kicking all connected STAs from AP");
+    ESP_ERROR_CHECK(esp_wifi_deauth_sta(0));
     esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
     esp_wifi_set_promiscuous(true);
     esp_wifi_set_promiscuous_rx_cb(&frame_handler);
