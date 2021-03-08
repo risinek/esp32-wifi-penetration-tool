@@ -4,9 +4,9 @@
 #include "esp_wifi_types.h"
 
 typedef enum {
-    PASSIVE,
-    HANDSHAKE,
-    PMKID
+    ATTACK_TYPE_PASSIVE,
+    ATTACK_TYPE_HANDSHAKE,
+    ATTACK_TYPE_PMKID
 } attack_type_t;
 
 typedef enum {
