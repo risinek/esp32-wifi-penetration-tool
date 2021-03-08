@@ -1,6 +1,7 @@
 #include "data_frame_parser.h"
 
 #include <stdint.h>
+#include <string.h>
 #include "arpa/inet.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
@@ -23,6 +24,16 @@ void print_raw_frame(wifi_promiscuous_pkt_t *frame){
 void print_mac_address(uint8_t *a){
     printf("%02x:%02x:%02x:%02x:%02x:%02x",
     a[0], a[1], a[2], a[3], a[4], a[5]);
+}
+
+wifi_promiscuous_pkt_t *filter_frame(wifi_promiscuous_pkt_t *frame, frame_filter_t *filter) {
+    data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame->payload;
+    
+    // if(memcmp(mac_header->addr3, filter->bssid, 6) != 0){
+    //     return NULL;
+    // }
+
+    return frame;
 }
 
 // returns NULL if no EAPOL packet found, otherwise returns pointer to whole raw frame

@@ -14,7 +14,14 @@ static const char *TAG = "frame_analyzer";
 
 static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGV(TAG, "Handling DATA frame");
+    frame_filter_t *frame_filter = (frame_filter_t *) args;
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
+
+    if(filter_frame(frame, frame_filter) == NULL){
+        ESP_LOGV(TAG, "Filtered out");
+        return;
+    }
+
     eapol_packet_t *eapol_packet;
     if((eapol_packet = parse_eapol_packet(frame)) != NULL){
         ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
