@@ -25,8 +25,8 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
     }
 }
 
-void frame_analyzer_capture_wpa_handshake(){
-    ESP_LOGI(TAG, "Capturing WPA handshake frames...");
-
-    ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, NULL));
+void frame_analyzer_capture_pmkid(const uint8_t *bssid){
+    ESP_LOGI(TAG, "Capturing PMKIDs in WPA handhshake...");
+    frame_filter_t frame_filter = { .bssid = bssid };
+    ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, &frame_filter));
 }

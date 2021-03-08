@@ -10,6 +10,6 @@ enum {
     DATA_FRAME_EVENT_FOUND_PMKID
 };
 
-void frame_analyzer_capture_wpa_handshake();
+void frame_analyzer_capture_pmkid(const uint8_t *bssid);
 
 #endif
