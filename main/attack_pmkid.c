@@ -16,6 +16,7 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
     wifictl_sta_disconnect();
     wifictl_sniffer_stop();
     frame_analyzer_pmkid_capture_stop();
+    ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &pmkid_exit_condition_handler));
     ESP_LOGD(TAG, "PMKID attack stopped");
 }
 
