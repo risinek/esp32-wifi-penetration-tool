@@ -22,7 +22,7 @@ void attack_pmkid(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Attack on PMKID...");
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(attack_config->ap_record->primary);
-    frame_analyzer_capture_pmkid(attack_config->ap_record->bssid);
+    frame_analyzer_pmkid_capture_start(attack_config->ap_record->bssid);
     wifictl_sta_connect_to_ap(attack_config->ap_record, "dummypassword");
     ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_FOUND_PMKID, &pmkid_exit_condition_handler, NULL));
 }
