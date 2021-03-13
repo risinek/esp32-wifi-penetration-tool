@@ -11,13 +11,13 @@
 #include "data_frame_parser.h"
 
 static const char *TAG = "frame_analyzer";
+static frame_filter_t frame_filter;
 
 static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGV(TAG, "Handling DATA frame");
-    frame_filter_t *frame_filter = (frame_filter_t *) args;
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
 
-    if(filter_frame(frame, frame_filter) == NULL){
+    if(filter_frame(frame, &frame_filter) == NULL){
         ESP_LOGV(TAG, "Filtered out");
         return;
     }
@@ -34,6 +34,6 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
 
 void frame_analyzer_capture_pmkid(const uint8_t *bssid){
     ESP_LOGI(TAG, "Capturing PMKIDs in WPA handhshake...");
-    frame_filter_t frame_filter = { .bssid = bssid };
-    ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, &frame_filter));
+    frame_filter.bssid = bssid;
+    ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, NULL));
 }
