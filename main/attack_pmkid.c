@@ -12,10 +12,11 @@
 static const char* TAG = "attack_pmkid";
 
 static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    ESP_LOGI(TAG, "Got PMKID, stopping attack...");
-    // wifictl_sniffer_stop();
-    // wifictl_sta_disconnect();
-    // frame_analyzer_pmkid_capture_stop();
+    ESP_LOGD(TAG, "Got PMKID, stopping attack...");
+    wifictl_sta_disconnect();
+    wifictl_sniffer_stop();
+    frame_analyzer_pmkid_capture_stop();
+    ESP_LOGD(TAG, "PMKID attack stopped");
 }
 
 void attack_pmkid(attack_config_t *attack_config){
