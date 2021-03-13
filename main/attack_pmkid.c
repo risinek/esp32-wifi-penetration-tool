@@ -13,6 +13,7 @@ static const char* TAG = "attack_pmkid";
 
 static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGD(TAG, "Got PMKID, stopping attack...");
+    attack_set_result(FINISHED);
     attack_pmkid_stop();
 }
 
