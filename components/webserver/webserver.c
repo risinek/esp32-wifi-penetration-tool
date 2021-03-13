@@ -61,9 +61,10 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_config.type = ATTACK_TYPE_PMKID;
     attack_config.timeout = 0;
     attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
-
-    attack_run(attack_config);
+    
     ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
+    attack_run(attack_config);
+
     return httpd_resp_send(req, NULL, 0);
 }
 

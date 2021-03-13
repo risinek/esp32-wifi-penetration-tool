@@ -66,7 +66,7 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
         frame_buffer += 2;
         eapol_packet_t *eapol_packet = (eapol_packet_t *) frame_buffer; 
         if(eapol_packet->header.packet_type == EAPOL_KEY) {
-            ESP_LOGD(TAG, "EAPOL-Key");
+            ESP_LOGI(TAG, "Captured handshake EAPOL-Key packet");
             print_raw_frame(frame);
             return eapol_packet;
         }
