@@ -37,3 +37,7 @@ void frame_analyzer_pmkid_capture_start(const uint8_t *bssid){
     frame_filter.bssid = bssid;
     ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, NULL));
 }
+
+void frame_analyzer_pmkid_capture_stop(){
+    ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &data_frame_handler));
+}

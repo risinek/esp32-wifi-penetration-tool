@@ -11,5 +11,6 @@ enum {
 };
 
 void frame_analyzer_pmkid_capture_start(const uint8_t *bssid);
+void frame_analyzer_pmkid_capture_stop();
 
 #endif
