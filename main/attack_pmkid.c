@@ -20,7 +20,7 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
     ESP_LOGD(TAG, "PMKID attack stopped");
 }
 
-void attack_pmkid(attack_config_t *attack_config){
+void attack_pmkid_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Attack on PMKID...");
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(attack_config->ap_record->primary);
