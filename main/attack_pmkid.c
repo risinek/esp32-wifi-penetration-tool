@@ -28,3 +28,11 @@ void attack_pmkid_start(attack_config_t *attack_config){
     wifictl_sta_connect_to_ap(attack_config->ap_record, "dummypassword");
     ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_FOUND_PMKID, &pmkid_exit_condition_handler, NULL));
 }
+
+void attack_pmkid_stop(){
+    wifictl_sta_disconnect();
+    wifictl_sniffer_stop();
+    frame_analyzer_pmkid_capture_stop();
+    ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &pmkid_exit_condition_handler));
+    ESP_LOGD(TAG, "PMKID attack stopped");
+}

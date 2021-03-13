@@ -4,5 +4,6 @@
 #include "attack.h"
 
 void attack_pmkid_start(attack_config_t *attack_config);
+void attack_pmkid_stop();
 
 #endif
