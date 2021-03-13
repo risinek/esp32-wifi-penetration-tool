@@ -91,3 +91,7 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
     ESP_ERROR_CHECK(esp_wifi_connect());
 
 }
+
+void wifictl_sta_disconnect(){
+    ESP_ERROR_CHECK(esp_wifi_disconnect());
+}
