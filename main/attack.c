@@ -14,6 +14,10 @@ const attack_result_t *attack_get_result() {
     return &attack_result;
 }
 
+void attack_set_result(attack_status_t status) {
+    attack_result.status = status;
+}
+
 void attack_run(attack_config_t attack_config) {
     ESP_LOGI(TAG, "Starting attack...");
     attack_result.status = RUNNING;
