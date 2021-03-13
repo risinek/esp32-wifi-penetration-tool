@@ -28,7 +28,7 @@ void attack_run(attack_config_t attack_config) {
             wifictl_sniffer_filter_frame_types(true, false, false);
             wifictl_sniffer_start(attack_config.ap_record->primary);
             frame_analyzer_capture_pmkid(attack_config.ap_record->bssid);
-            // connect as STA to AP
+            wifictl_connect_sta_to_ap(attack_config.ap_record, "dummypassword");
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Attack on WPA handshake...");

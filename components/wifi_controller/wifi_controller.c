@@ -56,11 +56,38 @@ void wifictl_mgmt_ap_start(){
         .ap = {
             .ssid = CONFIG_MGMT_AP_SSID,
             .ssid_len = strlen(CONFIG_MGMT_AP_SSID),
-            .channel = CONFIG_MGMT_AP_CHANNEL,
             .password = CONFIG_MGMT_AP_PASSWORD,
             .max_connection = CONFIG_MGMT_AP_MAX_CONNECTIONS,
             .authmode = WIFI_AUTH_WPA2_PSK
         },
     };
     wifictl_ap_start(&mgmt_wifi_config);
+}
+
+void wifictl_connect_sta_to_ap(const wifi_ap_record_t *ap_record, const char password[]){
+    ESP_LOGD(TAG, "Connecting STA to AP...");
+    
+    // wifi_init_apsta();
+    
+    wifi_config_t sta_wifi_config = {
+        .sta = {
+            .channel = ap_record->primary,
+            .scan_method = WIFI_FAST_SCAN,
+            .pmf_cfg.capable = false,
+            .pmf_cfg.required = false
+        },
+    };
+    mempcpy(sta_wifi_config.sta.ssid, ap_record->ssid, 32);
+
+    if(strlen(password) >= 64) {
+        ESP_LOGE(TAG, "Password is too long. Max supported length is 64");
+        return;
+    }
+    memcpy(sta_wifi_config.sta.password, password, strlen(password) + 1);
+
+    ESP_LOGD(TAG, ".ssid=%s", sta_wifi_config.sta.ssid);
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &sta_wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_connect());
+
 }
