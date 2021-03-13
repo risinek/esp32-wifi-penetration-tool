@@ -8,6 +8,6 @@
 
 void wifictl_ap_start(wifi_config_t *wifi_config);
 void wifictl_mgmt_ap_start();
-void wifictl_connect_sta_to_ap(const wifi_ap_record_t *ap_record, const char password[]);
+void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char password[]);
 
 #endif

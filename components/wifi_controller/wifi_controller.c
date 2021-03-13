@@ -64,7 +64,7 @@ void wifictl_mgmt_ap_start(){
     wifictl_ap_start(&mgmt_wifi_config);
 }
 
-void wifictl_connect_sta_to_ap(const wifi_ap_record_t *ap_record, const char password[]){
+void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char password[]){
     ESP_LOGD(TAG, "Connecting STA to AP...");
     
     // wifi_init_apsta();
