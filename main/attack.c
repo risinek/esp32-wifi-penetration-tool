@@ -2,9 +2,9 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
+#include "esp_err.h"
 
-#include "wifi_controller.h"
-#include "frame_analyzer.h"
+#include "attack_pmkid.h"
 
 static const char* TAG = "attack";
 static attack_result_t attack_result = { .status = IDLE };
@@ -24,11 +24,7 @@ void attack_run(attack_config_t attack_config) {
     }
     switch(attack_config.type) {
         case ATTACK_TYPE_PMKID:
-            ESP_LOGI(TAG, "Attack on PMKID...");
-            wifictl_sniffer_filter_frame_types(true, false, false);
-            wifictl_sniffer_start(attack_config.ap_record->primary);
-            frame_analyzer_capture_pmkid(attack_config.ap_record->bssid);
-            wifictl_connect_sta_to_ap(attack_config.ap_record, "dummypassword");
+            attack_pmkid(&attack_config);
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Attack on WPA handshake...");
