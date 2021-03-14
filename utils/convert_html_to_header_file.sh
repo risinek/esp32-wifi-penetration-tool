@@ -17,7 +17,7 @@ echo """#ifndef PAGE_${output_name^^}_H
 const char page_${output_name,,}[] =""" > $output_filename
 
 
-cat $1 | sed 's/"/\\"/g' | sed 's/ */&"/' | sed 's/$/"&/' >> $output_filename
+cat $1 | sed 's/http:\/\/192.168.4.1\///' | sed 's/"/\\"/g' | sed 's/ */&"/' | sed 's/$/"&/' >> $output_filename
 
 echo """
 ;
