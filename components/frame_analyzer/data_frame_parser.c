@@ -1,5 +1,6 @@
 #include "data_frame_parser.h"
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include "arpa/inet.h"
@@ -8,7 +9,7 @@
 #include "esp_log.h"
 #include "esp_wifi_types.h"
 
-#include "data_frame_types.h"
+#include "frame_analyzer_types.h"
 
 const char *TAG = "frame_analyzer:data_frame_parser";
 
