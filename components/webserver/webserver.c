@@ -93,7 +93,7 @@ static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
 
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     // first send attack result header
-    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_result, sizeof(attack_result_t) - sizeof(char *)));
+    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_result, 3));
     // send attack result content
     if(attack_result->content_size > 0){
         ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_result->content, attack_result->content_size));

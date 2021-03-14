@@ -23,9 +23,9 @@ typedef struct {
 } attack_config_t;
 
 typedef struct {
-    attack_status_t status;
-    attack_type_t type;
-    size_t content_size;
+    uint8_t status;
+    uint8_t type;
+    uint8_t content_size;
     char *content;
 } attack_result_t;
 
