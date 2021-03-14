@@ -1,5 +1,6 @@
 #include "attack_pmkid.h"
 
+#include <string.h>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
@@ -8,13 +9,36 @@
 #include "attack.h"
 #include "wifi_controller.h"
 #include "frame_analyzer.h"
+#include "frame_analyzer_types.h"
 
-static const char* TAG = "attack_pmkid";
+static const char* TAG = "main:attack_pmkid";
 
 static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGD(TAG, "Got PMKID, stopping attack...");
     attack_set_result(FINISHED);
     attack_pmkid_stop();
+    
+    pmkid_item_t *pmkid_item_head = *(pmkid_item_t **) event_data;
+    // count how many PMKIDs in the list
+    pmkid_item_t *pmkid_item = pmkid_item_head;
+    unsigned pmkid_item_count = 1; 
+    while((pmkid_item = pmkid_item->next) != NULL){
+        pmkid_item_count++;
+    }
+
+    char *content = attack_alloc_result_content(pmkid_item_count * 16);
+
+    // copy PMKIDs into continuous memory into "content" in result 
+    pmkid_item = pmkid_item_head;
+    do {
+        pmkid_item_head = pmkid_item;
+        memcpy(content, pmkid_item_head, 16);
+        content += 16;
+        pmkid_item = pmkid_item->next;
+        free(pmkid_item_head);
+    } while(pmkid_item != NULL);
+
+    ESP_LOGD(TAG, "PMKID attack finished");
 }
 
 void attack_pmkid_start(attack_config_t *attack_config){
