@@ -8,7 +8,7 @@
 #include "attack_pmkid.h"
 
 static const char* TAG = "attack";
-static attack_result_t attack_result = { .status = IDLE };
+static attack_result_t attack_result = { .status = READY, .content_size = 0, .content = NULL };
 
 const attack_result_t *attack_get_result() {
     return &attack_result;
@@ -30,6 +30,7 @@ static bool attack_timeout(unsigned seconds){
 void attack_run(attack_config_t attack_config) {
     ESP_LOGI(TAG, "Starting attack...");
     attack_result.status = RUNNING;
+    attack_result.type = ATTACK_TYPE_PMKID;
 
     if(attack_config.ap_record == NULL){
         ESP_LOGE(TAG, "NPE: No attack_config.ap_record!");

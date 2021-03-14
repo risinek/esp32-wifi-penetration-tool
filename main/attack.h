@@ -24,6 +24,9 @@ typedef struct {
 
 typedef struct {
     attack_status_t status;
+    attack_type_t type;
+    size_t content_size;
+    char *content;
 } attack_result_t;
 
 const attack_result_t *attack_get_result();
