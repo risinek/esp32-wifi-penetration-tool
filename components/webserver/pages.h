@@ -95,7 +95,7 @@ const char page_result[] =
                 "var status = \"ERROR: Parsing failed\";"
                 "switch(byteArray[0]) {"
                     "case 0:"
-                        "status = \"IDLE\";"
+                        "status = \"READY\";"
                         "break;"
                     "case 1:"
                         "status = \"RUNNING\";"

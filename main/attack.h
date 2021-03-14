@@ -10,7 +10,7 @@ typedef enum {
 } attack_type_t;
 
 typedef enum {
-    IDLE,
+    READY,
     RUNNING,
     FINISHED,
     TIMEOUT
