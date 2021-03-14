@@ -12,7 +12,7 @@
         th, td {
             padding:10px;
         }
-        tr:hover {
+        tr:hover, tr.selected {
             background-color: lightblue;
             cursor:pointer;
         }
@@ -22,7 +22,20 @@
     <h3>Available APs:</h3>
     <table id="ap-list"></table>
     <button type="button" onClick="refreshAps()">Refresh</button>
+    <br>
+    Attack type:
+    <select id="attack_type">
+        <option value="0">ATTACK_TYPE_PASSIVE</option>
+        <option value="1">ATTACK_TYPE_HANDSHAKE</option>
+        <option value="2" selected>ATTACK_TYPE_PMKID</option>
+    </select>
+    <br>
+    Attack timeout (seconds):
+    <input type="text" id="attack_timeout" value="10"/>
+    <br>
+    <button type="button" onClick="runAttack()">Attack</button>
     <script>
+    var selectedApElement = -1;
     function refreshAps() {
         document.getElementById("ap-list").innerHTML = "Loading (this may take a while)...";
         var oReq = new XMLHttpRequest();
@@ -34,7 +47,7 @@
                 for  (let i = 0; i < byteArray.byteLength; i = i + 40) {
                     var tr = document.createElement('tr');
                     tr.setAttribute("id", i / 40);
-                    tr.setAttribute("onClick", "runAttack(this)");
+                    tr.setAttribute("onClick", "selectAp(this)");
                     var td_ssid = document.createElement('td');
                     var td_rssi = document.createElement('td');
                     var td_bssid = document.createElement('td');
@@ -57,11 +70,27 @@
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
-    function runAttack(el) {
+    function selectAp(el) {
         console.log(el.id);
-        var arrayBuffer = new ArrayBuffer(1);
+        if(selectedApElement != -1){
+            selectedApElement.classList.remove("selected")
+        }
+        selectedApElement=el;
+        el.classList.add("selected");
+    }
+    function runAttack() {
+        if(selectedApElement == 1){
+            console.log("No AP selected. Attack not started.");
+            return;
+        }
+        var arrayBuffer = new ArrayBuffer(2);
         var uint8Array = new Uint8Array(arrayBuffer);
-        uint8Array[0] = parseInt(el.id);
+        // AP ID
+        uint8Array[0] = parseInt(selectedApElement.id);
+        // Attack type ID (attack_type_t)
+        uint8Array[1] = parseInt(document.getElementById("attack_type").value);
+        // Attack timeout
+        uint8Array[2] = parseInt(document.getElementById("attack_timeout").value);
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
