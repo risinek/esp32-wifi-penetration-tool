@@ -54,11 +54,17 @@ static httpd_uri_t uri_ap_list_get = {
 
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     char ap_record_id;
+    attack_config_t attack_config;
     // TODO - returns number of bytes
     // TODO - parse response to attack_config_t
     httpd_req_recv(req, &ap_record_id, 1);
-    // TODO call attack_run()
+    attack_config.type = ATTACK_TYPE_PMKID;
+    attack_config.timeout = 0;
+    attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
+    
     ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
+    attack_run(attack_config);
+
     return httpd_resp_send(req, NULL, 0);
 }
 
@@ -85,9 +91,14 @@ static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
     const attack_result_t *attack_result;
     attack_result = attack_get_result();
 
-    char resp[1];
-    resp[0] = attack_result->status;
-    return httpd_resp_send(req, resp, 1);
+    ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
+    // first send attack result header
+    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_result, 3));
+    // send attack result content
+    if(attack_result->content_size > 0){
+        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_result->content, attack_result->content_size));
+    }
+    return httpd_resp_send_chunk(req, NULL, 0);
 }
 
 static httpd_uri_t uri_get_result_get = {

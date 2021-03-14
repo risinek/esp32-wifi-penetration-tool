@@ -4,15 +4,16 @@
 #include "esp_wifi_types.h"
 
 typedef enum {
-    PASSIVE,
-    HANDSHAKE,
-    PMKID
+    ATTACK_TYPE_PASSIVE,
+    ATTACK_TYPE_HANDSHAKE,
+    ATTACK_TYPE_PMKID
 } attack_type_t;
 
 typedef enum {
-    IDLE,
+    READY,
     RUNNING,
-    FINISHED
+    FINISHED,
+    TIMEOUT
 } attack_status_t;
 
 typedef struct {
@@ -22,11 +23,15 @@ typedef struct {
 } attack_config_t;
 
 typedef struct {
-    attack_status_t status;
+    uint8_t status;
+    uint8_t type;
+    uint8_t content_size;
+    char *content;
 } attack_result_t;
 
 const attack_result_t *attack_get_result();
-// void attack_set_result()
-void attack_run(const attack_config_t *attack_config);
+void attack_set_result(attack_status_t status);
+void attack_run(const attack_config_t attack_config);
+char *attack_alloc_result_content(unsigned size);
 
 #endif

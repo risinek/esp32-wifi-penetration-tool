@@ -1,5 +1,5 @@
-#ifndef DATA_FRAME_TYPES_H
-#define DATA_FRAME_TYPES_H
+#ifndef FRAME_ANALYZER_TYPES_H
+#define FRAME_ANALYZER_TYPES_H
 
 #include <stdint.h>
 
@@ -111,5 +111,10 @@ typedef struct __attribute__((__packed__)) {
     uint32_t data_type:8;
     uint8_t data[];
 } key_data_field_t;
+
+typedef struct pmkid_item {
+    uint8_t pmkid[16];
+    struct pmkid_item *next;
+} pmkid_item_t;
 
 #endif
