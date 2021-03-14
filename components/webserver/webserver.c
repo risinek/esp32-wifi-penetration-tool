@@ -11,12 +11,13 @@
 #include "wifi_controller.h"
 #include "attack.h"
 
-#include "pages.h"
+#include "pages/page_index.h"
+#include "pages/page_result.h"
 
 static const char* TAG = "webserver";
 
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
-    return httpd_resp_send(req, page_root, HTTPD_RESP_USE_STRLEN);
+    return httpd_resp_send(req, page_index, HTTPD_RESP_USE_STRLEN);
 }
 
 static httpd_uri_t uri_root_get = {
