@@ -1,5 +1,6 @@
 #include "attack.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
@@ -16,6 +17,12 @@ const attack_result_t *attack_get_result() {
 
 void attack_set_result(attack_status_t status) {
     attack_result.status = status;
+}
+
+char *attack_alloc_result_content(unsigned size) {
+    attack_result.content_size = size;
+    attack_result.content = (char *) malloc(size);
+    return attack_result.content;
 }
 
 static bool attack_timeout(unsigned seconds){

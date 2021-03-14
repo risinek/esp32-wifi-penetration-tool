@@ -32,5 +32,6 @@ typedef struct {
 const attack_result_t *attack_get_result();
 void attack_set_result(attack_status_t status);
 void attack_run(const attack_config_t attack_config);
+char *attack_alloc_result_content(unsigned size);
 
 #endif
