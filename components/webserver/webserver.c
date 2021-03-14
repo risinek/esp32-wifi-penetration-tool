@@ -91,9 +91,14 @@ static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
     const attack_result_t *attack_result;
     attack_result = attack_get_result();
 
-    char resp[1];
-    resp[0] = attack_result->status;
-    return httpd_resp_send(req, resp, 1);
+    ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
+    // first send attack result header
+    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_result, sizeof(attack_result_t) - sizeof(char *)));
+    // send attack result content
+    if(attack_result->content_size > 0){
+        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_result->content, attack_result->content_size));
+    }
+    return httpd_resp_send_chunk(req, NULL, 0);
 }
 
 static httpd_uri_t uri_get_result_get = {
