@@ -31,6 +31,9 @@ static bool attack_timeout(unsigned seconds){
         ESP_LOGD(TAG, "Attack already finished. Not doing anything...");
         return false;
     }
+    
+    ESP_LOGD(TAG, "Attack timed out.");
+    attack_set_result(TIMEOUT);
     return true;
 }
 
@@ -47,8 +50,6 @@ void attack_run(attack_config_t attack_config) {
         case ATTACK_TYPE_PMKID:
             attack_pmkid_start(&attack_config);
             if(attack_timeout(5)){
-                ESP_LOGD(TAG, "Aborting attack!");
-                attack_set_result(TIMEOUT);
                 attack_pmkid_stop();
             }
             break;
