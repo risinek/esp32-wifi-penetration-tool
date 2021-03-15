@@ -18,7 +18,7 @@
         }
     </style>
 </head>
-<body onLoad="init()">
+<body onLoad="getStatus()">
     <h1>ESP32 Wi-Fi Penetration Tool</h1>
     <div id="errors"></div>
     <div id="loading">Loading... Please wait</div>
@@ -40,41 +40,93 @@
         <br>
         <button type="button" onClick="runAttack()">Attack</button>
     </div>
-    <div id="running" style="display: none;">Attack in progress.. <br>
-    It may take few moments based on attack timeout.. <br>
-    You may be kicked from management AP in the meantime.. <br>
-    Please reconnect to get result.</div>
-    <div id="result" style="display: none;">Loading result.. Please wait</div>
+    <div id="running" style="display: none;">
+        Attack in progress.. <br>
+        It may take few moments based on attack timeout.. <br>
+        You may be kicked from management AP in the meantime.. <br>
+        Please reconnect to get result. <br>
+        Progress: <div id="running-progress"></div>
+    </div>
+    <div id="result" style="display: none;">
+        <div id="result-meta">Loading result.. Please wait</div>
+        <div id="result-content"></div>
+        <button type="button" onClick="resetAttack()">New attack</button>
+    </div>
     <script>
     var selectedApElement = -1;
-    function init() {
-        /* call result endpoint
-        if READY -> show above
-        if RUNNING -> show new div with static text
-        if FINISHED/TIMEOUT -> show result */
-        var status = 2;
-        document.getElementById("loading").style.display = "none";
-        switch(status) {
+    var poll;
+    var poll_interval = 1000;
+    function resetAttack(){
+        document.getElementById("result").style.display = "none";
+        showAttackConfig();
+    }
+    function getStatus() {
+        var oReq = new XMLHttpRequest();
+        oReq.onload = function() {
+            var arrayBuffer = oReq.response;
+            if(arrayBuffer) {
+                var byteArray = new Uint8Array(arrayBuffer);
+                var status = "ERROR: Cannot parse attack state.";
+                document.getElementById("loading").style.display = "none";
+                switch(byteArray[0]) {
+                    case 0:
+                        showAttackConfig();
+                        break;
+                    case 1:
+                        document.getElementById("running").style.display = "block";
+                        document.getElementById("running-progress").innerHTML += "*";
+                        break;
+                    case 2:
+                        showResult("FINISHED", byteArray);
+                        break;
+                    case 3:
+                        showResult("TIMEOUT", byteArray);
+                        break;
+                    default:
+                        document.getElementById("errors").innerHTML = "Error loading attack status!";
+                }
+                return;
+                
+            }
+        };
+        oReq.onerror = function() {
+            document.getElementById("errors").innerHTML = "ERROR: Request failed";
+        };
+        oReq.open("GET", "http://192.168.4.1/get-result", true);
+        oReq.responseType = "arraybuffer";
+        oReq.send();
+    }
+    function showAttackConfig(){
+        document.getElementById("ready").style.display = "block";
+        refreshAps();
+    }
+    function showResult(status, byteArray){
+        clearInterval(poll);
+        document.getElementById("running").style.display = "none";
+        document.getElementById("result").style.display = "block";
+        document.getElementById("result-meta").innerHTML = status + "<br>";
+        type = "ERROR: Cannot parse attack type.";
+        switch(byteArray[1]) {
             case 0:
-                status = "READY";
-                document.getElementById("ready").style.display = "block";
+                type = "ATTACK_TYPE_PASSIVE";
                 break;
             case 1:
-                status = "RUNNING";
-                document.getElementById("running").style.display = "block";
+                type = "ATTACK_TYPE_HANDSHAKE";
                 break;
             case 2:
-                status = "FINISHED";
-                document.getElementById("result").style.display = "block";
-                break;
-            case 3:
-                status = "TIMEOUT";
-                document.getElementById("result").style.display = "block";
+                type = "ATTACK_TYPE_PMKID";
+                document.getElementById("result-content").innerHTML = "PMKIDs:<br>";
+                for(let i = 0; i < byteArray[2]; i = i + 1) {
+                    if((i % 16) == 0){
+                        document.getElementById("result-content").innerHTML += "<br>";
+                    }
+                    document.getElementById("result-content").innerHTML += byteArray[3 + i].toString(16);
+                    }
                 break;
             default:
-                status = "UNKNOWN";
-                document.getElementById("errors").innerHTML = "Error loading attack status!";
+                type = "UNKNOWN";
         }
+        document.getElementById("result-meta").innerHTML += type + "<br>";
     }
     function refreshAps() {
         document.getElementById("ap-list").innerHTML = "Loading (this may take a while)...";
@@ -121,6 +173,7 @@
     function runAttack() {
         if(selectedApElement == 1){
             console.log("No AP selected. Attack not started.");
+            document.getElementById("errors").innerHTML = "No AP selected. Attack not started.";
             return;
         }
         var arrayBuffer = new ArrayBuffer(3);
@@ -131,6 +184,9 @@
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
+        poll = setInterval(getStatus, poll_interval);
+        document.getElementById("ready").style.display = "none";
+        document.getElementById("running").style.display = "block";
     }
     </script>
 </body>
