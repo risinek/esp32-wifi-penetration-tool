@@ -56,19 +56,9 @@ static httpd_uri_t uri_ap_list_get = {
 };
 
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
-    char ap_record_id;
-    attack_config_t attack_config;
-    // TODO - returns number of bytes
-    // TODO - parse response to attack_config_t
-    httpd_req_recv(req, &ap_record_id, 1);
-    httpd_req_recv(req, (char *)&attack_config,  2);
-    // TODO this can be done in attack.c. Just forward incoming data to event loop
-    attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
-    
-    ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
-    // attack_run(attack_config);
-    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_config, sizeof(attack_config), portMAX_DELAY));
-
+    uint8_t config[3];
+    httpd_req_recv(req, (char *)&config, 3);
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &config, sizeof(config), portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
 }
 

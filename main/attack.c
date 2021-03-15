@@ -10,6 +10,7 @@
 
 #include "attack_pmkid.h"
 #include "webserver.h"
+#include "wifi_controller.h"
 
 static const char* TAG = "attack";
 static attack_result_t attack_result = { .status = READY, .type = -1, .content_size = 0, .content = NULL };
@@ -57,20 +58,23 @@ static void attack_timeout(void* arg){
 
 static void attack_request_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Starting attack...");
-    attack_config_t *attack_config = (attack_config_t *) event_data;
+    uint8_t *config = (uint8_t *) event_data;
+    attack_config_t attack_config = { .type = config[1], .timeout = config[2] };
+    attack_config.ap_record = wifictl_get_ap_record(config[0]);
+    
     attack_result.status = RUNNING;
-    attack_result.type = attack_config->type;
+    attack_result.type = attack_config.type;
 
-    if(attack_config->ap_record == NULL){
-        ESP_LOGE(TAG, "NPE: No attack_config->ap_record!");
+    if(attack_config.ap_record == NULL){
+        ESP_LOGE(TAG, "NPE: No attack_config.ap_record!");
         return;
     }
     // set timeout
-    ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle, attack_config->timeout * 1000000));
+    ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle, attack_config.timeout * 1000000));
     // start attack based on it's type
-    switch(attack_config->type) {
+    switch(attack_config.type) {
         case ATTACK_TYPE_PMKID:
-            attack_pmkid_start(attack_config);
+            attack_pmkid_start(&attack_config);
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Attack on WPA handshake...");
