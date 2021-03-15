@@ -32,7 +32,7 @@ static bool attack_timeout(unsigned seconds){
         return false;
     }
     
-    ESP_LOGD(TAG, "Attack timed out.");
+    ESP_LOGD(TAG, "Attack timed out after %u seconds.", seconds);
     attack_set_result(TIMEOUT);
     return true;
 }
@@ -49,7 +49,7 @@ void attack_run(attack_config_t attack_config) {
     switch(attack_config.type) {
         case ATTACK_TYPE_PMKID:
             attack_pmkid_start(&attack_config);
-            if(attack_timeout(5)){
+            if(attack_timeout(attack_config.timeout)){
                 attack_pmkid_stop();
             }
             break;

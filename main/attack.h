@@ -17,8 +17,8 @@ typedef enum {
 } attack_status_t;
 
 typedef struct {
-    attack_type_t type;
-    int timeout;
+    uint8_t type;
+    uint8_t timeout;
     const wifi_ap_record_t *ap_record;
 } attack_config_t;
 
