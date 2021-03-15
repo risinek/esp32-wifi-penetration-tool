@@ -5,6 +5,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_event.h"
 #include "esp_http_server.h"
 #include "esp_wifi_types.h"
 
@@ -15,6 +16,7 @@
 #include "pages/page_result.h"
 
 static const char* TAG = "webserver";
+ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
 
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
     return httpd_resp_send(req, page_index, HTTPD_RESP_USE_STRLEN);
@@ -64,7 +66,8 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
     
     ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
-    attack_run(attack_config);
+    // attack_run(attack_config);
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_config, sizeof(attack_config), portMAX_DELAY));
 
     return httpd_resp_send(req, NULL, 0);
 }

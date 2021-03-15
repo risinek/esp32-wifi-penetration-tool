@@ -5,11 +5,15 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_event.h"
+#include "esp_timer.h"
 
 #include "attack_pmkid.h"
+#include "webserver.h"
 
 static const char* TAG = "attack";
-static attack_result_t attack_result = { .status = READY, .content_size = 0, .content = NULL };
+static attack_result_t attack_result = { .status = READY, .type = -1, .content_size = 0, .content = NULL };
+static esp_timer_handle_t attack_timeout_handle;
 
 const attack_result_t *attack_get_result() {
     return &attack_result;
@@ -17,6 +21,11 @@ const attack_result_t *attack_get_result() {
 
 void attack_set_result(attack_status_t status) {
     attack_result.status = status;
+    if(status == FINISHED) {
+        // Stop timeout timer
+        ESP_LOGD(TAG, "Stopping attack timeout timer");
+        ESP_ERROR_CHECK(esp_timer_stop(attack_timeout_handle));
+    } 
 }
 
 char *attack_alloc_result_content(unsigned size) {
@@ -25,33 +34,43 @@ char *attack_alloc_result_content(unsigned size) {
     return attack_result.content;
 }
 
-static bool attack_timeout(unsigned seconds){
-    sleep(seconds);
-    if(attack_result.status == FINISHED) {
-        ESP_LOGD(TAG, "Attack already finished. Not doing anything...");
-        return false;
-    }
+static void attack_timeout(void* arg){
+    ESP_LOGD(TAG, "Attack timed out");
     
-    ESP_LOGD(TAG, "Attack timed out after %u seconds.", seconds);
     attack_set_result(TIMEOUT);
-    return true;
+
+    switch(attack_result.type) {
+        case ATTACK_TYPE_PMKID:
+            ESP_LOGI(TAG, "Aborting PMKID attack...");
+            attack_pmkid_stop();
+            break;
+        case ATTACK_TYPE_HANDSHAKE:
+            ESP_LOGI(TAG, "Abort HANDSHAKE attack...");
+            break;
+        case ATTACK_TYPE_PASSIVE:
+            ESP_LOGI(TAG, "Abort PASSIVE attack...");
+            break;
+        default:
+            ESP_LOGE(TAG, "Unknown attack type. Not aborting anything");
+    }
 }
 
-void attack_run(attack_config_t attack_config) {
+static void attack_request_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Starting attack...");
+    attack_config_t *attack_config = (attack_config_t *) event_data;
     attack_result.status = RUNNING;
-    attack_result.type = ATTACK_TYPE_PMKID;
+    attack_result.type = attack_config->type;
 
-    if(attack_config.ap_record == NULL){
-        ESP_LOGE(TAG, "NPE: No attack_config.ap_record!");
+    if(attack_config->ap_record == NULL){
+        ESP_LOGE(TAG, "NPE: No attack_config->ap_record!");
         return;
     }
-    switch(attack_config.type) {
+    // set timeout
+    ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle, attack_config->timeout * 1000000));
+    // start attack based on it's type
+    switch(attack_config->type) {
         case ATTACK_TYPE_PMKID:
-            attack_pmkid_start(&attack_config);
-            if(attack_timeout(attack_config.timeout)){
-                attack_pmkid_stop();
-            }
+            attack_pmkid_start(attack_config);
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Attack on WPA handshake...");
@@ -62,4 +81,13 @@ void attack_run(attack_config_t attack_config) {
         default:
             ESP_LOGE(TAG, "Uknown attack type!");
     }
+}
+
+void attack_init(){
+    const esp_timer_create_args_t attack_timeout_args = {
+        .callback = &attack_timeout
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&attack_timeout_args, &attack_timeout_handle));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request_handler, NULL));
 }
