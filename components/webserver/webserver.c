@@ -56,9 +56,9 @@ static httpd_uri_t uri_ap_list_get = {
 };
 
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
-    uint8_t config[3];
-    httpd_req_recv(req, (char *)&config, 3);
-    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &config, sizeof(config), portMAX_DELAY));
+    attack_request_t attack_request;
+    httpd_req_recv(req, (char *)&attack_request, 3);
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request, sizeof(attack_request_t), portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
 }
 
