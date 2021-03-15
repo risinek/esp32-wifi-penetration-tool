@@ -5,6 +5,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_event.h"
 #include "esp_http_server.h"
 #include "esp_wifi_types.h"
 
@@ -15,6 +16,7 @@
 #include "pages/page_result.h"
 
 static const char* TAG = "webserver";
+ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
 
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
     return httpd_resp_send(req, page_index, HTTPD_RESP_USE_STRLEN);
@@ -54,18 +56,9 @@ static httpd_uri_t uri_ap_list_get = {
 };
 
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
-    char ap_record_id;
-    attack_config_t attack_config;
-    // TODO - returns number of bytes
-    // TODO - parse response to attack_config_t
-    httpd_req_recv(req, &ap_record_id, 1);
-    httpd_req_recv(req, (char *)&attack_config,  2);
-    // TODO this can be done in attack.c. Just forward incoming data to event loop
-    attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
-    
-    ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
-    attack_run(attack_config);
-
+    attack_request_t attack_request;
+    httpd_req_recv(req, (char *)&attack_request, 3);
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request, sizeof(attack_request_t), portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
 }
 
