@@ -55,6 +55,7 @@
     var selectedApElement = -1;
     var poll;
     var poll_interval = 5000;
+    var defaultResultContent = document.getElementById("result").innerHTML;
     function resetAttack(){
         document.getElementById("result").style.display = "none";
         showAttackConfig();
@@ -101,6 +102,7 @@
     }
     function showResult(status, byteArray){
         clearInterval(poll);
+        document.getElementById("result").innerHTML = defaultResultContent;
         document.getElementById("running").style.display = "none";
         document.getElementById("result").style.display = "block";
         document.getElementById("result-meta").innerHTML = status + "<br>";
