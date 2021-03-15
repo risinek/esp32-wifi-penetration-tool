@@ -3,19 +3,19 @@
 <head>
     <title>ESP32 Management AP</title>
 </head>
-<body onLoad="getResult()">
+<body onLoad="fetchResult()">
     <h3>Attack result:</h3>
     <div id="result">Loading status...</div>
     <div id="content"></div>
     <a href="/">Back</a>
     <script>
-    var poll = setInterval(getResult, 5000);
+    var poll = setInterval(fetchResult, 5000);
     var resultResponseArrayBuffer;
-    function getResult() {
+    function fetchResult() {
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
             resultResponseArrayBuffer = oReq.response;
-            fetchResult();
+            getResult();
         };
         oReq.onerror = function() {
             document.getElementById("result").innerHTML = "ERROR: Request failed";
@@ -24,7 +24,7 @@
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
-    function fetchResult(){
+    function getResult(){
         if(resultResponseArrayBuffer) {
                 var byteArray = new Uint8Array(resultResponseArrayBuffer);
                 var status = "ERROR: Cannot parse attack state.";
