@@ -59,7 +59,7 @@ const char page_index[] =
     "<script>"
     "var selectedApElement = -1;"
     "var poll;"
-    "var poll_interval = 1000;"
+    "var poll_interval = 5000;"
     "function resetAttack(){"
         "document.getElementById(\"result\").style.display = \"none\";"
         "showAttackConfig();"
