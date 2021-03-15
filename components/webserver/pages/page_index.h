@@ -175,7 +175,7 @@ const char page_index[] =
         "el.classList.add(\"selected\");"
     "}"
     "function runAttack() {"
-        "if(selectedApElement == 1){"
+        "if(selectedApElement == -1){"
             "console.log(\"No AP selected. Attack not started.\");"
             "document.getElementById(\"errors\").innerHTML = \"No AP selected. Attack not started.\";"
             "return;"
