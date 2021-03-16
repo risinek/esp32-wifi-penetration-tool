@@ -54,7 +54,7 @@
     <script>
     var selectedApElement = -1;
     var poll;
-    var poll_interval = 5000;
+    var poll_interval = 1000;
     var defaultResultContent = document.getElementById("result").innerHTML;
     function resetAttack(){
         document.getElementById("result").style.display = "none";
@@ -75,6 +75,8 @@
                     case 1:
                         document.getElementById("running").style.display = "block";
                         document.getElementById("running-progress").innerHTML += "*";
+                        console.log("Poll");
+                        setTimeout(getStatus, poll_interval);
                         break;
                     case 2:
                         showResult("FINISHED", byteArray);
@@ -90,7 +92,13 @@
             }
         };
         oReq.onerror = function() {
-            document.getElementById("errors").innerHTML = "ERROR: Request failed";
+            console.log("Request error");
+            document.getElementById("errors").innerHTML = "Cannot reach ESP32. Check that you are connected to management AP. You might get disconnected during attack.";
+            getStatus();
+        };
+        oReq.ontimeout = function() {
+            console.log("Request timeout");
+            getStatus();  
         };
         oReq.open("GET", "http://192.168.4.1/get-result", true);
         oReq.responseType = "arraybuffer";
@@ -185,9 +193,9 @@
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
-        poll = setInterval(getStatus, poll_interval);
         document.getElementById("ready").style.display = "none";
         document.getElementById("running").style.display = "block";
+        getStatus();
     }
     </script>
 </body>
