@@ -13,16 +13,16 @@
 #include "wifi_controller.h"
 
 static const char* TAG = "attack";
-static attack_result_t attack_result = { .status = READY, .type = -1, .content_size = 0, .content = NULL };
+static attack_status_t attack_status = { .state = READY, .type = -1, .content_size = 0, .content = NULL };
 static esp_timer_handle_t attack_timeout_handle;
 
-const attack_result_t *attack_get_result() {
-    return &attack_result;
+const attack_status_t *attack_get_status() {
+    return &attack_status;
 }
 
-void attack_set_result(attack_status_t status) {
-    attack_result.status = status;
-    if(status == FINISHED) {
+void attack_update_status(attack_state_t state) {
+    attack_status.state = state;
+    if(state == FINISHED) {
         // Stop timeout timer
         ESP_LOGD(TAG, "Stopping attack timeout timer");
         ESP_ERROR_CHECK(esp_timer_stop(attack_timeout_handle));
@@ -30,17 +30,17 @@ void attack_set_result(attack_status_t status) {
 }
 
 char *attack_alloc_result_content(unsigned size) {
-    attack_result.content_size = size;
-    attack_result.content = (char *) malloc(size);
-    return attack_result.content;
+    attack_status.content_size = size;
+    attack_status.content = (char *) malloc(size);
+    return attack_status.content;
 }
 
 static void attack_timeout(void* arg){
     ESP_LOGD(TAG, "Attack timed out");
     
-    attack_set_result(TIMEOUT);
+    attack_update_status(TIMEOUT);
 
-    switch(attack_result.type) {
+    switch(attack_status.type) {
         case ATTACK_TYPE_PMKID:
             ESP_LOGI(TAG, "Aborting PMKID attack...");
             attack_pmkid_stop();
@@ -62,8 +62,8 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     attack_config_t attack_config = { .type = attack_request->type, .timeout = attack_request->timeout };
     attack_config.ap_record = wifictl_get_ap_record(attack_request->ap_record_id);
     
-    attack_result.status = RUNNING;
-    attack_result.type = attack_config.type;
+    attack_status.state = RUNNING;
+    attack_status.type = attack_config.type;
 
     if(attack_config.ap_record == NULL){
         ESP_LOGE(TAG, "NPE: No attack_config.ap_record!");

@@ -70,15 +70,15 @@ static httpd_uri_t uri_run_attack_post = {
 
 static esp_err_t uri_status_get_handler(httpd_req_t *req) {
     ESP_LOGD(TAG, "Fetching attack result...");
-    const attack_result_t *attack_result;
-    attack_result = attack_get_result();
+    const attack_status_t *attack_status;
+    attack_status = attack_get_status();
 
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     // first send attack result header
-    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_result, 3));
+    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_status, 3));
     // send attack result content
-    if(attack_result->content_size > 0){
-        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_result->content, attack_result->content_size));
+    if(attack_status->content_size > 0){
+        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_status->content, attack_status->content_size));
     }
     return httpd_resp_send_chunk(req, NULL, 0);
 }

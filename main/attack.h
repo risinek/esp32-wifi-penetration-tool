@@ -14,7 +14,7 @@ typedef enum {
     RUNNING,
     FINISHED,
     TIMEOUT
-} attack_status_t;
+} attack_state_t;
 
 typedef struct {
     uint8_t type;
@@ -23,14 +23,14 @@ typedef struct {
 } attack_config_t;
 
 typedef struct {
-    uint8_t status;
+    uint8_t state;
     uint8_t type;
     uint8_t content_size;
     char *content;
-} attack_result_t;
+} attack_status_t;
 
-const attack_result_t *attack_get_result();
-void attack_set_result(attack_status_t status);
+const attack_status_t *attack_get_status();
+void attack_update_status(attack_state_t status);
 void attack_init();
 char *attack_alloc_result_content(unsigned size);
 
