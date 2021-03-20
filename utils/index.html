@@ -56,10 +56,6 @@
     var poll;
     var poll_interval = 1000;
     var defaultResultContent = document.getElementById("result").innerHTML;
-    function resetAttack(){
-        document.getElementById("result").style.display = "none";
-        showAttackConfig();
-    }
     function getStatus() {
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
@@ -196,6 +192,13 @@
         document.getElementById("ready").style.display = "none";
         document.getElementById("running").style.display = "block";
         getStatus();
+    }
+    function resetAttack(){
+        var oReq = new XMLHttpRequest();
+        oReq.open("HEAD", "http://192.168.4.1/reset", true);
+        oReq.send();
+        document.getElementById("result").style.display = "none";
+        showAttackConfig();
     }
     </script>
 </body>
