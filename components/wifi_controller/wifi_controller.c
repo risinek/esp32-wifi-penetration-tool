@@ -51,6 +51,17 @@ void wifictl_ap_start(wifi_config_t *wifi_config) {
     ESP_LOGI(TAG, "AP started with SSID=%s", wifi_config->ap.ssid);
 }
 
+void wifictl_ap_stop(){
+    ESP_LOGD(TAG, "Stopping AP...");
+    wifi_config_t wifi_config = {
+        .ap = {
+            .max_connection = 0
+        },
+    };
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    ESP_LOGD(TAG, "AP stopped");
+}
+
 void wifictl_mgmt_ap_start(){
     wifi_config_t mgmt_wifi_config = {
         .ap = {
