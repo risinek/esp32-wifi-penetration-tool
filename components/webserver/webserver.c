@@ -28,6 +28,18 @@ static httpd_uri_t uri_root_get = {
     .user_ctx = NULL
 };
 
+static esp_err_t uri_reset_head_handler(httpd_req_t *req) {
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, NULL, 0, portMAX_DELAY));
+    return httpd_resp_send(req, NULL, 0);
+}
+
+static httpd_uri_t uri_reset_head = {
+    .uri = "/reset",
+    .method = HTTP_HEAD,
+    .handler = uri_reset_head_handler,
+    .user_ctx = NULL
+};
+
 static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
     wifictl_scan_nearby_aps();
 
@@ -69,7 +81,7 @@ static httpd_uri_t uri_run_attack_post = {
 };
 
 static esp_err_t uri_status_get_handler(httpd_req_t *req) {
-    ESP_LOGD(TAG, "Fetching attack result...");
+    ESP_LOGD(TAG, "Fetching attack status...");
     const attack_status_t *attack_status;
     attack_status = attack_get_status();
 
@@ -98,6 +110,7 @@ void webserver_run(){
 
     ESP_ERROR_CHECK(httpd_start(&server, &config));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_reset_head));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_run_attack_post));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_status_get));
