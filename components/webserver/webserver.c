@@ -13,7 +13,6 @@
 #include "attack.h"
 
 #include "pages/page_index.h"
-#include "pages/page_result.h"
 
 static const char* TAG = "webserver";
 ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
@@ -69,17 +68,6 @@ static httpd_uri_t uri_run_attack_post = {
     .user_ctx = NULL
 };
 
-static esp_err_t uri_result_get_handler(httpd_req_t *req) {
-    return httpd_resp_send(req, page_result, HTTPD_RESP_USE_STRLEN);
-}
-
-static httpd_uri_t uri_result_get = {
-    .uri = "/result",
-    .method = HTTP_GET,
-    .handler = uri_result_get_handler,
-    .user_ctx = NULL
-};
-
 static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
     ESP_LOGD(TAG, "Fetching attack result...");
     const attack_result_t *attack_result;
@@ -112,6 +100,5 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_run_attack_post));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_result_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_get_result_get));
 }
