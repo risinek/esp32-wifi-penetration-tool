@@ -87,6 +87,10 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     }
 }
 
+static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+    ESP_LOGD(TAG, "Resetting attack configuration...");
+}
+
 void attack_init(){
     const esp_timer_create_args_t attack_timeout_args = {
         .callback = &attack_timeout
@@ -94,4 +98,5 @@ void attack_init(){
     ESP_ERROR_CHECK(esp_timer_create(&attack_timeout_args, &attack_timeout_handle));
 
     ESP_ERROR_CHECK(esp_event_handler_register(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, &attack_reset_handler, NULL));
 }

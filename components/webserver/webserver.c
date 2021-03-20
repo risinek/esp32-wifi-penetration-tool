@@ -29,6 +29,7 @@ static httpd_uri_t uri_root_get = {
 };
 
 static esp_err_t uri_reset_head_handler(httpd_req_t *req) {
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, NULL, 0, portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
 }
 
