@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 Management AP</title>
+    <style>
+        table, tr, th {
+            border: 1px solid;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        th, td {
+            padding:10px;
+        }
+        tr:hover, tr.selected {
+            background-color: lightblue;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body onLoad="getStatus()">
+    <h1>ESP32 Wi-Fi Penetration Tool</h1>
+    <div id="errors"></div>
+    <div id="loading">Loading... Please wait</div>
+    <div id="ready" style="display: none;">
+        <h2>Attack configuration</h2>
+        <h3>Available APs:</h3>
+        <table id="ap-list"></table>
+        <button type="button" onClick="refreshAps()">Refresh</button>
+        <br>
+        Attack type:
+        <select id="attack_type">
+            <option value="0">ATTACK_TYPE_PASSIVE</option>
+            <option value="1">ATTACK_TYPE_HANDSHAKE</option>
+            <option value="2" selected>ATTACK_TYPE_PMKID</option>
+        </select>
+        <br>
+        Attack timeout (seconds):
+        <input type="text" id="attack_timeout" value="5"/>
+        <br>
+        <button type="button" onClick="runAttack()">Attack</button>
+    </div>
+    <div id="running" style="display: none;">
+        Attack in progress.. <br>
+        It may take few moments based on attack timeout.. <br>
+        You may be kicked from management AP in the meantime.. <br>
+        Please reconnect to get result. <br>
+        Progress: <div id="running-progress"></div>
+    </div>
+    <div id="result" style="display: none;">
+        <div id="result-meta">Loading result.. Please wait</div>
+        <div id="result-content"></div>
+        <button type="button" onClick="resetAttack()">New attack</button>
+    </div>
+    <script>
+    var selectedApElement = -1;
+    var poll;
+    var poll_interval = 1000;
+    var defaultResultContent = document.getElementById("result").innerHTML;
+    function resetAttack(){
+        document.getElementById("result").style.display = "none";
+        showAttackConfig();
+    }
+    function getStatus() {
+        var oReq = new XMLHttpRequest();
+        oReq.onload = function() {
+            var arrayBuffer = oReq.response;
+            if(arrayBuffer) {
+                var byteArray = new Uint8Array(arrayBuffer);
+                var status = "ERROR: Cannot parse attack state.";
+                document.getElementById("loading").style.display = "none";
+                switch(byteArray[0]) {
+                    case 0:
+                        showAttackConfig();
+                        break;
+                    case 1:
+                        document.getElementById("running").style.display = "block";
+                        document.getElementById("running-progress").innerHTML += "*";
+                        console.log("Poll");
+                        setTimeout(getStatus, poll_interval);
+                        break;
+                    case 2:
+                        showResult("FINISHED", byteArray);
+                        break;
+                    case 3:
+                        showResult("TIMEOUT", byteArray);
+                        break;
+                    default:
+                        document.getElementById("errors").innerHTML = "Error loading attack status!";
+                }
+                return;
+                
+            }
+        };
+        oReq.onerror = function() {
+            console.log("Request error");
+            document.getElementById("errors").innerHTML = "Cannot reach ESP32. Check that you are connected to management AP. You might get disconnected during attack.";
+            getStatus();
+        };
+        oReq.ontimeout = function() {
+            console.log("Request timeout");
+            getStatus();  
+        };
+        oReq.open("GET", "http://192.168.4.1/status", true);
+        oReq.responseType = "arraybuffer";
+        oReq.send();
+    }
+    function showAttackConfig(){
+        document.getElementById("ready").style.display = "block";
+        refreshAps();
+    }
+    function showResult(status, byteArray){
+        clearInterval(poll);
+        document.getElementById("result").innerHTML = defaultResultContent;
+        document.getElementById("running").style.display = "none";
+        document.getElementById("result").style.display = "block";
+        document.getElementById("result-meta").innerHTML = status + "<br>";
+        type = "ERROR: Cannot parse attack type.";
+        switch(byteArray[1]) {
+            case 0:
+                type = "ATTACK_TYPE_PASSIVE";
+                break;
+            case 1:
+                type = "ATTACK_TYPE_HANDSHAKE";
+                break;
+            case 2:
+                type = "ATTACK_TYPE_PMKID";
+                document.getElementById("result-content").innerHTML = "PMKIDs:<br>";
+                for(let i = 0; i < byteArray[2]; i = i + 1) {
+                    if((i % 16) == 0){
+                        document.getElementById("result-content").innerHTML += "<br>";
+                    }
+                    document.getElementById("result-content").innerHTML += byteArray[3 + i].toString(16);
+                    }
+                break;
+            default:
+                type = "UNKNOWN";
+        }
+        document.getElementById("result-meta").innerHTML += type + "<br>";
+    }
+    function refreshAps() {
+        document.getElementById("ap-list").innerHTML = "Loading (this may take a while)...";
+        var oReq = new XMLHttpRequest();
+        oReq.onload = function() {
+            document.getElementById("ap-list").innerHTML = "<th>SSID</th><th>BSSID</th><th>RSSI</th>";
+            var arrayBuffer = oReq.response;
+            if(arrayBuffer) {
+                var byteArray = new Uint8Array(arrayBuffer);
+                for  (let i = 0; i < byteArray.byteLength; i = i + 40) {
+                    var tr = document.createElement('tr');
+                    tr.setAttribute("id", i / 40);
+                    tr.setAttribute("onClick", "selectAp(this)");
+                    var td_ssid = document.createElement('td');
+                    var td_rssi = document.createElement('td');
+                    var td_bssid = document.createElement('td');
+                    td_ssid.innerHTML = new TextDecoder("utf-8").decode(byteArray.subarray(i + 0, i + 32));
+                    tr.appendChild(td_ssid);
+                    for(let j = 0; j < 6; j++){
+                        td_bssid.innerHTML += byteArray[i + 33 + j].toString(16) + ":";
+                    }
+                    tr.appendChild(td_bssid);
+                    td_rssi.innerHTML = byteArray[i + 39] - 255;
+                    tr.appendChild(td_rssi);
+                    document.getElementById("ap-list").appendChild(tr);
+                }
+            }
+        };
+        oReq.onerror = function() {
+            document.getElementById("ap-list").innerHTML = "ERROR";
+        };
+        oReq.open("GET", "http://192.168.4.1/ap-list", true);
+        oReq.responseType = "arraybuffer";
+        oReq.send();
+    }
+    function selectAp(el) {
+        console.log(el.id);
+        if(selectedApElement != -1){
+            selectedApElement.classList.remove("selected")
+        }
+        selectedApElement=el;
+        el.classList.add("selected");
+    }
+    function runAttack() {
+        if(selectedApElement == -1){
+            console.log("No AP selected. Attack not started.");
+            document.getElementById("errors").innerHTML = "No AP selected. Attack not started.";
+            return;
+        }
+        var arrayBuffer = new ArrayBuffer(3);
+        var uint8Array = new Uint8Array(arrayBuffer);
+        uint8Array[0] = parseInt(selectedApElement.id);
+        uint8Array[1] = parseInt(document.getElementById("attack_type").value);
+        uint8Array[2] = parseInt(document.getElementById("attack_timeout").value);
+        var oReq = new XMLHttpRequest();
+        oReq.open("POST", "http://192.168.4.1/run-attack", true);
+        oReq.send(arrayBuffer);
+        document.getElementById("ready").style.display = "none";
+        document.getElementById("running").style.display = "block";
+        getStatus();
+    }
+    </script>
+</body>
+</html>

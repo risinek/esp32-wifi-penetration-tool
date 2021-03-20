@@ -3,6 +3,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 
+#include "attack.h"
 #include "wifi_controller.h"
 #include "webserver.h"
 
@@ -12,5 +13,6 @@ void app_main(void)
 {
     ESP_LOGD(TAG, "app_main started");
     wifictl_mgmt_ap_start();
+    attack_init();
     webserver_run();
 }

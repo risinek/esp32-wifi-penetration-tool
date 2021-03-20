@@ -5,18 +5,20 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_event.h"
 #include "esp_http_server.h"
 #include "esp_wifi_types.h"
 
 #include "wifi_controller.h"
 #include "attack.h"
 
-#include "pages.h"
+#include "pages/page_index.h"
 
 static const char* TAG = "webserver";
+ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
 
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
-    return httpd_resp_send(req, page_root, HTTPD_RESP_USE_STRLEN);
+    return httpd_resp_send(req, page_index, HTTPD_RESP_USE_STRLEN);
 }
 
 static httpd_uri_t uri_root_get = {
@@ -53,18 +55,9 @@ static httpd_uri_t uri_ap_list_get = {
 };
 
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
-    char ap_record_id;
-    attack_config_t attack_config;
-    // TODO - returns number of bytes
-    // TODO - parse response to attack_config_t
-    httpd_req_recv(req, &ap_record_id, 1);
-    attack_config.type = ATTACK_TYPE_PMKID;
-    attack_config.timeout = 0;
-    attack_config.ap_record = wifictl_get_ap_record((unsigned) ap_record_id);
-    
-    ESP_LOGD(TAG, "Using AP with ID %u", ap_record_id);
-    attack_run(attack_config);
-
+    attack_request_t attack_request;
+    httpd_req_recv(req, (char *)&attack_request, 3);
+    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request, sizeof(attack_request_t), portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
 }
 
@@ -75,36 +68,25 @@ static httpd_uri_t uri_run_attack_post = {
     .user_ctx = NULL
 };
 
-static esp_err_t uri_result_get_handler(httpd_req_t *req) {
-    return httpd_resp_send(req, page_result, HTTPD_RESP_USE_STRLEN);
-}
-
-static httpd_uri_t uri_result_get = {
-    .uri = "/result",
-    .method = HTTP_GET,
-    .handler = uri_result_get_handler,
-    .user_ctx = NULL
-};
-
-static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
+static esp_err_t uri_status_get_handler(httpd_req_t *req) {
     ESP_LOGD(TAG, "Fetching attack result...");
-    const attack_result_t *attack_result;
-    attack_result = attack_get_result();
+    const attack_status_t *attack_status;
+    attack_status = attack_get_status();
 
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     // first send attack result header
-    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_result, 3));
+    ESP_ERROR_CHECK(httpd_resp_send_chunk(req, (char *) attack_status, 3));
     // send attack result content
-    if(attack_result->content_size > 0){
-        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_result->content, attack_result->content_size));
+    if(attack_status->content_size > 0){
+        ESP_ERROR_CHECK(httpd_resp_send_chunk(req, attack_status->content, attack_status->content_size));
     }
     return httpd_resp_send_chunk(req, NULL, 0);
 }
 
-static httpd_uri_t uri_get_result_get = {
-    .uri = "/get-result",
+static httpd_uri_t uri_status_get = {
+    .uri = "/status",
     .method = HTTP_GET,
-    .handler = uri_get_result_get_handler,
+    .handler = uri_status_get_handler,
     .user_ctx = NULL
 };
 
@@ -118,6 +100,5 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_root_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_ap_list_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_run_attack_post));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_result_get));
-    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_get_result_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_status_get));
 }
