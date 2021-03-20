@@ -83,12 +83,12 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
             ESP_LOGI(TAG, "Passive attack with timeout...");
             break;
         default:
-            ESP_LOGE(TAG, "Uknown attack type!");
+            ESP_LOGE(TAG, "Unknown attack type!");
     }
 }
 
 static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    ESP_LOGD(TAG, "Resetting attack configuration...");
+    ESP_LOGD(TAG, "Resetting attack status...");
     if(attack_status.content){
         free(attack_status.content);
     }
