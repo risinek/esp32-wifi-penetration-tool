@@ -84,7 +84,7 @@ static esp_err_t uri_get_result_get_handler(httpd_req_t *req) {
 }
 
 static httpd_uri_t uri_get_result_get = {
-    .uri = "/get-result",
+    .uri = "/status",
     .method = HTTP_GET,
     .handler = uri_get_result_get_handler,
     .user_ctx = NULL
