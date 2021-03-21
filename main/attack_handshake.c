@@ -32,7 +32,7 @@ void attack_handshake_start(attack_config_t *attack_config){
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     // temporary call until specific fucntion for handshake is created
-    frame_analyzer_pmkid_capture_start(ap_record->bssid);
+    frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
     ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, &handshake_capture_handler, NULL));
     
     const esp_timer_create_args_t deauth_timer_args = {
@@ -45,7 +45,7 @@ void attack_handshake_start(attack_config_t *attack_config){
 void attack_handshake_stop(){
     ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
     wifictl_sniffer_stop();
-    frame_analyzer_pmkid_capture_stop();
+    frame_analyzer_capture_stop();
     ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &handshake_capture_handler));
     ESP_LOGD(TAG, "Handshake attack stopped");
 }

