@@ -120,7 +120,7 @@
                 break;
             case 2:
                 type = "ATTACK_TYPE_PMKID";
-                resultPmkid(byteArray);
+                resultPmkid(byteArray, 3);
                 break;
             default:
                 type = "UNKNOWN";
@@ -194,8 +194,7 @@
         document.getElementById("result").style.display = "none";
         showAttackConfig();
     }
-    function resultPmkid(byteArray){
-        let index = 3;
+    function resultPmkid(byteArray, index){
         var mac_ap = "";
         var mac_sta = "";
         var ssid = "";
@@ -203,7 +202,6 @@
         for(let i = 0; i < 6; i = i + 1) {
             mac_ap += byteArray[index + i].toString(16);
         }
-        
         index = index + 6;
         for(let i = 0; i < 6; i = i + 1) {
             mac_sta += byteArray[index + i].toString(16);
