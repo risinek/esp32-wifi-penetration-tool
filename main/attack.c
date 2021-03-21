@@ -9,6 +9,7 @@
 #include "esp_timer.h"
 
 #include "attack_pmkid.h"
+#include "attack_handshake.h"
 #include "webserver.h"
 #include "wifi_controller.h"
 
@@ -47,6 +48,7 @@ static void attack_timeout(void* arg){
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Abort HANDSHAKE attack...");
+            attack_handshake_stop();
             break;
         case ATTACK_TYPE_PASSIVE:
             ESP_LOGI(TAG, "Abort PASSIVE attack...");
@@ -78,6 +80,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Attack on WPA handshake...");
+            attack_handshake_start(&attack_config);
             break;
         case ATTACK_TYPE_PASSIVE:
             ESP_LOGI(TAG, "Passive attack with timeout...");
