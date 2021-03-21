@@ -198,6 +198,7 @@
         var mac_ap = "";
         var mac_sta = "";
         var ssid = "";
+        var ssid_text = "";
         var pmkid = "";
         for(let i = 0; i < 6; i = i + 1) {
             mac_ap += byteArray[index + i].toString(16);
@@ -209,6 +210,7 @@
         index = index + 6;
         for(let i = 0; i < byteArray[index]; i = i + 1) {
             ssid += byteArray[index + 1 + i].toString(16);
+            ssid_text += String.fromCharCode(byteArray[index + 1 + i]);
         }
         index = index + byteArray[index] + 1;
         var pmkid_cnt = 0;
@@ -223,7 +225,7 @@
         document.getElementById("result-content").innerHTML = "";
         document.getElementById("result-content").innerHTML += "MAC AP: <code>" + mac_ap + "</code><br>";
         document.getElementById("result-content").innerHTML += "MAC STA: <code>" + mac_sta + "</code><br>";
-        document.getElementById("result-content").innerHTML += "(E)SSID: <code>" + ssid + "</code>";
+        document.getElementById("result-content").innerHTML += "(E)SSID: <code>" + ssid + "</code> (" + ssid_text + ")";
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "</code><br>";
         document.getElementById("result-content").innerHTML += "<br>Hashcat ready format:"
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "*" + mac_ap + "*" + mac_sta  + "*" + ssid  + "</code><br>";
