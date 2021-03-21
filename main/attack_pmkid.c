@@ -38,7 +38,7 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
     strcpy(content, (char *) ap_record->ssid);
     content += strlen((char *) ap_record->ssid);
 
-    // copy PMKIDs into continuous memory into "content" in result 
+    // copy PMKIDs into continuous memory into "content" in status 
     pmkid_item = pmkid_item_head;
     do {
         pmkid_item_head = pmkid_item;
