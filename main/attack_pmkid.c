@@ -1,3 +1,4 @@
+// Ref: https://hashcat.net/forum/thread-7717.html
 #include "attack_pmkid.h"
 
 #include <string.h>
