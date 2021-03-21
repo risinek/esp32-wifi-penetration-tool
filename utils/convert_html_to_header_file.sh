@@ -1,4 +1,6 @@
 #!/bin/bash
+# Set PAGE_HEADER_LOC env variable if you want this script to also automatically add newly created header file to webserver
+# Example: export PAGE_HEADER_LOC=../components/webserver/pages
 
 if [ -z "$1" ] ; then
     echo "Missing argument - filename!"
@@ -20,3 +22,8 @@ echo """
 ;
 #endif
 """ >> $output_filename
+
+if [ -n "$PAGE_HEADER_LOC" ]; then
+    echo "Copying $output_filename to $PAGE_HEADER_LOC/$output_filename"
+    cp $output_filename $PAGE_HEADER_LOC/$output_filename
+fi

