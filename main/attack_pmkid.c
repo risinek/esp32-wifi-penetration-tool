@@ -53,7 +53,7 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
 }
 
 void attack_pmkid_start(attack_config_t *attack_config){
-    ESP_LOGI(TAG, "Attack on PMKID...");
+    ESP_LOGI(TAG, "Starting PMKID attack...");
     ap_record = attack_config->ap_record;
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(attack_config->ap_record->primary);
