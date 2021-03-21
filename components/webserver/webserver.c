@@ -69,8 +69,9 @@ static httpd_uri_t uri_ap_list_get = {
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_request_t attack_request;
     httpd_req_recv(req, (char *)&attack_request, 3);
+    esp_err_t res = httpd_resp_send(req, NULL, 0);
     ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request, sizeof(attack_request_t), portMAX_DELAY));
-    return httpd_resp_send(req, NULL, 0);
+    return res;
 }
 
 static httpd_uri_t uri_run_attack_post = {
