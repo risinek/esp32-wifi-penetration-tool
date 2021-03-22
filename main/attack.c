@@ -95,7 +95,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
             attack_pmkid_start(&attack_config);
             break;
         case ATTACK_TYPE_HANDSHAKE:
-            ESP_LOGI(TAG, "Attack on WPA handshake...");
             attack_handshake_start(&attack_config);
             break;
         case ATTACK_TYPE_PASSIVE:
@@ -110,6 +109,7 @@ static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_
     ESP_LOGD(TAG, "Resetting attack status...");
     if(attack_status.content){
         free(attack_status.content);
+        attack_status.content = NULL;
     }
     attack_status.content_size = 0;
     attack_status.type = -1;
