@@ -27,7 +27,7 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
     eapol_packet_t *eapol_packet;
     if((eapol_packet = parse_eapol_packet(frame)) != NULL){
         if(search_type == SEARCH_HANDSHAKE){
-            ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame->payload, frame->rx_ctrl.sig_len, portMAX_DELAY));
+            ESP_ERROR_CHECK(esp_event_post(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, frame, sizeof(wifi_promiscuous_pkt_t) + frame->rx_ctrl.sig_len, portMAX_DELAY));
         }
         else if(search_type == SEARCH_PMKID){
             pmkid_item_t *pmkid_items;

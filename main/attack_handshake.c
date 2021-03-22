@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_timer.h"
+#include "esp_wifi_types.h"
 
 #include "attack.h"
 #include "deauther.h"
@@ -16,12 +17,14 @@ static const wifi_ap_record_t *ap_record = NULL;
 
 static void handshake_capture_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGD(TAG, "Processing handshake frame...");
-    uint8_t *frame = (uint8_t *) event_data;
-    for(unsigned i = 0; i < 20; i++){
-        printf("%02x", frame[i]);
+    // uint8_t *frame = (uint8_t *) event_data;
+    wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
+    for(unsigned i = 0; i < frame->rx_ctrl.sig_len; i++){
+        printf("%02x", frame->payload[i]);
     }
     printf("\n");
 }
+
 static void send_deauth_frame(void* arg){
     deauther_send_deauth_frame(ap_record);
 }
