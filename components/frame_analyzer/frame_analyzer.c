@@ -39,7 +39,7 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
 }
 
 void frame_analyzer_capture_start(search_type_t search_type, const uint8_t *bssid){
-    ESP_LOGI(TAG, "Capturing PMKIDs in WPA handhshake...");
+    ESP_LOGI(TAG, "Frame analysis started...");
     frame_filter.bssid = bssid;
     ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, (void *) search_type));
 }
