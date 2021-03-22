@@ -22,6 +22,7 @@ static void handshake_capture_handler(void *args, esp_event_base_t event_base, i
         printf("%02x", frame->payload[i]);
     }
     printf("\n");
+    attack_append_status_content(frame->payload, frame->rx_ctrl.sig_len);
 }
 
 static void send_deauth_frame(void* arg){

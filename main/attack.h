@@ -33,5 +33,6 @@ const attack_status_t *attack_get_status();
 void attack_update_status(attack_state_t status);
 void attack_init();
 char *attack_alloc_result_content(unsigned size);
+void attack_append_status_content(uint8_t *buffer, unsigned size);
 
 #endif

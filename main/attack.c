@@ -1,6 +1,7 @@
 #include "attack.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
@@ -28,6 +29,21 @@ void attack_update_status(attack_state_t state) {
         ESP_LOGD(TAG, "Stopping attack timeout timer");
         ESP_ERROR_CHECK(esp_timer_stop(attack_timeout_handle));
     } 
+}
+
+void attack_append_status_content(uint8_t *buffer, unsigned size){
+    if(size == 0){
+        ESP_LOGE(TAG, "Size can't be 0 if you want to reallocate");
+        return;
+    }
+    char *reallocated_content = realloc(attack_status.content, attack_status.content_size + size);
+    if(reallocated_content == NULL){
+        ESP_LOGE(TAG, "Error reallocating status content! Status content may not be complete.");
+        return;
+    }
+    memcpy(&reallocated_content[attack_status.content_size], buffer, size);
+    attack_status.content = reallocated_content;
+    attack_status.content_size += size;
 }
 
 char *attack_alloc_result_content(unsigned size) {
