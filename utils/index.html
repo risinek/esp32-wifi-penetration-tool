@@ -121,6 +121,7 @@
                 break;
             case 1:
                 type = "ATTACK_TYPE_HANDSHAKE";
+                resultHandshake(attack_content, attack_content_size);
                 break;
             case 2:
                 type = "ATTACK_TYPE_PMKID";
@@ -234,6 +235,16 @@
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "</code><br>";
         document.getElementById("result-content").innerHTML += "<br>Hashcat ready format:"
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "*" + mac_ap + "*" + mac_sta  + "*" + ssid  + "</code><br>";
+    }
+    function resultHandshake(attack_content, attack_content_size){
+        var handshakes = "";
+        for(let i = 0; i < attack_content_size; i = i + 1) {
+            handshakes += ("00" + attack_content[i].toString(16)).slice(-2);
+            if(i % 50 == 49) {
+                handshakes += "\n";
+            }
+        }
+        document.getElementById("result-content").innerHTML = "<pre><code>" + handshakes + "</code></pre>";
     }
     </script>
 </body>
