@@ -25,7 +25,7 @@ typedef struct {
 typedef struct {
     uint8_t state;
     uint8_t type;
-    uint8_t content_size;
+    uint16_t content_size;
     char *content;
 } attack_status_t;
 
