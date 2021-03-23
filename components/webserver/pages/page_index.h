@@ -245,7 +245,7 @@ const char page_index[] =
         "for(let i = 0; i < attack_content_size; i = i + 1) {\n"
             "handshakes += uint8ToHex(attack_content[i]);\n"
             "if(i % 50 == 49) {\n"
-                "handshakes += \"\n\";\n"
+                "handshakes += \"\\n\";\n"
             "}\n"
         "}\n"
         "document.getElementById(\"result-content\").innerHTML = \"<pre><code>\" + handshakes + \"</code></pre>\";\n"
