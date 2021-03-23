@@ -150,7 +150,7 @@
                     td_ssid.innerHTML = new TextDecoder("utf-8").decode(byteArray.subarray(i + 0, i + 32));
                     tr.appendChild(td_ssid);
                     for(let j = 0; j < 6; j++){
-                        td_bssid.innerHTML += byteArray[i + 33 + j].toString(16) + ":";
+                        td_bssid.innerHTML += uint8ToHex(byteArray[i + 33 + j]) + ":";
                     }
                     tr.appendChild(td_bssid);
                     td_rssi.innerHTML = byteArray[i + 39] - 255;
@@ -207,15 +207,15 @@
         var pmkid = "";
         var index = 0;
         for(let i = 0; i < 6; i = i + 1) {
-            mac_ap += attack_content[index + i].toString(16);
+            mac_ap += uint8ToHex(attack_content[index + i]);
         }
         index = index + 6;
         for(let i = 0; i < 6; i = i + 1) {
-            mac_sta += attack_content[index + i].toString(16);
+            mac_sta += uint8ToHex(attack_content[index + i]);
         }
         index = index + 6;
         for(let i = 0; i < attack_content[index]; i = i + 1) {
-            ssid += attack_content[index + 1 + i].toString(16);
+            ssid += uint8ToHex(attack_content[index + 1 + i]);
             ssid_text += String.fromCharCode(attack_content[index + 1 + i]);
         }
         index = index + attack_content[index] + 1;
@@ -226,7 +226,7 @@
                 pmkid += "</code>PMKID #" + pmkid_cnt + ": <code>";
                 pmkid_cnt += 1;
             }
-            pmkid += attack_content[index + i].toString(16);
+            pmkid += uint8ToHex(attack_content[index + i]);
         }
         document.getElementById("result-content").innerHTML = "";
         document.getElementById("result-content").innerHTML += "MAC AP: <code>" + mac_ap + "</code><br>";
@@ -239,12 +239,15 @@
     function resultHandshake(attack_content, attack_content_size){
         var handshakes = "";
         for(let i = 0; i < attack_content_size; i = i + 1) {
-            handshakes += ("00" + attack_content[i].toString(16)).slice(-2);
+            handshakes += uint8ToHex(attack_content[i]);
             if(i % 50 == 49) {
                 handshakes += "\n";
             }
         }
         document.getElementById("result-content").innerHTML = "<pre><code>" + handshakes + "</code></pre>";
+    }
+    function uint8ToHex(uint8){
+        return ("00" + uint8.toString(16)).slice(-2);
     }
     </script>
 </body>
