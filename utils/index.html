@@ -29,13 +29,14 @@
         <h2>Attack configuration</h2>
         <form onSubmit="runAttack(); return false;">
             <fieldset>
-                <legend>Available APs:</legend>
+                <legend>Select target</legend>
                 <table id="ap-list"></table>
-                <button type="button" onClick="refreshAps()">Refresh</button>
-                <br>
+                <p>
+                    <button type="button" onClick="refreshAps()">Refresh</button>
+                </p>
             </fieldset>
             <fieldset>
-                <legend>Custom configuration</legend>
+                <legend>Attack configuration</legend>
                 <p>
                     <label for="attack_type">Attack type:</label>
                     <select id="attack_type" onChange="updateConfigurableFields(this)" required>
@@ -54,7 +55,9 @@
                     <label for="attack_timeout">Attack timeout (seconds):</label>
                     <input type="number" min="0" id="attack_timeout" value="" required/>
                 </p>
-                <button>Attack</button>
+                <p>
+                    <button>Attack</button>
+                </p>
             </fieldset>
         </form>
     </section>
