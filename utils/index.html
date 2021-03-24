@@ -205,11 +205,12 @@
         }
         hideAllSections();
         document.getElementById("running").style.display = "block";
-        var arrayBuffer = new ArrayBuffer(3);
+        var arrayBuffer = new ArrayBuffer(4);
         var uint8Array = new Uint8Array(arrayBuffer);
         uint8Array[0] = parseInt(selectedApElement.id);
         uint8Array[1] = parseInt(document.getElementById("attack_type").value);
-        uint8Array[2] = parseInt(document.getElementById("attack_timeout").value);
+        uint8Array[2] = parseInt(document.getElementById("attack_method").value);
+        uint8Array[3] = parseInt(document.getElementById("attack_timeout").value);
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
