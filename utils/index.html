@@ -41,6 +41,12 @@
                     </select>
                 </p>
                 <p>
+                    <label for="attack_method">Attack method:</label>
+                    <select id="attack_method" required disabled>
+                        <option value="" selected disabled hidden>NOT AVAILABLE</option>
+                    </select>
+                </p>
+                <p>
                     <label for="attack_timeout">Attack timeout (seconds):</label>
                     <input type="number" min="0" id="attack_timeout" value="" required/>
                 </p>
@@ -67,6 +73,7 @@
     var poll;
     var poll_interval = 1000;
     var defaultResultContent = document.getElementById("result").innerHTML;
+    var defaultAttackMethods = document.getElementById("attack_method").innerHTML;
     function getStatus() {
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
@@ -266,21 +273,35 @@
         return ("00" + uint8.toString(16)).slice(-2);
     }
     function updateConfigurableFields(el){
-        console.log("Chosen type: " + el.value);
+        document.getElementById("attack_method").innerHTML = defaultAttackMethods;
+        document.getElementById("attack_method").setAttribute("disabled", "true");
         switch(parseInt(el.value)){
             case AttackTypeEnum.ATTACK_TYPE_PASSIVE:
                 console.log("PASSIVE configuration");
                 break;
             case AttackTypeEnum.ATTACK_TYPE_HANDSHAKE:
                 console.log("HANDSHAKE configuration");
+                document.getElementById("attack_timeout").value = 30;
+                setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)"]);
                 break;
             case AttackTypeEnum.ATTACK_TYPE_PMKID:
                 console.log("PMKID configuration");
+                document.getElementById("attack_timeout").value = 5;
                 break;
             default:
                 console.log("Unknown attack type");
                 break;
         }
+    }
+    function setAttackMethods(attackMethodsArray){
+        document.getElementById("attack_method").removeAttribute("disabled");
+        attackMethodsArray.forEach(function(method, index){
+            let option = document.createElement("option");
+            option.value = index;
+            option.text = method;
+            option.selected = true;
+            document.getElementById("attack_method").appendChild(option);
+        });
     }
     </script>
 </body>
