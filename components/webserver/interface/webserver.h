@@ -12,6 +12,7 @@ enum {
 typedef struct {
     uint8_t ap_record_id;
     uint8_t type;
+    uint8_t method;
     uint8_t timeout;
 } attack_request_t;
 

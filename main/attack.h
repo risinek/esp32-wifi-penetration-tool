@@ -18,6 +18,7 @@ typedef enum {
 
 typedef struct {
     uint8_t type;
+    uint8_t method;
     uint8_t timeout;
     const wifi_ap_record_t *ap_record;
 } attack_config_t;

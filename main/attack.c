@@ -77,7 +77,7 @@ static void attack_timeout(void* arg){
 static void attack_request_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Starting attack...");
     attack_request_t *attack_request = (attack_request_t *) event_data;
-    attack_config_t attack_config = { .type = attack_request->type, .timeout = attack_request->timeout };
+    attack_config_t attack_config = { .type = attack_request->type, .method = attack_request->method, .timeout = attack_request->timeout };
     attack_config.ap_record = wifictl_get_ap_record(attack_request->ap_record_id);
     
     attack_status.state = RUNNING;
