@@ -19,9 +19,9 @@
 </head>
 <body onLoad="getStatus()">
     <h1>ESP32 Wi-Fi Penetration Tool</h1>
-    <div id="errors"></div>
-    <div id="loading">Loading... Please wait</div>
-    <div id="ready" style="display: none;">
+    <section id="errors"></section>
+    <section id="loading">Loading... Please wait</section>
+    <section id="ready" style="display: none;">
         <h2>Attack configuration</h2>
         <h3>Available APs:</h3>
         <table id="ap-list"></table>
@@ -38,20 +38,19 @@
         Attack timeout (seconds):
         <input type="text" id="attack_timeout" value="5"/>
         <br>
-        <button type="button" onClick="runAttack()">Attack</button>
-    </div>
-    <div id="running" style="display: none;">
+    </section>
+    <section id="running" style="display: none;">
         Attack in progress.. <br>
         It may take few moments based on attack timeout.. <br>
         You may be kicked from management AP in the meantime.. <br>
         Please reconnect to get result. <br>
         Progress: <div id="running-progress"></div>
-    </div>
-    <div id="result" style="display: none;">
+    </section>
+    <section id="result" style="display: none;">
         <div id="result-meta">Loading result.. Please wait</div>
         <div id="result-content"></div>
         <button type="button" onClick="resetAttack()">New attack</button>
-    </div>
+    </section>
     <script>
     var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
     var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2};
