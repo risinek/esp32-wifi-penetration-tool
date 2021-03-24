@@ -77,7 +77,7 @@
                 var attack_content = new Uint8Array(arrayBuffer, 4);
                 console.log("attack_state=" + attack_state + "; attack_type=" + attack_type + "; attack_count_size=" + attack_content_size);
                 var status = "ERROR: Cannot parse attack state.";
-                document.getElementById("loading").style.display = "none";
+                hideAllSections();
                 switch(attack_state) {
                     case AttackStateEnum.READY:
                         showAttackConfig();
@@ -114,14 +114,19 @@
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
+    function hideAllSections(){
+        for(let section of document.getElementsByTagName("section")){
+            section.style.display = "none";
+        };
+    }
     function showAttackConfig(){
         document.getElementById("ready").style.display = "block";
         refreshAps();
     }
     function showResult(status, attack_type, attack_content_size, attack_content){
+        hideAllSections();
         clearInterval(poll);
         document.getElementById("result").innerHTML = defaultResultContent;
-        document.getElementById("running").style.display = "none";
         document.getElementById("result").style.display = "block";
         document.getElementById("result-meta").innerHTML = status + "<br>";
         type = "ERROR: Cannot parse attack type.";
@@ -190,6 +195,8 @@
             document.getElementById("errors").innerHTML = "No AP selected. Attack not started.";
             return;
         }
+        hideAllSections();
+        document.getElementById("running").style.display = "block";
         var arrayBuffer = new ArrayBuffer(3);
         var uint8Array = new Uint8Array(arrayBuffer);
         uint8Array[0] = parseInt(selectedApElement.id);
@@ -198,16 +205,14 @@
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
-        document.getElementById("ready").style.display = "none";
-        document.getElementById("running").style.display = "block";
         getStatus();
     }
     function resetAttack(){
+        hideAllSections();
+        showAttackConfig();
         var oReq = new XMLHttpRequest();
         oReq.open("HEAD", "http://192.168.4.1/reset", true);
         oReq.send();
-        document.getElementById("result").style.display = "none";
-        showAttackConfig();
     }
     function resultPmkid(attack_content, attack_content_size){
         var mac_ap = "";
