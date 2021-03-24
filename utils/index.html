@@ -32,17 +32,18 @@
             </fieldset>
             <fieldset>
                 <legend>Custom configuration</legend>
-                <label for="attack_type">Attack type:</label>
-                <select id="attack_type" onChange="updateConfigurableFields(this)" required>
-                    <option value="" selected disabled>Select attack type...</option>
-                    <option value="0">ATTACK_TYPE_PASSIVE</option>
-                    <option value="1">ATTACK_TYPE_HANDSHAKE</option>
-                    <option value="2">ATTACK_TYPE_PMKID</option>
-                </select>
-                <br>
-                <label for="attack_timeout">Attack timeout (seconds):</label>
-                <input type="number" min="0" id="attack_timeout" value="5" required/>
-                <br>
+                <p>
+                    <label for="attack_type">Attack type:</label>
+                    <select id="attack_type" onChange="updateConfigurableFields(this)" required>
+                        <option value="0" selected>ATTACK_TYPE_PASSIVE</option>
+                        <option value="1">ATTACK_TYPE_HANDSHAKE</option>
+                        <option value="2">ATTACK_TYPE_PMKID</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="attack_timeout">Attack timeout (seconds):</label>
+                    <input type="number" min="0" id="attack_timeout" value="" required/>
+                </p>
                 <button>Attack</button>
             </fieldset>
         </form>
