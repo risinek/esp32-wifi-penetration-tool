@@ -52,7 +52,7 @@
         <button type="button" onClick="resetAttack()">New attack</button>
     </div>
     <script>
-    var AttackStateEnum = { READY: 0, RUNNING: 1, FINNISHED: 2, TIMEOUT: 3};
+    var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
     var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0,ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2};
     var selectedApElement = -1;
     var poll;
@@ -80,7 +80,7 @@
                         console.log("Poll");
                         setTimeout(getStatus, poll_interval);
                         break;
-                    case AttackStateEnum.FINNISHED:
+                    case AttackStateEnum.FINISHED:
                         showResult("FINISHED", attack_type, attack_content_size, attack_content);
                         break;
                     case AttackStateEnum.TIMEOUT:
