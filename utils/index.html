@@ -28,10 +28,11 @@
         <button type="button" onClick="refreshAps()">Refresh</button>
         <br>
         Attack type:
-        <select id="attack_type">
+        <select id="attack_type" onChange="updateConfigurableFields(this)">
+            <option value="-1" selected disabled hidden>Select attack type...</option>
             <option value="0">ATTACK_TYPE_PASSIVE</option>
             <option value="1">ATTACK_TYPE_HANDSHAKE</option>
-            <option value="2" selected>ATTACK_TYPE_PMKID</option>
+            <option value="2">ATTACK_TYPE_PMKID</option>
         </select>
         <br>
         Attack timeout (seconds):
@@ -53,7 +54,7 @@
     </div>
     <script>
     var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
-    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0,ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2};
+    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2};
     var selectedApElement = -1;
     var poll;
     var poll_interval = 1000;
@@ -250,6 +251,23 @@
     }
     function uint8ToHex(uint8){
         return ("00" + uint8.toString(16)).slice(-2);
+    }
+    function updateConfigurableFields(el){
+        console.log("Chosen type: " + el.value);
+        switch(parseInt(el.value)){
+            case AttackTypeEnum.ATTACK_TYPE_PASSIVE:
+                console.log("PASSIVE configuration");
+                break;
+            case AttackTypeEnum.ATTACK_TYPE_HANDSHAKE:
+                console.log("HANDSHAKE configuration");
+                break;
+            case AttackTypeEnum.ATTACK_TYPE_PMKID:
+                console.log("PMKID configuration");
+                break;
+            default:
+                console.log("Unknown attack type");
+                break;
+        }
     }
     </script>
 </body>
