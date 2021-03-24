@@ -76,7 +76,7 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
     if(!wifi_init){
         wifi_init_apsta();
     }
-    
+
     wifi_config_t sta_wifi_config = {
         .sta = {
             .channel = ap_record->primary,
@@ -87,11 +87,13 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
     };
     mempcpy(sta_wifi_config.sta.ssid, ap_record->ssid, 32);
 
-    if(strlen(password) >= 64) {
-        ESP_LOGE(TAG, "Password is too long. Max supported length is 64");
-        return;
+    if(password != NULL){
+        if(strlen(password) >= 64) {
+            ESP_LOGE(TAG, "Password is too long. Max supported length is 64");
+            return;
+        }
+        memcpy(sta_wifi_config.sta.password, password, strlen(password) + 1);
     }
-    memcpy(sta_wifi_config.sta.password, password, strlen(password) + 1);
 
     ESP_LOGD(TAG, ".ssid=%s", sta_wifi_config.sta.ssid);
 
