@@ -23,21 +23,29 @@
     <section id="loading">Loading... Please wait</section>
     <section id="ready" style="display: none;">
         <h2>Attack configuration</h2>
-        <h3>Available APs:</h3>
-        <table id="ap-list"></table>
-        <button type="button" onClick="refreshAps()">Refresh</button>
-        <br>
-        Attack type:
-        <select id="attack_type" onChange="updateConfigurableFields(this)">
-            <option value="-1" selected disabled hidden>Select attack type...</option>
-            <option value="0">ATTACK_TYPE_PASSIVE</option>
-            <option value="1">ATTACK_TYPE_HANDSHAKE</option>
-            <option value="2">ATTACK_TYPE_PMKID</option>
-        </select>
-        <br>
-        Attack timeout (seconds):
-        <input type="text" id="attack_timeout" value="5"/>
-        <br>
+        <form onSubmit="runAttack(); return false;">
+            <fieldset>
+                <legend>Available APs:</legend>
+                <table id="ap-list"></table>
+                <button type="button" onClick="refreshAps()">Refresh</button>
+                <br>
+            </fieldset>
+            <fieldset>
+                <legend>Custom configuration</legend>
+                <label for="attack_type">Attack type:</label>
+                <select id="attack_type" onChange="updateConfigurableFields(this)" required>
+                    <option value="" selected disabled>Select attack type...</option>
+                    <option value="0">ATTACK_TYPE_PASSIVE</option>
+                    <option value="1">ATTACK_TYPE_HANDSHAKE</option>
+                    <option value="2">ATTACK_TYPE_PMKID</option>
+                </select>
+                <br>
+                <label for="attack_timeout">Attack timeout (seconds):</label>
+                <input type="number" min="0" id="attack_timeout" value="5" required/>
+                <br>
+                <button>Attack</button>
+            </fieldset>
+        </form>
     </section>
     <section id="running" style="display: none;">
         Attack in progress.. <br>
