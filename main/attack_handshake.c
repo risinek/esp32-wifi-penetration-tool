@@ -76,7 +76,15 @@ void attack_handshake_start(attack_config_t *attack_config){
 }
 
 void attack_handshake_stop(){
-    ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
+    switch(attack_config->method){
+        case ATTACK_HANDSHAKE_METHOD_BROADCAST:
+            ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
+            break;
+        case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
+            wifictl_mgmt_ap_start();
+        default:
+            ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");
+    }
     wifictl_sniffer_stop();
     frame_analyzer_capture_stop();
     ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &handshake_capture_handler));
