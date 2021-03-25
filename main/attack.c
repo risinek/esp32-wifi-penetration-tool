@@ -1,6 +1,7 @@
 #include "attack.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
@@ -9,6 +10,7 @@
 #include "esp_timer.h"
 
 #include "attack_pmkid.h"
+#include "attack_handshake.h"
 #include "webserver.h"
 #include "wifi_controller.h"
 
@@ -29,6 +31,21 @@ void attack_update_status(attack_state_t state) {
     } 
 }
 
+void attack_append_status_content(uint8_t *buffer, unsigned size){
+    if(size == 0){
+        ESP_LOGE(TAG, "Size can't be 0 if you want to reallocate");
+        return;
+    }
+    char *reallocated_content = realloc(attack_status.content, attack_status.content_size + size);
+    if(reallocated_content == NULL){
+        ESP_LOGE(TAG, "Error reallocating status content! Status content may not be complete.");
+        return;
+    }
+    memcpy(&reallocated_content[attack_status.content_size], buffer, size);
+    attack_status.content = reallocated_content;
+    attack_status.content_size += size;
+}
+
 char *attack_alloc_result_content(unsigned size) {
     attack_status.content_size = size;
     attack_status.content = (char *) malloc(size);
@@ -47,6 +64,7 @@ static void attack_timeout(void* arg){
             break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Abort HANDSHAKE attack...");
+            attack_handshake_stop();
             break;
         case ATTACK_TYPE_PASSIVE:
             ESP_LOGI(TAG, "Abort PASSIVE attack...");
@@ -59,7 +77,7 @@ static void attack_timeout(void* arg){
 static void attack_request_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Starting attack...");
     attack_request_t *attack_request = (attack_request_t *) event_data;
-    attack_config_t attack_config = { .type = attack_request->type, .timeout = attack_request->timeout };
+    attack_config_t attack_config = { .type = attack_request->type, .method = attack_request->method, .timeout = attack_request->timeout };
     attack_config.ap_record = wifictl_get_ap_record(attack_request->ap_record_id);
     
     attack_status.state = RUNNING;
@@ -77,7 +95,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
             attack_pmkid_start(&attack_config);
             break;
         case ATTACK_TYPE_HANDSHAKE:
-            ESP_LOGI(TAG, "Attack on WPA handshake...");
+            attack_handshake_start(&attack_config);
             break;
         case ATTACK_TYPE_PASSIVE:
             ESP_LOGI(TAG, "Passive attack with timeout...");
@@ -91,6 +109,7 @@ static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_
     ESP_LOGD(TAG, "Resetting attack status...");
     if(attack_status.content){
         free(attack_status.content);
+        attack_status.content = NULL;
     }
     attack_status.content_size = 0;
     attack_status.type = -1;

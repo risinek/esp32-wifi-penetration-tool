@@ -10,7 +10,12 @@ enum {
     DATA_FRAME_EVENT_FOUND_PMKID
 };
 
-void frame_analyzer_pmkid_capture_start(const uint8_t *bssid);
-void frame_analyzer_pmkid_capture_stop();
+typedef enum {
+    SEARCH_HANDSHAKE,
+    SEARCH_PMKID
+} search_type_t;
+
+void frame_analyzer_capture_start(search_type_t search_type, const uint8_t *bssid);
+void frame_analyzer_capture_stop();
 
 #endif
