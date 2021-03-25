@@ -18,7 +18,9 @@ static const uint32_t LINKTYPE_IEEE802_11 = 105;
 static unsigned pcap_size = 0;
 static uint8_t *pcap_buffer = NULL;
 
-uint8_t *pcap_serializer_init_new(){
+uint8_t *pcap_serializer_init(){
+    // Make sure memory from previous attack is freed
+    free(pcap_buffer);
     // Ref: https://gitlab.com/wireshark/wireshark/-/wikis/Development/LibpcapFileFormat#global-header
     pcap_global_header_t pcap_global_header = {
         .magic_number = PCAP_MAGIC_NUMBER,
@@ -67,6 +69,7 @@ void pcap_serializer_append_frame(const uint8_t *buffer, unsigned size, unsigned
 
 void pcap_serializer_deinit(){
     free(pcap_buffer);
+    pcap_buffer = NULL;
     pcap_size = 0;
 }
 

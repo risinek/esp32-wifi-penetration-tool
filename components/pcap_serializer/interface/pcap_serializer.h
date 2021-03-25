@@ -22,7 +22,7 @@ typedef struct {
         uint32_t orig_len;       /* actual length of packet */
 } pcap_record_header_t;
 
-uint8_t *pcap_serializer_init_new();
+uint8_t *pcap_serializer_init();
 void pcap_serializer_append_frame(const uint8_t *buffer, unsigned size, unsigned ts_usec);
 void pcap_serializer_deinit();
 unsigned pcap_serializer_get_size();
