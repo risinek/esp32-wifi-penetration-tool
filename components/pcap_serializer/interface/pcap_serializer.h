@@ -1,0 +1,4 @@
+#ifndef PCAP_SERIALIZER_H
+#define PCAP_SERIALIZER_H
+
+#endif
