@@ -19,8 +19,8 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
     ESP_LOGV(TAG, "Handling DATA frame");
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
 
-    if(filter_frame(frame, target_bssid) == NULL){
-        ESP_LOGV(TAG, "Frame filtered out.");
+    if(!is_frame_bssid_matching(frame, target_bssid)){
+        ESP_LOGV(TAG, "Frame filtered out. Not matching BSSIDs.");
         return;
     }
 
