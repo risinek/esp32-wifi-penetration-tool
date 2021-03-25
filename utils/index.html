@@ -268,6 +268,10 @@
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "*" + mac_ap + "*" + mac_sta  + "*" + ssid  + "</code><br>";
     }
     function resultHandshake(attack_content, attack_content_size){
+        var pcap_link = document.createElement("a");
+        pcap_link.setAttribute("href", "capture.pcap");
+        pcap_link.text = "Download PCAP file";
+        document.getElementById("result-content").innerHTML = "<p>" + pcap_link.outerHTML + "</p>";
         var handshakes = "";
         for(let i = 0; i < attack_content_size; i = i + 1) {
             handshakes += uint8ToHex(attack_content[i]);
@@ -275,7 +279,7 @@
                 handshakes += "\n";
             }
         }
-        document.getElementById("result-content").innerHTML = "<pre><code>" + handshakes + "</code></pre>";
+        document.getElementById("result-content").innerHTML += "<pre><code>" + handshakes + "</code></pre>";
     }
     function uint8ToHex(uint8){
         return ("00" + uint8.toString(16)).slice(-2);
