@@ -64,8 +64,12 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     return NULL;
 }
 
-bool is_eapol_key_packet(eapol_packet_t *eapol_packet){
-    return eapol_packet->header.packet_type == EAPOL_KEY;
+eapol_key_packet_t *parse_eapol_key_packet(eapol_packet_t *eapol_packet){
+    if(eapol_packet->header.packet_type != EAPOL_KEY){
+        ESP_LOGD(TAG, "Not an EAPoL-Key packet.");
+        return NULL;
+    }
+    return (eapol_key_packet_t *) eapol_packet->packet_body;
 }
 
 pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){
@@ -113,14 +117,7 @@ pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length
     return pmkid_item_head;
 }
 
-pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
-    if(eapol_packet->header.packet_type != EAPOL_KEY){
-        ESP_LOGE(TAG, "Not an EAPoL-Key packet.");
-        return NULL;
-    }
-
-    eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
-
+pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_key_packet_t *eapol_key){
     if(eapol_key->key_data_length == 0){
         ESP_LOGD(TAG, "Empty Key Data");
         return NULL;
