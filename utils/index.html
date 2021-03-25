@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>ESP32 Management AP</title>
     <style>
+        body {
+            width: fit-content;
+        }
         table, tr, th {
             border: 1px solid;
             border-collapse: collapse;
@@ -19,43 +23,64 @@
 </head>
 <body onLoad="getStatus()">
     <h1>ESP32 Wi-Fi Penetration Tool</h1>
-    <div id="errors"></div>
-    <div id="loading">Loading... Please wait</div>
-    <div id="ready" style="display: none;">
+    <section id="errors"></section>
+    <section id="loading">Loading... Please wait</section>
+    <section id="ready" style="display: none;">
         <h2>Attack configuration</h2>
-        <h3>Available APs:</h3>
-        <table id="ap-list"></table>
-        <button type="button" onClick="refreshAps()">Refresh</button>
-        <br>
-        Attack type:
-        <select id="attack_type">
-            <option value="0">ATTACK_TYPE_PASSIVE</option>
-            <option value="1">ATTACK_TYPE_HANDSHAKE</option>
-            <option value="2" selected>ATTACK_TYPE_PMKID</option>
-        </select>
-        <br>
-        Attack timeout (seconds):
-        <input type="text" id="attack_timeout" value="5"/>
-        <br>
-        <button type="button" onClick="runAttack()">Attack</button>
-    </div>
-    <div id="running" style="display: none;">
+        <form onSubmit="runAttack(); return false;">
+            <fieldset>
+                <legend>Select target</legend>
+                <table id="ap-list"></table>
+                <p>
+                    <button type="button" onClick="refreshAps()">Refresh</button>
+                </p>
+            </fieldset>
+            <fieldset>
+                <legend>Attack configuration</legend>
+                <p>
+                    <label for="attack_type">Attack type:</label>
+                    <select id="attack_type" onChange="updateConfigurableFields(this)" required>
+                        <option value="0" selected>ATTACK_TYPE_PASSIVE</option>
+                        <option value="1">ATTACK_TYPE_HANDSHAKE</option>
+                        <option value="2">ATTACK_TYPE_PMKID</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="attack_method">Attack method:</label>
+                    <select id="attack_method" required disabled>
+                        <option value="" selected disabled hidden>NOT AVAILABLE</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="attack_timeout">Attack timeout (seconds):</label>
+                    <input type="number" min="0" id="attack_timeout" value="" required/>
+                </p>
+                <p>
+                    <button>Attack</button>
+                </p>
+            </fieldset>
+        </form>
+    </section>
+    <section id="running" style="display: none;">
         Attack in progress.. <br>
         It may take few moments based on attack timeout.. <br>
         You may be kicked from management AP in the meantime.. <br>
         Please reconnect to get result. <br>
         Progress: <div id="running-progress"></div>
-    </div>
-    <div id="result" style="display: none;">
+    </section>
+    <section id="result" style="display: none;">
         <div id="result-meta">Loading result.. Please wait</div>
         <div id="result-content"></div>
         <button type="button" onClick="resetAttack()">New attack</button>
-    </div>
+    </section>
     <script>
+    var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
+    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2};
     var selectedApElement = -1;
     var poll;
     var poll_interval = 1000;
     var defaultResultContent = document.getElementById("result").innerHTML;
+    var defaultAttackMethods = document.getElementById("attack_method").innerHTML;
     function getStatus() {
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
@@ -67,21 +92,21 @@
                 var attack_content = new Uint8Array(arrayBuffer, 4);
                 console.log("attack_state=" + attack_state + "; attack_type=" + attack_type + "; attack_count_size=" + attack_content_size);
                 var status = "ERROR: Cannot parse attack state.";
-                document.getElementById("loading").style.display = "none";
+                hideAllSections();
                 switch(attack_state) {
-                    case 0:
+                    case AttackStateEnum.READY:
                         showAttackConfig();
                         break;
-                    case 1:
+                    case AttackStateEnum.RUNNING:
                         document.getElementById("running").style.display = "block";
                         document.getElementById("running-progress").innerHTML += "*";
                         console.log("Poll");
                         setTimeout(getStatus, poll_interval);
                         break;
-                    case 2:
+                    case AttackStateEnum.FINISHED:
                         showResult("FINISHED", attack_type, attack_content_size, attack_content);
                         break;
-                    case 3:
+                    case AttackStateEnum.TIMEOUT:
                         showResult("TIMEOUT", attack_type, attack_content_size, attack_content);
                         break;
                     default:
@@ -104,26 +129,31 @@
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
+    function hideAllSections(){
+        for(let section of document.getElementsByTagName("section")){
+            section.style.display = "none";
+        };
+    }
     function showAttackConfig(){
         document.getElementById("ready").style.display = "block";
         refreshAps();
     }
     function showResult(status, attack_type, attack_content_size, attack_content){
+        hideAllSections();
         clearInterval(poll);
         document.getElementById("result").innerHTML = defaultResultContent;
-        document.getElementById("running").style.display = "none";
         document.getElementById("result").style.display = "block";
         document.getElementById("result-meta").innerHTML = status + "<br>";
         type = "ERROR: Cannot parse attack type.";
         switch(attack_type) {
-            case 0:
+            case AttackTypeEnum.ATTACK_TYPE_PASSIVE:
                 type = "ATTACK_TYPE_PASSIVE";
                 break;
-            case 1:
+            case AttackTypeEnum.ATTACK_TYPE_HANDSHAKE:
                 type = "ATTACK_TYPE_HANDSHAKE";
                 resultHandshake(attack_content, attack_content_size);
                 break;
-            case 2:
+            case AttackTypeEnum.ATTACK_TYPE_PMKID:
                 type = "ATTACK_TYPE_PMKID";
                 resultPmkid(attack_content, attack_content_size);
                 break;
@@ -180,24 +210,25 @@
             document.getElementById("errors").innerHTML = "No AP selected. Attack not started.";
             return;
         }
-        var arrayBuffer = new ArrayBuffer(3);
+        hideAllSections();
+        document.getElementById("running").style.display = "block";
+        var arrayBuffer = new ArrayBuffer(4);
         var uint8Array = new Uint8Array(arrayBuffer);
         uint8Array[0] = parseInt(selectedApElement.id);
         uint8Array[1] = parseInt(document.getElementById("attack_type").value);
-        uint8Array[2] = parseInt(document.getElementById("attack_timeout").value);
+        uint8Array[2] = parseInt(document.getElementById("attack_method").value);
+        uint8Array[3] = parseInt(document.getElementById("attack_timeout").value);
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
-        document.getElementById("ready").style.display = "none";
-        document.getElementById("running").style.display = "block";
         getStatus();
     }
     function resetAttack(){
+        hideAllSections();
+        showAttackConfig();
         var oReq = new XMLHttpRequest();
         oReq.open("HEAD", "http://192.168.4.1/reset", true);
         oReq.send();
-        document.getElementById("result").style.display = "none";
-        showAttackConfig();
     }
     function resultPmkid(attack_content, attack_content_size){
         var mac_ap = "";
@@ -248,6 +279,37 @@
     }
     function uint8ToHex(uint8){
         return ("00" + uint8.toString(16)).slice(-2);
+    }
+    function updateConfigurableFields(el){
+        document.getElementById("attack_method").innerHTML = defaultAttackMethods;
+        document.getElementById("attack_method").setAttribute("disabled", "true");
+        switch(parseInt(el.value)){
+            case AttackTypeEnum.ATTACK_TYPE_PASSIVE:
+                console.log("PASSIVE configuration");
+                break;
+            case AttackTypeEnum.ATTACK_TYPE_HANDSHAKE:
+                console.log("HANDSHAKE configuration");
+                document.getElementById("attack_timeout").value = 30;
+                setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)"]);
+                break;
+            case AttackTypeEnum.ATTACK_TYPE_PMKID:
+                console.log("PMKID configuration");
+                document.getElementById("attack_timeout").value = 5;
+                break;
+            default:
+                console.log("Unknown attack type");
+                break;
+        }
+    }
+    function setAttackMethods(attackMethodsArray){
+        document.getElementById("attack_method").removeAttribute("disabled");
+        attackMethodsArray.forEach(function(method, index){
+            let option = document.createElement("option");
+            option.value = index;
+            option.text = method;
+            option.selected = true;
+            document.getElementById("attack_method").appendChild(option);
+        });
     }
     </script>
 </body>

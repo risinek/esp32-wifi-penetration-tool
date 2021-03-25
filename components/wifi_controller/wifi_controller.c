@@ -12,17 +12,13 @@
 #include "esp_event.h"
 
 static const char* TAG = "wifi_controller";
+static bool wifi_init = false;
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
 
 }
 
 static void wifi_init_apsta(){
-    if (esp_wifi_get_mode(NULL) == ESP_OK) {
-        ESP_LOGD(TAG, "APSTA already initialised. Skipping.");
-        return;
-    }
-
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -38,16 +34,16 @@ static void wifi_init_apsta(){
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 
     ESP_ERROR_CHECK(esp_wifi_start());
-    
+    wifi_init = true;
 }
 
 void wifictl_ap_start(wifi_config_t *wifi_config) {
     ESP_LOGD(TAG, "Starting AP...");
-    
-    wifi_init_apsta();
-    
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
+    if(!wifi_init){
+        wifi_init_apsta();
+    }
 
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
     ESP_LOGI(TAG, "AP started with SSID=%s", wifi_config->ap.ssid);
 }
 
@@ -77,9 +73,10 @@ void wifictl_mgmt_ap_start(){
 
 void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char password[]){
     ESP_LOGD(TAG, "Connecting STA to AP...");
-    
-    // wifi_init_apsta();
-    
+    if(!wifi_init){
+        wifi_init_apsta();
+    }
+
     wifi_config_t sta_wifi_config = {
         .sta = {
             .channel = ap_record->primary,
@@ -90,11 +87,13 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
     };
     mempcpy(sta_wifi_config.sta.ssid, ap_record->ssid, 32);
 
-    if(strlen(password) >= 64) {
-        ESP_LOGE(TAG, "Password is too long. Max supported length is 64");
-        return;
+    if(password != NULL){
+        if(strlen(password) >= 64) {
+            ESP_LOGE(TAG, "Password is too long. Max supported length is 64");
+            return;
+        }
+        memcpy(sta_wifi_config.sta.password, password, strlen(password) + 1);
     }
-    memcpy(sta_wifi_config.sta.password, password, strlen(password) + 1);
 
     ESP_LOGD(TAG, ".ssid=%s", sta_wifi_config.sta.ssid);
 
@@ -107,6 +106,13 @@ void wifictl_sta_disconnect(){
     ESP_ERROR_CHECK(esp_wifi_disconnect());
 }
 
+void wifictl_set_ap_mac(const uint8_t *mac_ap){
+    ESP_LOGD(TAG, "Changing AP MAC address...");
+    ESP_ERROR_CHECK(esp_wifi_set_mac(WIFI_IF_AP, mac_ap));
+}
+void wifictl_get_ap_mac(uint8_t *mac_ap){
+    esp_wifi_get_mac(WIFI_IF_AP, mac_ap);
+}
 void wifictl_get_sta_mac(uint8_t *mac_sta){
     esp_wifi_get_mac(WIFI_IF_STA, mac_sta);
 }
