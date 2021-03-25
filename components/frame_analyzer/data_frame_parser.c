@@ -59,13 +59,13 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     if(ntohs(*(uint16_t *) frame_buffer) == ETHER_TYPE_EAPOL) {
         ESP_LOGD(TAG, "EAPOL packet");
         frame_buffer += 2;
-        eapol_packet_t *eapol_packet = (eapol_packet_t *) frame_buffer; 
-        if(eapol_packet->header.packet_type == EAPOL_KEY) {
-            ESP_LOGI(TAG, "Captured handshake EAPOL-Key packet");
-            return eapol_packet;
-        }
+        return (eapol_packet_t *) frame_buffer; 
     }
     return NULL;
+}
+
+bool is_eapol_key_packet(eapol_packet_t *eapol_packet){
+    return eapol_packet->header.packet_type == EAPOL_KEY;
 }
 
 pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){

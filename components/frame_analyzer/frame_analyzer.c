@@ -24,9 +24,14 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
         return;
     }
 
-    eapol_packet_t *eapol_packet;
-    if((eapol_packet = parse_eapol_packet(frame)) == NULL){
-        ESP_LOGV(TAG, "Filtered out. Not an EAPOL packet.");
+    eapol_packet_t *eapol_packet = parse_eapol_packet(frame);
+    if(eapol_packet == NULL){
+        ESP_LOGV(TAG, "Not an EAPOL packet.");
+        return;
+    }
+
+    if(!is_eapol_key_packet(eapol_packet)){
+        ESP_LOGV(TAG, "Not an EAPOL-Key packet");
         return;
     }
 

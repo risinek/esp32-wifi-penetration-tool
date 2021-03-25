@@ -8,6 +8,7 @@
 
 bool is_frame_bssid_matching(wifi_promiscuous_pkt_t *frame, uint8_t *bssid);
 eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame);
+bool is_eapol_key_packet(eapol_packet_t *eapol_packet);
 pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet);
 
 #endif
