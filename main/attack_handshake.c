@@ -11,6 +11,7 @@
 #include "deauther.h"
 #include "wifi_controller.h"
 #include "frame_analyzer.h"
+#include "pcap_serializer.h"
 
 static const char *TAG = "main:attack_handshake";
 static esp_timer_handle_t deauth_timer_handle;
@@ -26,6 +27,7 @@ static void handshake_capture_handler(void *args, esp_event_base_t event_base, i
     }
     printf("\n");
     attack_append_status_content(frame->payload, frame->rx_ctrl.sig_len);
+    pcap_serializer_append_frame(frame->payload, frame->rx_ctrl.sig_len, frame->rx_ctrl.timestamp);
 }
 
 static void timer_send_deauth_frame(void* arg){
@@ -61,6 +63,7 @@ void attack_handshake_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Starting handshake attack...");
     method = attack_config->method;
     ap_record = attack_config->ap_record;
+    pcap_serializer_init();
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
