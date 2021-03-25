@@ -64,7 +64,7 @@ void pcap_serializer_append_frame(const uint8_t *buffer, unsigned size, unsigned
     memcpy(&reallocated_pcap_buffer[pcap_size], &pcap_record_header, sizeof(pcap_record_header_t));
     memcpy(&reallocated_pcap_buffer[pcap_size + sizeof(pcap_record_header_t)], buffer, size);
     pcap_buffer = reallocated_pcap_buffer;
-    pcap_size += size;
+    pcap_size += sizeof(pcap_record_header_t) + size;
 }
 
 void pcap_serializer_deinit(){
