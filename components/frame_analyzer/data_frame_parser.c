@@ -11,7 +11,7 @@
 
 #include "frame_analyzer_types.h"
 
-const char *TAG = "frame_analyzer:data_frame_parser";
+static const char *TAG = "frame_analyzer:data_frame_parser";
 
 ESP_EVENT_DEFINE_BASE(DATA_FRAME_EVENTS);
 
@@ -33,7 +33,7 @@ bool is_frame_bssid_matching(wifi_promiscuous_pkt_t *frame, uint8_t *bssid) {
     return memcmp(mac_header->addr3, bssid, 6) == 0;
 }
 
-// returns NULL if no EAPOL packet found, otherwise returns pointer to whole raw frame
+// returns NULL if no EAPOL packet found, otherwise returns pointer to EAPoL packet
 eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     uint8_t *frame_buffer = frame->payload;
 
