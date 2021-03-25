@@ -80,7 +80,7 @@
     var poll;
     var poll_interval = 1000;
     var defaultResultContent = document.getElementById("result").innerHTML;
-    var defaultAttackMethods = document.getElementById("attack_method").innerHTML;
+    var defaultAttackMethods = document.getElementById("attack_method").outerHTML;
     function getStatus() {
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
@@ -285,8 +285,7 @@
         return ("00" + uint8.toString(16)).slice(-2);
     }
     function updateConfigurableFields(el){
-        document.getElementById("attack_method").innerHTML = defaultAttackMethods;
-        document.getElementById("attack_method").setAttribute("disabled", "true");
+        document.getElementById("attack_method").outerHTML = defaultAttackMethods;
         switch(parseInt(el.value)){
             case AttackTypeEnum.ATTACK_TYPE_PASSIVE:
                 console.log("PASSIVE configuration");
