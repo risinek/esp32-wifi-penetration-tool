@@ -108,6 +108,10 @@ void wifictl_sta_disconnect(){
 
 void wifictl_set_ap_mac(const uint8_t *mac_ap){
     ESP_LOGD(TAG, "Changing AP MAC address...");
+    ESP_ERROR_CHECK(esp_wifi_set_mac(WIFI_IF_AP, mac_ap));
+}
+void wifictl_get_ap_mac(uint8_t *mac_ap){
+    esp_wifi_get_mac(WIFI_IF_AP, mac_ap);
 }
 void wifictl_get_sta_mac(uint8_t *mac_sta){
     esp_wifi_get_mac(WIFI_IF_STA, mac_sta);
