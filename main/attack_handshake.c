@@ -67,7 +67,7 @@ void attack_handshake_start(attack_config_t *attack_config){
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
-    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_CAPTURED_EAPOLKEY, &handshake_capture_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, &handshake_capture_handler, NULL));
     switch(attack_config->method){
         case ATTACK_HANDSHAKE_METHOD_BROADCAST:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
