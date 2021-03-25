@@ -296,7 +296,7 @@ const char page_index[] =
                 "break;\n"
             "case AttackTypeEnum.ATTACK_TYPE_HANDSHAKE:\n"
                 "console.log(\"HANDSHAKE configuration\");\n"
-                "document.getElementById(\"attack_timeout\").value = 30;\n"
+                "document.getElementById(\"attack_timeout\").value = 60;\n"
                 "setAttackMethods([\"DEAUTH_ROGUE_AP (PASSIVE)\", \"DEAUTH_BROADCAST (ACTIVE)\"]);\n"
                 "break;\n"
             "case AttackTypeEnum.ATTACK_TYPE_PMKID:\n"
