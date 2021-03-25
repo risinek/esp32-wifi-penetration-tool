@@ -1,6 +1,7 @@
 #include "frame_analyzer.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
@@ -11,13 +12,13 @@
 #include "data_frame_parser.h"
 
 static const char *TAG = "frame_analyzer";
-static frame_filter_t frame_filter;
+static uint8_t target_bssid[6];
 
 static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGV(TAG, "Handling DATA frame");
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
 
-    if(filter_frame(frame, &frame_filter) == NULL){
+    if(filter_frame(frame, target_bssid) == NULL){
         ESP_LOGV(TAG, "Filtered out. Not matching filter (BSSID).");
         return;
     }
@@ -47,7 +48,7 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
 
 void frame_analyzer_capture_start(search_type_t search_type, const uint8_t *bssid){
     ESP_LOGI(TAG, "Frame analysis started...");
-    frame_filter.bssid = bssid;
+    memcpy(&target_bssid, bssid, 6);
     ESP_ERROR_CHECK(esp_event_handler_register(SNIFFER_EVENTS, SNIFFER_EVENT_CAPTURED_DATA, &data_frame_handler, (void *) search_type));
 }
 

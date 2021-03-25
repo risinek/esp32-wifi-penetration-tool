@@ -28,10 +28,10 @@ void print_mac_address(const uint8_t *a){
     printf("\n");
 }
 
-wifi_promiscuous_pkt_t *filter_frame(wifi_promiscuous_pkt_t *frame, frame_filter_t *filter) {
+wifi_promiscuous_pkt_t *filter_frame(wifi_promiscuous_pkt_t *frame, uint8_t *bssid) {
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame->payload;
 
-    if(memcmp(mac_header->addr3, filter->bssid, 6) != 0){
+    if(memcmp(mac_header->addr3, bssid, 6) != 0){
         ESP_LOGV(TAG, "Filtering out frame based on not matching BSSIDs");
         return NULL;
     }
