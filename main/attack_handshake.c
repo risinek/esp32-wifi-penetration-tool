@@ -12,6 +12,7 @@
 #include "wifi_controller.h"
 #include "frame_analyzer.h"
 #include "pcap_serializer.h"
+#include "hccapx_serializer.h"
 
 static const char *TAG = "main:attack_handshake";
 static esp_timer_handle_t deauth_timer_handle;
@@ -25,6 +26,7 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
     attack_append_status_content(frame->payload, frame->rx_ctrl.sig_len);
     pcap_serializer_append_frame(frame->payload, frame->rx_ctrl.sig_len, frame->rx_ctrl.timestamp);
+    hccapx_serializer_add_frame((data_frame_t *) frame->payload, frame->rx_ctrl.sig_len);
 }
 
 static void timer_send_deauth_frame(void* arg){
@@ -61,6 +63,7 @@ void attack_handshake_start(attack_config_t *attack_config){
     method = attack_config->method;
     ap_record = attack_config->ap_record;
     pcap_serializer_init();
+    hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
