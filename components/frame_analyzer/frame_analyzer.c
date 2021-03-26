@@ -24,7 +24,7 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
         return;
     }
 
-    eapol_packet_t *eapol_packet = parse_eapol_packet(frame);
+    eapol_packet_t *eapol_packet = parse_eapol_packet((data_frame_t *) frame->payload);
     if(eapol_packet == NULL){
         ESP_LOGV(TAG, "Not an EAPOL packet.");
         return;
