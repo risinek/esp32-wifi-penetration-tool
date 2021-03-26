@@ -43,6 +43,11 @@ typedef struct {
 } data_frame_mac_header_t;
 
 typedef struct {
+    data_frame_mac_header_t mac_header;
+    uint8_t body[];
+} data_frame_t;
+
+typedef struct {
     uint8_t snap_dsap;
     uint8_t snap_ssap;
     uint8_t control;

@@ -34,19 +34,15 @@ bool is_frame_bssid_matching(wifi_promiscuous_pkt_t *frame, uint8_t *bssid) {
 }
 
 // returns NULL if no EAPOL packet found, otherwise returns pointer to EAPoL packet
-eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
-    uint8_t *frame_buffer = frame->payload;
+eapol_packet_t *parse_eapol_packet(data_frame_t *frame) {
+    uint8_t *frame_buffer = frame->body;
 
-    data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
-    frame_buffer += sizeof(data_frame_mac_header_t);
-
-
-    if(mac_header->frame_control.protected_frame == 1) {
+    if(frame->mac_header.frame_control.protected_frame == 1) {
         ESP_LOGV(TAG, "Protected frame, skipping...");
         return NULL;
     }
 
-    if(mac_header->frame_control.subtype > 7) {
+    if(frame->mac_header.frame_control.subtype > 7) {
         ESP_LOGV(TAG, "QoS data frame");
         // Skipping QoS field (2 bytes)
         frame_buffer += 2;
