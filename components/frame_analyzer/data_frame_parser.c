@@ -11,7 +11,7 @@
 
 #include "frame_analyzer_types.h"
 
-const char *TAG = "frame_analyzer:data_frame_parser";
+static const char *TAG = "frame_analyzer:data_frame_parser";
 
 ESP_EVENT_DEFINE_BASE(DATA_FRAME_EVENTS);
 
@@ -28,31 +28,21 @@ void print_mac_address(const uint8_t *a){
     printf("\n");
 }
 
-wifi_promiscuous_pkt_t *filter_frame(wifi_promiscuous_pkt_t *frame, frame_filter_t *filter) {
+bool is_frame_bssid_matching(wifi_promiscuous_pkt_t *frame, uint8_t *bssid) {
     data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame->payload;
-
-    if(memcmp(mac_header->addr3, filter->bssid, 6) != 0){
-        ESP_LOGV(TAG, "Filtering out frame based on not matching BSSIDs");
-        return NULL;
-    }
-    
-    return frame;
+    return memcmp(mac_header->addr3, bssid, 6) == 0;
 }
 
-// returns NULL if no EAPOL packet found, otherwise returns pointer to whole raw frame
-eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
-    uint8_t *frame_buffer = frame->payload;
+// returns NULL if no EAPOL packet found, otherwise returns pointer to EAPoL packet
+eapol_packet_t *parse_eapol_packet(data_frame_t *frame) {
+    uint8_t *frame_buffer = frame->body;
 
-    data_frame_mac_header_t *mac_header = (data_frame_mac_header_t *) frame_buffer;
-    frame_buffer += sizeof(data_frame_mac_header_t);
-
-
-    if(mac_header->frame_control.protected_frame == 1) {
+    if(frame->mac_header.frame_control.protected_frame == 1) {
         ESP_LOGV(TAG, "Protected frame, skipping...");
         return NULL;
     }
 
-    if(mac_header->frame_control.subtype > 7) {
+    if(frame->mac_header.frame_control.subtype > 7) {
         ESP_LOGV(TAG, "QoS data frame");
         // Skipping QoS field (2 bytes)
         frame_buffer += 2;
@@ -65,13 +55,17 @@ eapol_packet_t *parse_eapol_packet(wifi_promiscuous_pkt_t *frame) {
     if(ntohs(*(uint16_t *) frame_buffer) == ETHER_TYPE_EAPOL) {
         ESP_LOGD(TAG, "EAPOL packet");
         frame_buffer += 2;
-        eapol_packet_t *eapol_packet = (eapol_packet_t *) frame_buffer; 
-        if(eapol_packet->header.packet_type == EAPOL_KEY) {
-            ESP_LOGI(TAG, "Captured handshake EAPOL-Key packet");
-            return eapol_packet;
-        }
+        return (eapol_packet_t *) frame_buffer; 
     }
     return NULL;
+}
+
+eapol_key_packet_t *parse_eapol_key_packet(eapol_packet_t *eapol_packet){
+    if(eapol_packet->header.packet_type != EAPOL_KEY){
+        ESP_LOGD(TAG, "Not an EAPoL-Key packet.");
+        return NULL;
+    }
+    return (eapol_key_packet_t *) eapol_packet->packet_body;
 }
 
 pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){
@@ -119,14 +113,7 @@ pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length
     return pmkid_item_head;
 }
 
-pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_packet_t *eapol_packet) {
-    if(eapol_packet->header.packet_type != EAPOL_KEY){
-        ESP_LOGE(TAG, "Not an EAPoL-Key packet.");
-        return NULL;
-    }
-
-    eapol_key_packet_t *eapol_key = (eapol_key_packet_t *) eapol_packet->packet_body;
-
+pmkid_item_t *parse_pmkid(eapol_key_packet_t *eapol_key){
     if(eapol_key->key_data_length == 0){
         ESP_LOGD(TAG, "Empty Key Data");
         return NULL;

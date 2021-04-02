@@ -62,11 +62,7 @@
         </form>
     </section>
     <section id="running" style="display: none;">
-        Attack in progress.. <br>
-        It may take few moments based on attack timeout.. <br>
-        You may be kicked from management AP in the meantime.. <br>
-        Please reconnect to get result. <br>
-        Progress: <div id="running-progress"></div>
+        Time elapsed: <span id="running-progress"></span>
     </section>
     <section id="result" style="display: none;">
         <div id="result-meta">Loading result.. Please wait</div>
@@ -79,6 +75,10 @@
     var selectedApElement = -1;
     var poll;
     var poll_interval = 1000;
+    var running_poll;
+    var running_poll_interval = 1000;
+    var attack_timeout = 0;
+    var time_elapsed = 0;
     var defaultResultContent = document.getElementById("result").innerHTML;
     var defaultAttackMethods = document.getElementById("attack_method").outerHTML;
     function getStatus() {
@@ -98,8 +98,7 @@
                         showAttackConfig();
                         break;
                     case AttackStateEnum.RUNNING:
-                        document.getElementById("running").style.display = "block";
-                        document.getElementById("running-progress").innerHTML += "*";
+                        showRunning();
                         console.log("Poll");
                         setTimeout(getStatus, poll_interval);
                         break;
@@ -133,6 +132,19 @@
         for(let section of document.getElementsByTagName("section")){
             section.style.display = "none";
         };
+    }
+    function showRunning(){
+        hideAllSections();
+        document.getElementById("running").style.display = "block";
+    }
+    function countProgress(){
+        if(time_elapsed >= attack_timeout){
+            document.getElementById("errors").innerHTML = "Please reconnect to management AP";
+            document.getElementById("errors").style.display = "block";
+            clearInterval(running_poll);
+        }
+        document.getElementById("running-progress").innerHTML = time_elapsed + "/" + attack_timeout + "s";
+        time_elapsed++;
     }
     function showAttackConfig(){
         document.getElementById("ready").style.display = "block";
@@ -222,6 +234,9 @@
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
         getStatus();
+        attack_timeout = parseInt(document.getElementById("attack_timeout").value);
+        time_elapsed = 0;
+        running_poll = setInterval(countProgress, running_poll_interval);
     }
     function resetAttack(){
         hideAllSections();
@@ -268,10 +283,15 @@
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "*" + mac_ap + "*" + mac_sta  + "*" + ssid  + "</code><br>";
     }
     function resultHandshake(attack_content, attack_content_size){
+        document.getElementById("result-content").innerHTML = "";
         var pcap_link = document.createElement("a");
         pcap_link.setAttribute("href", "capture.pcap");
         pcap_link.text = "Download PCAP file";
-        document.getElementById("result-content").innerHTML = "<p>" + pcap_link.outerHTML + "</p>";
+        var hccapx_link = document.createElement("a");
+        hccapx_link.setAttribute("href", "capture.hccapx");
+        hccapx_link.text = "Download HCCAPX file";
+        document.getElementById("result-content").innerHTML += "<p>" + pcap_link.outerHTML + "</p>";
+        document.getElementById("result-content").innerHTML += "<p>" + hccapx_link.outerHTML + "</p>";
         var handshakes = "";
         for(let i = 0; i < attack_content_size; i = i + 1) {
             handshakes += uint8ToHex(attack_content[i]);

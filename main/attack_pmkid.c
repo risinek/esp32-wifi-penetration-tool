@@ -59,7 +59,7 @@ void attack_pmkid_start(attack_config_t *attack_config){
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_PMKID, ap_record->bssid);
     wifictl_sta_connect_to_ap(ap_record, "dummypassword");
-    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_FOUND_PMKID, &pmkid_exit_condition_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_PMKID, &pmkid_exit_condition_handler, NULL));
 }
 
 void attack_pmkid_stop(){
