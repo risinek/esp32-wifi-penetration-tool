@@ -18,3 +18,6 @@ This component wraps all Wi-Fi related operations. It's used to start AP, connec
 
 ### Webserver
 Webserver component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
+
+## License
+Even though this project is licensed under MIT license (see [LICENSE](LICENSE) file for details), don't be shy or greedy and share your work.
