@@ -44,11 +44,13 @@ void attack_append_status_content(uint8_t *buffer, unsigned size){
         ESP_LOGE(TAG, "Size can't be 0 if you want to reallocate");
         return;
     }
+    // temporarily save new location in case of realloc failure to preserve current content
     char *reallocated_content = realloc(attack_status.content, attack_status.content_size + size);
     if(reallocated_content == NULL){
         ESP_LOGE(TAG, "Error reallocating status content! Status content may not be complete.");
         return;
     }
+    // copy new data after current content
     memcpy(&reallocated_content[attack_status.content_size], buffer, size);
     attack_status.content = reallocated_content;
     attack_status.content_size += size;
