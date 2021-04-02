@@ -28,5 +28,8 @@ Webserver component provides web UI to configure attacks. It expects that AP is 
     <img src="doc/images/mini2.jpg" alt="Hw components" width="300">
 </center>
 
+## Disclaimer
+This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard. It's not meant to be used for illegal activities.
+
 ## License
 Even though this project is licensed under MIT license (see [LICENSE](LICENSE) file for details), don't be shy or greedy and share your work.
