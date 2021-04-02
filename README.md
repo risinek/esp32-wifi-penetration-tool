@@ -32,7 +32,7 @@ Webserver component provides web UI to configure attacks. It expects that AP is 
 <p align="center">
     <img src="doc/images/mini.jpg" alt="Hw components" width="300">
     <img src="doc/images/mini2.jpg" alt="Hw components" width="300">
-</cepnter>
+</p>
 
 ## Disclaimer
 This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard. It's not meant to be used for illegal activities.
