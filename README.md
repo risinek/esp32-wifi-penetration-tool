@@ -11,6 +11,12 @@ Cracking of PMK from PMKID or handshake itself is not part of this project, as E
 Each component has single header file in `interface` folder that provides "all-in-one" interface for this component. It provides all functions intended to be used outside
 of the component.
 
+## Hardware 
+
+## Build
+
+## Contributing
+
 ## Components
 This project consists of multiple components, that should be reusable with none or minimal code changes.
 
