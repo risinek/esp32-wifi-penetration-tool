@@ -22,7 +22,7 @@ typedef struct __attribute__((__packed__)){
     uint8_t eapol[256];
 } hccapx_t;
 
-void hccapx_serializer_init(uint8_t *ssid, unsigned size);
+void hccapx_serializer_init(const uint8_t *ssid, unsigned size);
 hccapx_t *hccapx_serializer_get();
 void hccapx_serializer_add_frame(data_frame_t *frame);
 

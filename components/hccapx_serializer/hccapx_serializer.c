@@ -36,7 +36,7 @@ bool is_array_zero(uint8_t *array, unsigned size){
     return true;
 }
 
-void hccapx_serializer_init(uint8_t *ssid, unsigned size){
+void hccapx_serializer_init(const uint8_t *ssid, unsigned size){
     hccapx.essid_len = size;
     memcpy(hccapx.essid, ssid, size);
     hccapx.message_pair = 255;
