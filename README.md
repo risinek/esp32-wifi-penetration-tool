@@ -1,6 +1,4 @@
-ESP32 WPA Handshake attack 
-====================
-## Alternatively - ESP32 Wi-Fi Penetration Tool
+# ESP32 Wi-Fi Penetration Tool
 
 This project implements attack on WPA/WPA2 handshake. 
 It tries to get PMKID if AP provides it in plaintext during WPA authentication, otherwise it runs deauthentication attack and gather WPA handshake. 
