@@ -26,7 +26,7 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
     attack_append_status_content(frame->payload, frame->rx_ctrl.sig_len);
     pcap_serializer_append_frame(frame->payload, frame->rx_ctrl.sig_len, frame->rx_ctrl.timestamp);
-    hccapx_serializer_add_frame((data_frame_t *) frame->payload, frame->rx_ctrl.sig_len);
+    hccapx_serializer_add_frame((data_frame_t *) frame->payload);
 }
 
 static void timer_send_deauth_frame(void* arg){

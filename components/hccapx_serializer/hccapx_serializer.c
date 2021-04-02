@@ -168,7 +168,7 @@ static void sta_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol
     }
 }
 
-void hccapx_serializer_add_frame(data_frame_t *frame, unsigned size){
+void hccapx_serializer_add_frame(data_frame_t *frame){
     eapol_packet_t *eapol_packet = parse_eapol_packet(frame);
     eapol_key_packet_t *eapol_key_packet = parse_eapol_key_packet(eapol_packet);
     if(memcmp(frame->mac_header.addr2, frame->mac_header.addr3, 6) == 0){
