@@ -63,13 +63,13 @@ static unsigned save_eapol(eapol_packet_t *eapol_packet, eapol_key_packet_t *eap
     return 0;
 }
 
-void ap_message_m1(eapol_key_packet_t *eapol_key_packet){
+static void ap_message_m1(eapol_key_packet_t *eapol_key_packet){
     ESP_LOGD(TAG, "From AP M1");
     message_ap = 1;
     memcpy(hccapx.nonce_ap, eapol_key_packet->key_nonce, 32);
 }
 
-void ap_message_m3(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
+static void ap_message_m3(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
     ESP_LOGD(TAG, "From AP M3");
     message_ap = 3;
     if(message_ap == 0){
@@ -90,7 +90,7 @@ void ap_message_m3(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_p
     }
 }
 
-void ap_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
+static void ap_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
     if((!is_array_zero(hccapx.mac_sta, 6)) && (memcmp(frame->mac_header.addr1, hccapx.mac_sta, 6) != 0)){
         ESP_LOGE(TAG, "Different STA");
         return;
@@ -110,7 +110,7 @@ void ap_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol_key_pac
     memcpy(hccapx.keymic, eapol_key_packet->key_mic, 16);
 }
 
-void sta_message_m2(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
+static void sta_message_m2(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
     ESP_LOGD(TAG, "From STA M2");
     message_sta = 2;
     memcpy(hccapx.nonce_sta, eapol_key_packet->key_nonce, 32);
@@ -124,7 +124,7 @@ void sta_message_m2(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_
     }
 }
 
-void sta_message_m4(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
+static void sta_message_m4(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
     ESP_LOGD(TAG, "From STA M4");
     if(message_sta == 2){
         ESP_LOGD(TAG, "Already have M2, not worth");
@@ -150,7 +150,7 @@ void sta_message_m4(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_
     }
 }
 
-void sta_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
+static void sta_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol_key_packet_t *eapol_key_packet){
     if(is_array_zero(hccapx.mac_sta, 6)){
         memcpy(hccapx.mac_sta, frame->mac_header.addr2, 6);
     }
