@@ -113,7 +113,7 @@ pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length
     return pmkid_item_head;
 }
 
-pmkid_item_t *parse_pmkid_from_eapol_packet(eapol_key_packet_t *eapol_key){
+pmkid_item_t *parse_pmkid(eapol_key_packet_t *eapol_key){
     if(eapol_key->key_data_length == 0){
         ESP_LOGD(TAG, "Empty Key Data");
         return NULL;
