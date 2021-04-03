@@ -39,7 +39,7 @@ This project consists of multiple components, that can be reused in other projec
 - **Main** component is entry point for this project. All neccessary initialisation steps are done here. Management AP is started and the controll is handed to other components.
 - **Wifi Controller** component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
 - **Webserver** component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
-- **Deauther** component bypasses Wi-Fi Stack Libraries restriction to send some types of arbitrary 802.11 frames.
+- [**Deauther**](compontents/deauther) component bypasses Wi-Fi Stack Libraries restriction to send some types of arbitrary 802.11 frames.
 - **Frame Analyzer** component processes captured frames and provides parsing functionality to other components.
 - **PCAP Serializer** component serializes captured frames into PCAP binary format and provides it to other components (mostly for webserver/UI)
 - **HCCAPX Serializer** component serializes captured frames into HCCAPX binary format and provides it to other components (mostly for webserver/UI)
