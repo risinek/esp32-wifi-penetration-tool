@@ -9,9 +9,9 @@ Cracking of PMK from PMKID or handshake itself is not part of this project, as E
 </p>
 
 ## Build
-This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`).
+This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`). It may be broken on newer version.
 
-Project can be build the usual way:
+Project can be built and flashed in the usual ESP-IDF way:
 
 ```shell
 idf.py build
@@ -25,15 +25,15 @@ Legacy method using `make` is not supported by this project.
 This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygex` from root directory. It will generate HTML API reference into `doc/api/html`.
 
 ### Components
-This project consists of multiple components, that can be reused in other projects. Each component has it's own README with detailed description. Here comes the list of components:
+This project consists of multiple components, that can be reused in other projects. Each component has it's own README with detailed description. Here comes brief description of components:
 
 - **Main** component is entry point for this project. All neccessary initialisation steps are done here. Management AP is started and the controll is handed to other components.
 - **Wifi Controller** component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
 - **Webserver** component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
-- **Deauther**
-- **Frame Analyzer**
-- **PCAP Serializer**
-- **HCCAPX Serializer**
+- **Deauther** component bypasses Wi-Fi Stack Libraries restriction to send some types of arbitrary 802.11 frames.
+- **Frame Analyzer** component processes captured frames and provides parsing functionality to other components.
+- **PCAP Serializer** component serializes captured frames into PCAP binary format and provides it to other components (mostly for webserver/UI)
+- **HCCAPX Serializer** component serializes captured frames into HCCAPX binary format and provides it to other components (mostly for webserver/UI)
 
 ## Hardware 
 This project was mostly build and tested on **ESP32-DEVKITC-32E**
