@@ -32,7 +32,7 @@ static const wifi_ap_record_t *ap_record = NULL;
  * captured PMKIDs into status content.
  * 
  * @param args not used
- * @param event_base expects DATA_FRAME_EVENTS
+ * @param event_base expects FRAME_ANALYZER_EVENTS
  * @param event_id expects DATA_FRAME_EVENT_PMKID
  * @param event_data expexcts pmkid_item_t *
  */
@@ -80,7 +80,7 @@ void attack_pmkid_start(attack_config_t *attack_config){
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_PMKID, ap_record->bssid);
     wifictl_sta_connect_to_ap(ap_record, "dummypassword");
-    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_PMKID, &pmkid_exit_condition_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_PMKID, &pmkid_exit_condition_handler, NULL));
 }
 
 void attack_pmkid_stop(){

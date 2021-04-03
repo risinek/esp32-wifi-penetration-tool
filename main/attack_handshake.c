@@ -36,7 +36,7 @@ static const wifi_ap_record_t *ap_record = NULL;
  * appends the frame to status content and serialize them into pcap and hccapx format.
  * 
  * @param args not used
- * @param event_base expects DATA_FRAME_EVENTS
+ * @param event_base expects FRAME_ANALYZER_EVENTS
  * @param event_id expects DATA_FRAME_EVENT_EAPOLKEY_FRAME
  * @param event_data expects wifi_promiscuous_pkt_t
  */
@@ -106,7 +106,7 @@ void attack_handshake_start(attack_config_t *attack_config){
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
-    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, &eapolkey_frame_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, &eapolkey_frame_handler, NULL));
     switch(attack_config->method){
         case ATTACK_HANDSHAKE_METHOD_BROADCAST:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
