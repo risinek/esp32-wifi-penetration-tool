@@ -41,17 +41,24 @@ This project consists of multiple components, that can be reused in other projec
 - **PCAP Serializer**
 - **HCCAPX Serializer**
 
-#### Wifi Controller
-This component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
+## Hardware 
+This project was mostly build and tested on **ESP32-DEVKITC-32E**
+but there should not be any differences for any **ESP32-WROOM-32** modules.
 
-#### Webserver
-Webserver component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
-
+On the following pictures you can see
+- **ESP32-DEVKITC-32E**
+- 220mAh Li-Pol 3.7V accumulator (weights ±5g)
+- MCP1702-3302ET voltage regulator
+- Czech 5-koruna coin for scale
 <p align="center">
     <img src="doc/images/mini.jpg" alt="Hw components" width="300">
     <img src="doc/images/mini2.jpg" alt="Hw components" width="300">
 </p>
 
+Altogether this setup weights around 17g. This can be further downsized by using smaller Li-Pol accumulator and using ESP32-WROOM-32 modul instead of whole dev board.
+
+### Power consumption
+Based on [Radioshuttle - Battery-Powered ESP32](https://www.radioshuttle.de/en/media-en/tech-infos-en/battery-powered-esp32/) article, ESP32 consumes around *80-180 mA* while operating on Wi-Fi interface. 
 ## Disclaimer
 This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard. It's not meant to be used for illegal activities.
 
