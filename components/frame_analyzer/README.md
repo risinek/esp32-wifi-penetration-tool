@@ -21,5 +21,5 @@ If you want to use this package in your project, just pass captures frames from 
 
 Or use just parsing functionality of this component.
 
-## Documentation
+## Reference
 Doxygen API reference available
