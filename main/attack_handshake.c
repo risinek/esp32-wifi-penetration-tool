@@ -17,7 +17,7 @@
 #include "esp_wifi_types.h"
 
 #include "attack.h"
-#include "deauther.h"
+#include "wsl_bypasser.h"
 #include "wifi_controller.h"
 #include "frame_analyzer.h"
 #include "pcap_serializer.h"
