@@ -1,7 +1,7 @@
 # ESP32 Wi-Fi Penetration Tool
-## Deauther component
+## Wi-Fi Stack Libraries (WSL) Bypasser component
 
-This component main purpose is to bypass Wi-Fi Stack Libaries blocking mechanism that disallows sending some types of raw 802.11 frames. 
+This components main purpose is to bypass Wi-Fi Stack Libaries blocking mechanism that disallows sending some types of raw 802.11 frames. 
 
 It's based on [ESP32-Deauther](https://github.com/GANESH-ICMC/esp32-deauther) project, where the function used to check type of frame in frame buffer [was decompiled by Ghidra tool](https://github.com/GANESH-ICMC/esp32-deauther/issues/9) and it's name `ieee80211_raw_frame_sanity_check` was found.
 
