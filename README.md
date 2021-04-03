@@ -11,10 +11,17 @@ Cracking of PMK from PMKID or handshake itself is not part of this project, as E
 Each component has single header file in `interface` folder that provides "all-in-one" interface for this component. It provides all functions intended to be used outside
 of the component.
 
-## Hardware 
-
 ## Build
+This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`).
 
+Project can be build the usual way:
+
+```shell
+idf.py build
+idf.py flash
+```
+
+Legacy method using `make` is not supported by this project.
 ## Contributing
 
 ## Documentation
