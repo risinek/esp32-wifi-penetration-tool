@@ -69,7 +69,7 @@ Based on [Radioshuttle - Battery-Powered ESP32](https://www.radioshuttle.de/en/m
 Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes, so verbose documentation is welcome.
 
 ## Disclaimer
-This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard and ESP32 platform can be utilised to attack on those vulnerable spots. Use responsibly against networks you have permission to attack on.
+This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard and how ESP32 platform can be utilised to attack on those vulnerable spots. Use responsibly against networks you have permission to attack on.
 
 ## License
 Even though this project is licensed under MIT license (see [LICENSE](LICENSE) file for details), don't be shy or greedy and share your work.
