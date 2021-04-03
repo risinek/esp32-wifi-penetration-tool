@@ -1,8 +1,8 @@
 # ESP32 Wi-Fi Penetration Tool
 
-This project implements attack on WPA/WPA2 handshake. 
-It tries to get PMKID if AP provides it in plaintext during WPA authentication, otherwise it runs deauthentication attack and gather WPA handshake. 
-Cracking of PMK from PMKID or handshake itself is not part of this project, as ESP32 doesn't have sufficient power to crash hashes in meaningful time period.
+This project implements an universal tool for ESP32 platform for implementing various Wi-Fi attacks. It provides some common functions that are commonly used in Wi-Fi attacks that makes implementing new attacks a bit simpler. It also includes Wi-Fi attacks itself like capturing PMKIDs from handshaker, or handshakes themselves by different methods like starting rogue duplicated AP or sending deauthentication frames directly.
+
+Obviously cracking is not part of this project, as ESP32 does not have enough power to crack hashes in effective way. But the rest can be done on this small, cheap, low-power SoC.
 
 <p align="center">
     <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
