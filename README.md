@@ -59,8 +59,9 @@ Altogether this setup weights around 17g. This can be further downsized by using
 
 ### Power consumption
 Based on [Radioshuttle - Battery-Powered ESP32](https://www.radioshuttle.de/en/media-en/tech-infos-en/battery-powered-esp32/) article, ESP32 consumes around *80-180 mA* while operating on Wi-Fi interface. 
+
 ## Disclaimer
-This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard. It's not meant to be used for illegal activities.
+This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard and ESP32 platform can be utilised to attack on those vulnerable spots. Use responsibly against networks you have permission to attack on.
 
 ## License
 Even though this project is licensed under MIT license (see [LICENSE](LICENSE) file for details), don't be shy or greedy and share your work.
