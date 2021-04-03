@@ -36,7 +36,7 @@ This project uses Doxygen notation for documenting components API and implementa
 ### Components
 This project consists of multiple components, that can be reused in other projects. Each component has it's own README with detailed description. Here comes brief description of components:
 
-- **Main** component is entry point for this project. All neccessary initialisation steps are done here. Management AP is started and the controll is handed to other components.
+- [**Main**](main) component is entry point for this project. All neccessary initialisation steps are done here. Management AP is started and the controll is handed to other components.
 - [**Wifi Controller**](components/wifi_controller) component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
 - [**Webserver**](components/webserver) component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
 - [**Deauther**](components/deauther) component bypasses Wi-Fi Stack Libraries restriction to send some types of arbitrary 802.11 frames.
