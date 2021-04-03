@@ -4,7 +4,7 @@
  * @date 2021-04-02
  * @copyright Copyright (c) 2021
  *
- * @brief Attack wrapper controls.
+ * @brief Provides interface to attack wrapper
  * 
  * This file provide interface to control attack wrapper like setting current attack state, 
  * update attack status content, etc...

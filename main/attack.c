@@ -4,7 +4,7 @@
  * @date 2021-04-02
  * @copyright Copyright (c) 2021
  * 
- * @brief Implementation of attack wrapper
+ * @brief Implements common attack wrapper.
  */
 
 #include "attack.h"
