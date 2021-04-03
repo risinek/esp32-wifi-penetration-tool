@@ -31,7 +31,7 @@ Legacy method using `make` is not supported by this project.
 
 ## Documentation
 ### API reference
-This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygex` from root directory. It will generate HTML API reference into `doc/api/html`.
+This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygen` from root directory. It will generate HTML API reference into `doc/api/html`.
 
 ### Components
 This project consists of multiple components, that can be reused in other projects. Each component has it's own README with detailed description. Here comes brief description of components:
