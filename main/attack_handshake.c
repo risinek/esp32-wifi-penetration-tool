@@ -57,7 +57,7 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
  * @param arg not used
  */
 static void timer_send_deauth_frame(void* arg){
-    deauther_send_deauth_frame(ap_record);
+    wsl_bypasser_send_deauth_frame(ap_record);
 }
 
 /**
