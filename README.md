@@ -20,9 +20,6 @@ idf.py flash
 
 Legacy method using `make` is not supported by this project.
 
-## Contributing
-Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes of ESP32 platform and Wi-Fi attacks implementations, so verbose documentation is welcome.
-
 ## Documentation
 ### API reference
 This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygex` from root directory. It will generate HTML API reference into `doc/api/html`.
@@ -56,6 +53,9 @@ Altogether this setup weights around 17g. This can be further downsized by using
 
 ### Power consumption
 Based on [Radioshuttle - Battery-Powered ESP32](https://www.radioshuttle.de/en/media-en/tech-infos-en/battery-powered-esp32/) article, ESP32 consumes around *80-180 mA* while operating on Wi-Fi interface. 
+
+## Contributing
+Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes, so verbose documentation is welcome.
 
 ## Disclaimer
 This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard and ESP32 platform can be utilised to attack on those vulnerable spots. Use responsibly against networks you have permission to attack on.
