@@ -9,7 +9,7 @@
 #include "esp_event.h"
 
 #include "wifi_controller.h"
-#include "data_frame_parser.h"
+#include "frame_analyzer_parser.h"
 
 static const char *TAG = "frame_analyzer";
 static uint8_t target_bssid[6];

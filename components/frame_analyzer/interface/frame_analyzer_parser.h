@@ -1,5 +1,5 @@
-#ifndef DATA_FRAME_PARSER_H
-#define DATA_FRAME_PARSER_H
+#ifndef FRAME_ANALYZER_PARSER_H
+#define FRAME_ANALYZER_PARSER_H
 
 #include <stdint.h>
 #include "esp_wifi_types.h"
