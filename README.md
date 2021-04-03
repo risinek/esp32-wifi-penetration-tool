@@ -8,6 +8,15 @@ Obviously cracking is not part of this project, as ESP32 does not have enough po
     <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
 </p>
 
+
+## Usage
+1. Build and flash it onto ESP32 (devkit or module)
+1. Power it
+1. Management AP is started automatically after boot
+1. Connect to this AP
+1. In browser open `192.168.4.1` and you should see a web client to configure and control this tool like this:
+![Web client UI](doc/images/ui-config.png)
+
 ## Build
 This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`). It may be broken on newer version.
 
