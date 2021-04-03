@@ -1,4 +1,14 @@
-// Ref: https://hashcat.net/forum/thread-7717.html
+/**
+ * @file attack_pmkid.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-03
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implements PMKID attack.
+ * 
+ * @see PMKID attack reference - https://hashcat.net/forum/thread-7717.html
+ */
+
 #include "attack_pmkid.h"
 
 #include <string.h>
@@ -15,6 +25,17 @@
 static const char* TAG = "main:attack_pmkid";
 static const wifi_ap_record_t *ap_record = NULL;
 
+/**
+ * @brief Callback for DATA_FRAME_EVENT_PMKID event.
+ * 
+ * If DATA_FRAME_EVENT_PMKID is received from event pool, this function stops PMKID attack and serialize 
+ * captured PMKIDs into status content.
+ * 
+ * @param args not used
+ * @param event_base expects DATA_FRAME_EVENTS
+ * @param event_id expects DATA_FRAME_EVENT_PMKID
+ * @param event_data expexcts pmkid_item_t *
+ */
 static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGD(TAG, "Got PMKID, stopping attack...");
     attack_update_status(FINISHED);
