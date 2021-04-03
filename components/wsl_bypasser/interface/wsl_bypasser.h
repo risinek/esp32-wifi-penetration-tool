@@ -1,5 +1,5 @@
-#ifndef DEAUTHER_H
-#define DEAUTHER_H
+#ifndef WSL_BYPASSER_H
+#define WSL_BYPASSER_H
 
 #include "esp_wifi_types.h"
 

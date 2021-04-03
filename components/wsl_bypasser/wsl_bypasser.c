@@ -1,6 +1,6 @@
 // Inspired by: https://github.com/GANESH-ICMC/esp32-deauther
 
-#include "deauther.h"
+#include "wsl_bypasser.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -11,7 +11,7 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
-static const char *TAG = "deauther";
+static const char *TAG = "wsl_bypasser";
 static const uint8_t deauth_frame_default[] = {
     0xc0, 0x00, 0x3a, 0x01,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
