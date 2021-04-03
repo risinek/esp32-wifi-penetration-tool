@@ -13,7 +13,7 @@ This webserver implements few enpoints that are used by JavaScript client.
 - **`/`** displayes index.html page
 - **`/status`** returns attack status in binary
 - **`/reset`** tells the application to reset attack status to default READY state
-- **`/ap-list`** scans surrounding APs and displays them to table
+- **`/ap-list`** scans near APs and displays them to table
 - **`/run-attack`** sends configuration back to the application
 - **`/capture.pcap`** provides PCAP formatted file for download
 - **`/capture.hccapx`** provides HCCAPX formatted file for download
