@@ -1,3 +1,12 @@
+/**
+ * @file attack_handshake.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-03
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implements handshake attacks and different available methods.
+ */
+
 #include "attack_handshake.h"
 
 #include <string.h>
@@ -20,6 +29,17 @@ static attack_handshake_methods_t method = -1;
 static uint8_t mac_ap_orig[6];
 static const wifi_ap_record_t *ap_record = NULL;
 
+/**
+ * @brief Callback for DATA_FRAME_EVENT_EAPOLKEY_FRAME event.
+ * 
+ * If EAPOL-Key frame is captured and DATA_FRAME_EVENT_EAPOLKEY_FRAME event is received from event pool, this method
+ * appends the frame to status content and serialize them into pcap and hccapx format.
+ * 
+ * @param args not used
+ * @param event_base expects DATA_FRAME_EVENTS
+ * @param event_id expects DATA_FRAME_EVENT_EAPOLKEY_FRAME
+ * @param event_data expects wifi_promiscuous_pkt_t
+ */
 static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Got EAPoL-Key frame");
     ESP_LOGD(TAG, "Processing handshake frame...");
@@ -29,10 +49,22 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
     hccapx_serializer_add_frame((data_frame_t *) frame->payload);
 }
 
+/**
+ * @brief Callback for periodic deauthentication frame timer
+ * 
+ * Periodicaly called to send deauthentication frame for given AP
+ * 
+ * @param arg not used
+ */
 static void timer_send_deauth_frame(void* arg){
     deauther_send_deauth_frame(ap_record);
 }
 
+/**
+ * @brief Initialises ATTACK_HANDSHAKE_METHOD_BROADCAST attack method 
+ * 
+ * Starts periodic timer for sending deauthentication frame via timer_send_deauth_frame().
+ */
 static void attack_handshake_method_broadcast(){
     const esp_timer_create_args_t deauth_timer_args = {
         .callback = &timer_send_deauth_frame
@@ -41,6 +73,13 @@ static void attack_handshake_method_broadcast(){
     ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, 5 * 1000000));
 }
 
+/**
+ * @brief Initialises ATTACK_HANDSHAKE_METHOD_ROGUE_AP attack method
+ * 
+ * Starts duplicated AP with same BSSID as genuine AP from ap_record.
+ * 
+ * @note BSSID is MAC address of APs Wi-Fi interface
+ */
 static void attack_handshake_method_rogueap(){
     ESP_LOGD(TAG, "Configuring Rogue AP");
     wifictl_get_ap_mac(mac_ap_orig);
