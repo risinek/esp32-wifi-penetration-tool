@@ -1,3 +1,14 @@
+/**
+ * @file main.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-03
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Main file used to setup ESP32 into initial state
+ * 
+ * Starts management AP and webserver  
+ */
+
 #include <stdio.h>
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
