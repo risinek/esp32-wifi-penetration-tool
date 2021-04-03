@@ -17,16 +17,20 @@ of the component.
 
 ## Contributing
 
-## Components
+## Documentation
+### API reference
+This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygex` from root directory. It will generate HTML API reference into `doc/api/html`.
+
+### Components
 This project consists of multiple components, that should be reusable with none or minimal code changes.
 
-### Main
+#### Main
 Main component is entry point for this project. All neccessary initialisation steps are done here. **Management AP** is started and the controll is handed to other components.
 
-### Wifi Controller
+#### Wifi Controller
 This component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
 
-### Webserver
+#### Webserver
 Webserver component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
 
 <p align="center">
