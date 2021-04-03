@@ -22,7 +22,9 @@ idf.py flash
 ```
 
 Legacy method using `make` is not supported by this project.
+
 ## Contributing
+Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes of ESP32 platform and Wi-Fi attacks implementations, so verbose documentation is welcome.
 
 ## Documentation
 ### API reference
