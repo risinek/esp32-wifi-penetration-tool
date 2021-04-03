@@ -26,7 +26,6 @@
 static const char *TAG = "main:attack_handshake";
 static esp_timer_handle_t deauth_timer_handle;
 static attack_handshake_methods_t method = -1;
-static uint8_t mac_ap_orig[6];
 static const wifi_ap_record_t *ap_record = NULL;
 
 /**
@@ -82,7 +81,6 @@ static void attack_handshake_method_broadcast(){
  */
 static void attack_handshake_method_rogueap(){
     ESP_LOGD(TAG, "Configuring Rogue AP");
-    wifictl_get_ap_mac(mac_ap_orig);
     wifictl_set_ap_mac(ap_record->bssid);
     wifi_config_t ap_config = {
         .ap = {
@@ -130,7 +128,7 @@ void attack_handshake_stop(){
             break;
         case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
             wifictl_mgmt_ap_start();
-            wifictl_set_ap_mac(mac_ap_orig);
+            wifictl_restore_ap_mac();
             break;
         default:
             ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");
