@@ -31,10 +31,15 @@ Feel free to contribute. Don't hestitate to refactor current code base. Please s
 This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygex` from root directory. It will generate HTML API reference into `doc/api/html`.
 
 ### Components
-This project consists of multiple components, that should be reusable with none or minimal code changes.
+This project consists of multiple components, that can be reused in other projects. Each component has it's own README with detailed description. Here comes the list of components:
 
-#### Main
-Main component is entry point for this project. All neccessary initialisation steps are done here. **Management AP** is started and the controll is handed to other components.
+- **Main** component is entry point for this project. All neccessary initialisation steps are done here. Management AP is started and the controll is handed to other components.
+- **Wifi Controller** component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
+- **Webserver** component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
+- **Deauther**
+- **Frame Analyzer**
+- **PCAP Serializer**
+- **HCCAPX Serializer**
 
 #### Wifi Controller
 This component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
