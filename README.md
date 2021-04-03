@@ -8,9 +8,6 @@ Cracking of PMK from PMKID or handshake itself is not part of this project, as E
     <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
 </p>
 
-Each component has single header file in `interface` folder that provides "all-in-one" interface for this component. It provides all functions intended to be used outside
-of the component.
-
 ## Build
 This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`).
 
