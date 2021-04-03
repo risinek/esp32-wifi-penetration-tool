@@ -20,7 +20,6 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 
 static void wifi_init_apsta(){
     ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_netif_create_default_wifi_ap();
     esp_netif_create_default_wifi_sta();
