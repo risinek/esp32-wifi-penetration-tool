@@ -1,4 +1,4 @@
-#include "data_frame_parser.h"
+#include "frame_analyzer_parser.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,9 +11,9 @@
 
 #include "frame_analyzer_types.h"
 
-static const char *TAG = "frame_analyzer:data_frame_parser";
+static const char *TAG = "frame_analyzer:parser";
 
-ESP_EVENT_DEFINE_BASE(DATA_FRAME_EVENTS);
+ESP_EVENT_DEFINE_BASE(FRAME_ANALYZER_EVENTS);
 
 void print_raw_frame(const wifi_promiscuous_pkt_t *frame){
     for(unsigned i = 0; i < frame->rx_ctrl.sig_len; i++) {

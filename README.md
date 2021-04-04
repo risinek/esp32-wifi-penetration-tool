@@ -39,7 +39,7 @@ This project consists of multiple components, that can be reused in other projec
 - [**Main**](main) component is entry point for this project. All neccessary initialisation steps are done here. Management AP is started and the control is handed to webserver.
 - [**Wifi Controller**](components/wifi_controller) component wraps all Wi-Fi related operations. It's used to start AP, connect as STA, scan nearby APs etc. 
 - [**Webserver**](components/webserver) component provides web UI to configure attacks. It expects that AP is started and no additional security features like SSL encryption are enabled.
-- [**Deauther**](components/deauther) component bypasses Wi-Fi Stack Libraries restriction to send some types of arbitrary 802.11 frames.
+- [**Wi-Fi Stack Libraries Bypasser**](components/wsl_bypasser) component bypasses Wi-Fi Stack Libraries restriction to send some types of arbitrary 802.11 frames.
 - [**Frame Analyzer**](components/frame_analyzer) component processes captured frames and provides parsing functionality to other components.
 - [**PCAP Serializer**](components/pcap_serializer) component serializes captured frames into PCAP binary format and provides it to other components (mostly for webserver/UI)
 - [**HCCAPX Serializer**](components/hccapx_serializer) component serializes captured frames into HCCAPX binary format and provides it to other components (mostly for webserver/UI)
@@ -69,7 +69,7 @@ Based on [Radioshuttle - Battery-Powered ESP32](https://www.radioshuttle.de/en/m
 Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes, so verbose documentation is welcome.
 
 ## Disclaimer
-This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard and ESP32 platform can be utilised to attack on those vulnerable spots. Use responsibly against networks you have permission to attack on.
+This project demonstrates vulnerabilities of Wi-Fi networks and its underlaying 802.11 standard and how ESP32 platform can be utilised to attack on those vulnerable spots. Use responsibly against networks you have permission to attack on.
 
 ## License
 Even though this project is licensed under MIT license (see [LICENSE](LICENSE) file for details), don't be shy or greedy and share your work.

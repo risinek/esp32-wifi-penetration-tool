@@ -7,7 +7,7 @@
 #include "esp_err.h"
 #include "frame_analyzer.h"
 #include "frame_analyzer_types.h"
-#include "data_frame_parser.h"
+#include "frame_analyzer_parser.h"
 
 #define HCCAPX_SIGNATURE 0x58504348
 #define HCCAPX_VERSION 4

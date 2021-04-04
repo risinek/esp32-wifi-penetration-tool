@@ -16,6 +16,7 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
 void wifictl_sta_disconnect();
 void wifictl_set_ap_mac(const uint8_t *mac_ap);
 void wifictl_get_ap_mac(uint8_t *mac_ap);
+void wifictl_restore_ap_mac();
 void wifictl_get_sta_mac(uint8_t *mac_sta);
 
 #endif

