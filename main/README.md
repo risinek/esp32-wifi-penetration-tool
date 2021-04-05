@@ -3,7 +3,7 @@
 
 This component the main component (also called pseudo-component). It contains attacks implementations themselves and attack wrapper framework.
 
-Theory behind following attacks implementations is in [/doc/ATTACK_THEORY.md](../doc/ATTACKS_THEORY.md)
+Theory behind following attacks implementations is in [/doc/ATTACK_THEORY.md](../doc/ATTACKS_THEORY.md).
 
 ### Deauth broadcast
 One way to send deauthentication frames is by bypassing Wi-Fi Stack Libaries that block them from being send. For this purpose [WSL Bypasser](../components/wsl_bypasser) component is being used. For further detail about how the bypass works, see README for WSL Bypasser component.
@@ -31,6 +31,10 @@ This is demonstrated in the following sequence diagram:
 #### Cons
 - This apporach requires active communication to be happening.
 - It may confuse STA completely so it will not be able to authenticate again, or it may try to authenticate with rogue AP instead of the genuine one. (can be fixed by turning duplicated AP on and off giving STA some time to reconnect)
+
+
+### PMKID capture
+To capture PMKID from AP the only thing we have to do is to initiate connection and get first handshake message from AP. If PMKID is available, AP will send it as part of the first handshake message, so it doesn't matter we don't know the credentials.
 
 ## Reference
 Doxygen API reference available
