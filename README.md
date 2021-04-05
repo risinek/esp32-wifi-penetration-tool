@@ -1,13 +1,12 @@
 # ESP32 Wi-Fi Penetration Tool
 
-This project implements an universal tool for ESP32 platform for implementing various Wi-Fi attacks. It provides some common functions that are commonly used in Wi-Fi attacks that makes implementing new attacks a bit simpler. It also includes Wi-Fi attacks itself like capturing PMKIDs from handshaker, or handshakes themselves by different methods like starting rogue duplicated AP or sending deauthentication frames directly.
+This project introduces an universal tool for ESP32 platform for implementing various Wi-Fi attacks. It provides some common functionality that is commonly used in Wi-Fi attacks and makes implementing new attacks a bit simpler. It also includes Wi-Fi attacks itself like capturing PMKIDs from handshakes, or handshakes themselves by different methods like starting rogue duplicated AP or sending deauthentication frames directly, etc...
 
-Obviously cracking is not part of this project, as ESP32 does not have enough power to crack hashes in effective way. But the rest can be done on this small, cheap, low-power SoC.
+Obviously cracking is not part of this project, as ESP32 is not sufficient to crack hashes in effective way. The rest can be done on this small, cheap, low-power SoC.
 
 <p align="center">
     <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
 </p>
-
 
 ## Usage
 1. Build and flash it onto ESP32 (devkit or module)
@@ -15,7 +14,8 @@ Obviously cracking is not part of this project, as ESP32 does not have enough po
 1. Management AP is started automatically after boot
 1. Connect to this AP
 1. In browser open `192.168.4.1` and you should see a web client to configure and control this tool like this:
-![Web client UI](doc/images/ui-config.png)
+
+    ![Web client UI](doc/images/ui-config.png)
 
 ## Build
 This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`). It may be broken on newer version.
