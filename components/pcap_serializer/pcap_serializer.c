@@ -9,11 +9,11 @@
 static const char *TAG = "pcap_serializer";
 
 // Ref: https://gitlab.com/wireshark/wireshark/-/wikis/Development/LibpcapFileFormat#global-header
-static const uint32_t SNAPLEN = 65535;
-static const uint32_t PCAP_MAGIC_NUMBER = 0xa1b2c3d4;
+#define SNAPLEN 65535
+#define PCAP_MAGIC_NUMBER 0xa1b2c3d4
 
 // Ref: http://www.tcpdump.org/linktypes.html (LINKTYPE_IEEE802_11)
-static const uint32_t LINKTYPE_IEEE802_11 = 105;
+#define LINKTYPE_IEEE802_11 105
 
 static unsigned pcap_size = 0;
 static uint8_t *pcap_buffer = NULL;
