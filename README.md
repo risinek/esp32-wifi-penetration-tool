@@ -30,6 +30,8 @@ idf.py flash
 Legacy method using `make` is not supported by this project.
 
 ## Documentation
+### Wi-Fi attacks
+Attacks implementations in this projects are described in [main component README](main/). Theory behind these attacks is located in [doc/ATTACKS_THEORY.md](doc/ATTACKS_THEORY.md)
 ### API reference
 This project uses Doxygen notation for documenting components API and implementation. Doxyfile is included so if you want to generate API reference, just run `doxygen` from root directory. It will generate HTML API reference into `doc/api/html`.
 
