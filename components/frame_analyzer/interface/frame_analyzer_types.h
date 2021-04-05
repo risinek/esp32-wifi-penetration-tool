@@ -1,12 +1,24 @@
+/**
+ * @file frame_analyzer_types.h
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-05
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Provides structures and constants based on various standards like 802.11, 802.1X etc...
+ */
 #ifndef FRAME_ANALYZER_TYPES_H
 #define FRAME_ANALYZER_TYPES_H
 
 #include <stdint.h>
 
-// Ref: 802.1X-2020 [11.1.4]
+/**
+ * @see Ref: 802.1X-2020 [11.1.4]
+ */
 #define ETHER_TYPE_EAPOL 0x888e
 
-// Ref: 802.1X-2020 [11.3.2]
+/**
+ * @see Ref: 802.1X-2020 [11.3.2]
+ */
 typedef enum {
     EAPOL_EAP_PACKET = 0,
 	EAPOL_START,
@@ -54,21 +66,27 @@ typedef struct {
     uint8_t encapsulation[3];
 } llc_snap_header_t;
 
-// Ref: 802.1X-2020 [11.3]
+/**
+ * @see Ref: 802.1X-2020 [11.3]
+ */
 typedef struct {
 	uint8_t version;
 	uint8_t packet_type;
 	uint16_t packet_body_length;
 } eapol_packet_header_t;
 
-// Ref: 802.1X-2020 [11.3], 802.11-2016 [12.7.2]
+/**
+ * @see Ref: 802.1X-2020 [11.3], 802.11-2016 [12.7.2]
+ */
 typedef struct {
 	eapol_packet_header_t header;
 	uint8_t packet_body[];
 } eapol_packet_t;
 
-// Ref: 802.11-2016 [12.7.2]
-// unnamed fields are "reserved"
+/**
+ * @note unnamed fields are "reserved"
+ * @see Ref: 802.11-2016 [12.7.2]
+ */
 typedef struct {
     uint8_t key_descriptor_version:3;
     uint8_t key_type:1;
@@ -84,7 +102,10 @@ typedef struct {
     uint8_t :2;
 } key_information_t;
 
-// Ref: 802.11-2016 [12.7.2]
+/**
+ * @todo MIC lenght is dependent on 802.11-2016 [12.7.3] - key_infromation_t.descrptor_version
+ * @see Ref: 802.11-2016 [12.7.2]
+ */
 typedef struct __attribute__((__packed__)) {
     uint8_t descriptor_type;
     key_information_t key_information;
@@ -94,21 +115,30 @@ typedef struct __attribute__((__packed__)) {
     uint8_t key_iv[16];
     uint8_t key_rsc[8];
     uint8_t reserved[8];
-    // TODO MIC lenght is dependent on 802.11-2016 [12.7.3] - key_infromation_t.descrptor_version
     uint8_t key_mic[16];
     uint16_t key_data_length;
     uint8_t key_data[];
 } eapol_key_packet_t;
 
-// Ref: 802.11-2016 [12.7.2, Table 12-6]
+/**
+ * @see Ref: 802.11-2016 [12.7.2, Table 12-6]
+ */
 #define KEY_DATA_TYPE 0xdd
-// Ref: 802.11-2016 [12.7.2, Table 12-6]
-// Needs trailing byte due to casting to uint32_t and converting from netlong
+
+/**
+ * @note Needs trailing byte due to casting to uint32_t and converting from netlong
+ * @see Ref: 802.11-2016 [12.7.2, Table 12-6]
+ */
 #define KEY_DATA_OUI_IEEE80211 0x00fac00
-// Ref: 802.11-2016 [12.7.2, Table 12-6]
+
+/**
+ * @see Ref: 802.11-2016 [12.7.2, Table 12-6]
+ */
 #define KEY_DATA_DATA_TYPE_PMKID_KDE 4
 
-// Ref: 802.11-2016 [12.7.2]
+/**
+ * @see Ref: 802.11-2016 [12.7.2]
+ */
 typedef struct __attribute__((__packed__)) {
     uint8_t type;
     uint8_t length;
@@ -117,6 +147,9 @@ typedef struct __attribute__((__packed__)) {
     uint8_t data[];
 } key_data_field_t;
 
+/**
+ * @brief linked list of PMKIDs
+ */
 typedef struct pmkid_item {
     uint8_t pmkid[16];
     struct pmkid_item *next;

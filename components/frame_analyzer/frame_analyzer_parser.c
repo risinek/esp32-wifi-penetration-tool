@@ -1,3 +1,11 @@
+/**
+ * @file frame_analyzer_parser.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-05
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implements parsing functionality
+ */
 #include "frame_analyzer_parser.h"
 
 #include <stdlib.h>
@@ -15,6 +23,11 @@ static const char *TAG = "frame_analyzer:parser";
 
 ESP_EVENT_DEFINE_BASE(FRAME_ANALYZER_EVENTS);
 
+/**
+ * @brief Debug function to print raw frame to serial
+ * 
+ * @param frame 
+ */
 void print_raw_frame(const wifi_promiscuous_pkt_t *frame){
     for(unsigned i = 0; i < frame->rx_ctrl.sig_len; i++) {
         printf("%02x", frame->payload[i]);
@@ -22,6 +35,11 @@ void print_raw_frame(const wifi_promiscuous_pkt_t *frame){
     printf("\n");
 }
 
+/**
+ * @brief Debug functions to print MAC address from given buffer to serial
+ * 
+ * @param a mac address buffer
+ */
 void print_mac_address(const uint8_t *a){
     printf("%02x:%02x:%02x:%02x:%02x:%02x",
     a[0], a[1], a[2], a[3], a[4], a[5]);
@@ -33,7 +51,6 @@ bool is_frame_bssid_matching(wifi_promiscuous_pkt_t *frame, uint8_t *bssid) {
     return memcmp(mac_header->addr3, bssid, 6) == 0;
 }
 
-// returns NULL if no EAPOL packet found, otherwise returns pointer to EAPoL packet
 eapol_packet_t *parse_eapol_packet(data_frame_t *frame) {
     uint8_t *frame_buffer = frame->body;
 
@@ -68,7 +85,16 @@ eapol_key_packet_t *parse_eapol_key_packet(eapol_packet_t *eapol_packet){
     return (eapol_key_packet_t *) eapol_packet->packet_body;
 }
 
-pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){
+/**
+ * @brief Parses all PMKIDs to linked list structure 
+ * 
+ * It crawlers through key data buffer and looks for PMKIDs.
+ * If PMKID element is found, its saved into the list of PMKIDs.
+ * @param key_data 
+ * @param length of key data
+ * @return pmkid_item_t* 
+ */
+static pmkid_item_t *parse_pmkid_from_key_data(uint8_t *key_data, const uint16_t length){
     uint8_t *key_data_index = key_data;
     uint8_t *key_data_max_index = key_data + length;
 

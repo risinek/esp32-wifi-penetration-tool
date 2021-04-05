@@ -1,5 +1,14 @@
-// References: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_server.html
-
+/**
+ * @file webserver.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-05
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implements Webserver component and all available enpoints.
+ * 
+ * Webserver is built on esp_http_server subcomponent from ESP-IDF
+ * @see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_server.html
+ */
 #include "webserver.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -19,6 +28,14 @@
 static const char* TAG = "webserver";
 ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
 
+/**
+ * @brief Handlers for index/root \c / path endpoint
+ * 
+ * This endpoint provides index page source
+ * @param req 
+ * @return esp_err_t 
+ * @{
+ */
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
     return httpd_resp_send(req, page_index, HTTPD_RESP_USE_STRLEN);
 }
@@ -29,7 +46,16 @@ static httpd_uri_t uri_root_get = {
     .handler = uri_root_get_handler,
     .user_ctx = NULL
 };
+//@}
 
+/**
+ * @brief Handlers for \c /reset endpoint
+ * 
+ * This endpoint resets the attack logic to initial READY state. 
+ * @param req 
+ * @return esp_err_t 
+ * @{
+ */
 static esp_err_t uri_reset_head_handler(httpd_req_t *req) {
     ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, NULL, 0, portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
@@ -41,7 +67,19 @@ static httpd_uri_t uri_reset_head = {
     .handler = uri_reset_head_handler,
     .user_ctx = NULL
 };
+//@}
 
+/**
+ * @brief Handlers for \c /ap-list endpoint
+ * 
+ * This endpoint returns list of available APs nearby.
+ * It calls wifi_controller ap_scanner and serialize their SSIDs into octet response.
+ * @attention reponse may take few seconds
+ * @attention client may be disconnected from ESP AP after calling this endpoint
+ * @param req 
+ * @return esp_err_t 
+ * @{
+ */
 static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
     wifictl_scan_nearby_aps();
 
@@ -67,7 +105,16 @@ static httpd_uri_t uri_ap_list_get = {
     .handler = uri_ap_list_get_handler,
     .user_ctx = NULL
 };
+//@}
 
+/**
+ * @brief Handlers for \c /run-attack endpoint  
+ * 
+ * This endpoint receives attack configuration from client. It deserialize it from octet stream to attack_request_t structure. 
+ * @param req 
+ * @return esp_err_t
+ * @{ 
+ */
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_request_t attack_request;
     httpd_req_recv(req, (char *)&attack_request, sizeof(attack_request_t));
@@ -82,7 +129,16 @@ static httpd_uri_t uri_run_attack_post = {
     .handler = uri_run_attack_post_handler,
     .user_ctx = NULL
 };
+//@}
 
+/**
+ * @brief Handlers for \c /status endpoint  
+ * 
+ * This endpoint fetches current status from main component attack wrapper, serialize it and sends it to client as octet stream.
+ * @param req 
+ * @return esp_err_t 
+ * @{
+ */
 static esp_err_t uri_status_get_handler(httpd_req_t *req) {
     ESP_LOGD(TAG, "Fetching attack status...");
     const attack_status_t *attack_status;
@@ -104,7 +160,18 @@ static httpd_uri_t uri_status_get = {
     .handler = uri_status_get_handler,
     .user_ctx = NULL
 };
+//@}
 
+/**
+ * @brief Handlers for \c /capture.pcap endpoint  
+ * 
+ * This endpoint forwards PCAP binary data from pcap_serializer via octet stream to client.
+ * 
+ * @note Most browsers will start download process when this endpoint is called.
+ * @param req 
+ * @return esp_err_t 
+ * @{
+ */
 static esp_err_t uri_capture_pcap_get_handler(httpd_req_t *req){
     ESP_LOGD(TAG, "Providing PCAP file...");
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
@@ -117,7 +184,18 @@ static httpd_uri_t uri_capture_pcap_get = {
     .handler = uri_capture_pcap_get_handler,
     .user_ctx = NULL
 };
+//@}
 
+/**
+ * @brief Handlers for \c /capture.hccapx endpoint  
+ * 
+ * This endpoint forwards HCCAPX binary data from hccapx_serializer via octet stream to client.
+ * 
+ * @note Most browsers will start download process when this endpoint is called.
+ * @param req 
+ * @return esp_err_t 
+ * @{
+ */
 static esp_err_t uri_capture_hccapx_get_handler(httpd_req_t *req){
     ESP_LOGD(TAG, "Providing HCCAPX file...");
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
@@ -130,6 +208,7 @@ static httpd_uri_t uri_capture_hccapx_get = {
     .handler = uri_capture_hccapx_get_handler,
     .user_ctx = NULL
 };
+//@}
 
 void webserver_run(){
     ESP_LOGD(TAG, "Running webserver");
