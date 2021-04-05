@@ -12,6 +12,9 @@
 #include "esp_event.h"
 
 static const char* TAG = "wifi_controller";
+/**
+ * @brief Stores current state of Wi-Fi interface
+ */
 static bool wifi_init = false;
 static uint8_t original_mac_ap[6];
 
@@ -19,6 +22,11 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 
 }
 
+/**
+ * @brief Initializes Wi-Fi interface into APSTA mode and starts it.
+ * 
+ * @attention This function should be called only once.
+ */
 static void wifi_init_apsta(){
     ESP_ERROR_CHECK(esp_netif_init());
 

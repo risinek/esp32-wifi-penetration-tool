@@ -1,3 +1,11 @@
+/**
+ * @file ap_scanner.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-05
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implements AP scanning functionality.
+ */
 #include "ap_scanner.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -6,7 +14,10 @@
 #include "esp_wifi.h"
 
 static const char* TAG = "wifi_controller/ap_scanner";
-
+/**
+ * @brief Stores last scanned AP records into linked list.
+ * 
+ */
 static wifictl_ap_records_t ap_records;
 
 void wifictl_scan_nearby_aps(){
