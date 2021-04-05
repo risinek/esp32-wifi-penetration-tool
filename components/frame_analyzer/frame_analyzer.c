@@ -1,3 +1,11 @@
+/**
+ * @file frame_analyzer.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-05
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implements frame analysis
+ */
 #include "frame_analyzer.h"
 
 #include <stdint.h>
@@ -15,6 +23,15 @@ static const char *TAG = "frame_analyzer";
 static uint8_t target_bssid[6];
 static search_type_t search_type = -1;
 
+
+/**
+ * @brief Analyzes data frames from sniffer.
+ *  
+ * @param args 
+ * @param event_base 
+ * @param event_id 
+ * @param event_data 
+ */
 static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGV(TAG, "Handling DATA frame");
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
