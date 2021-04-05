@@ -1,3 +1,11 @@
+/**
+ * @file pcap_serializer.c
+ * @author risinek (risinek@gmail.com)
+ * @date 2021-04-05
+ * @copyright Copyright (c) 2021
+ * 
+ * @brief Implementation of PCAP serializer
+ */
 #include "pcap_serializer.h"
 
 #include <stdint.h>
@@ -8,11 +16,22 @@
 
 static const char *TAG = "pcap_serializer";
 
-// Ref: https://gitlab.com/wireshark/wireshark/-/wikis/Development/LibpcapFileFormat#global-header
+
+/**
+ * @brief Constanst according to reference
+ * 
+ * @see Ref: https://gitlab.com/wireshark/wireshark/-/wikis/Development/LibpcapFileFormat#global-header
+ */
+//@{
 #define SNAPLEN 65535
 #define PCAP_MAGIC_NUMBER 0xa1b2c3d4
+//@}
 
-// Ref: http://www.tcpdump.org/linktypes.html (LINKTYPE_IEEE802_11)
+/**
+ * @brief Constanst according to reference
+ * 
+ * @see Ref: http://www.tcpdump.org/linktypes.html (LINKTYPE_IEEE802_11)
+ */
 #define LINKTYPE_IEEE802_11 105
 
 static unsigned pcap_size = 0;
