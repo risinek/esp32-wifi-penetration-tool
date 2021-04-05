@@ -6,7 +6,7 @@ Most common attack on WPA/WPA2-PSK (Personal) is by sniffing handshake frames an
 
 ![WPA handshake sequence diagram](../doc/drawio/wpa-handshake-seq.drawio.svg)
 
-PTK is used for one authenticated session and the communication is being encrypted by it (not really PTK itself, different keys are derived from PTK, but if you have PTK, you can derivate them too). Hence anyone being able to also calculate PTK can also decrypt communication between station (STA) and access point (AP). Besides these publicly transmitted parameters, there is also PMK (Pairwise Master Key) that both sides know in advance and is never transmitted. The PSK is the actual secret that we have to figure out/crack. For WPA/WPA2-PSK (Personal) PMK is equal to PSK, for WPA/WPA2-Enterprise PMK is derived from MSK/AAA key (which is not covered in this writeup). PSK itself can be also split further. This is visualized in the following diagram:
+PTK is used for one authenticated session and the communication is being encrypted by it (not really PTK itself, different keys are derived from PTK, but if you have PTK, you can derivate them too). Hence anyone being able to also calculate PTK can also decrypt communication between station (STA) and access point (AP). Besides these publicly transmitted parameters, there is also PMK (Pairwise Master Key) that both sides know in advance and is never transmitted. For WPA/WPA2-PSK (Personal) PMK is equal to PSK, for WPA/WPA2-Enterprise PMK is derived from MSK/AAA key (which is not covered in this writeup). PSK itself can be also split further. The *passphrase* is the actual secret that we have to figure out/crack. This is visualized in the following diagram:
 
 ![WPA handshake sequence diagram](../doc/drawio/wpa-keys-hierarchy.drawio.svg)
 
