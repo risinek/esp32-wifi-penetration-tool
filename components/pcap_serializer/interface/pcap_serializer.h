@@ -42,9 +42,8 @@ typedef struct {
  * @brief Prepares new empty buffer for PCAP formatted binary data. 
  * 
  * Has always to be called before pcap_serializer_append_frame()
- * @return 
- *      - uint8_t* pointer to newly allocated PCAP buffer.
- *      - NULL initialisation failed
+ * @return uint8_t* pointer to newly allocated PCAP buffer.
+ * @return \c NULL initialisation failed
  */
 uint8_t *pcap_serializer_init();
 
