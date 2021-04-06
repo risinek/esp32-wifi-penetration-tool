@@ -174,8 +174,6 @@ static void ap_message(data_frame_t *frame, eapol_packet_t* eapol_packet, eapol_
     else {
         ap_message_m3(eapol_packet, eapol_key_packet);
     }
-    
-    memcpy(hccapx.keymic, eapol_key_packet->key_mic, 16);
 }
 
 /**
