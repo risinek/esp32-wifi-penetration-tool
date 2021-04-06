@@ -67,6 +67,7 @@ typedef struct {
 } llc_snap_header_t;
 
 /**
+ * Size: 4 bytes
  * @see Ref: 802.1X-2020 [11.3]
  */
 typedef struct {
@@ -84,6 +85,7 @@ typedef struct {
 } eapol_packet_t;
 
 /**
+ * Size: 2 bytes
  * @note unnamed fields are "reserved"
  * @see Ref: 802.11-2016 [12.7.2]
  */
