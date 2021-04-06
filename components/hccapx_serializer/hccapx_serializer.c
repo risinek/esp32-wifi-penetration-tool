@@ -136,11 +136,9 @@ static void ap_message_m3(eapol_packet_t* eapol_packet, eapol_key_packet_t *eapo
         // No AP message was processed yet. ANonce has to be copied into HCCAPX buffer.
         memcpy(hccapx.nonce_ap, eapol_key_packet->key_nonce, 32);
     }
-    if(message_sta == 2){
-        hccapx.message_pair = 2;
-    }
     if(eapol_source == 2){
         // EAPoL packet was already saved from message #2. No need to resave it.
+        hccapx.message_pair = 2;
         return;
     }
     if(save_eapol(eapol_packet, eapol_key_packet) != 0){
