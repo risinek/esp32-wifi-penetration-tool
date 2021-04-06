@@ -107,6 +107,11 @@ static unsigned save_eapol(eapol_packet_t *eapol_packet, eapol_key_packet_t *eap
     hccapx.eapol_len = eapol_len;
     memcpy(hccapx.eapol, eapol_packet, hccapx.eapol_len);
     memcpy(hccapx.keymic, eapol_key_packet->key_mic, 16);
+    // Clear key MIC from EAPoL packet so hashcat can calulate MIC without preprocessing.
+    // This is not documented in HCCAPX reference.
+    // But it's based on 802.11i-2004 [8.5.2/h] and by analysing behaviour of cap2hccapx tool
+    // MIC key on 77 bytes offset inside EAPoL-Key + 4 bytes EAPoL header.
+    memset(&hccapx.eapol[81], 0x0, 16);
     return 0;
 }
 
