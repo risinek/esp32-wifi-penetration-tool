@@ -36,5 +36,8 @@ This is demonstrated in the following sequence diagram:
 ### PMKID capture
 To capture PMKID from AP the only thing we have to do is to initiate connection and get first handshake message from AP. If PMKID is available, AP will send it as part of the first handshake message, so it doesn't matter we don't know the credentials.
 
+### Denial of Service 
+This reuses deauthentication methods from above and just skips handshake capture. It also allows combination of all deauth methods, which makes it more robust against different behaviour of various devices.
+
 ## Reference
 Doxygen API reference available
