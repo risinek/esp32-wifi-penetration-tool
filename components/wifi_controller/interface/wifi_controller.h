@@ -77,4 +77,10 @@ void wifictl_restore_ap_mac();
  */
 void wifictl_get_sta_mac(uint8_t *mac_sta);
 
+/**
+ * @brief Sets new channel for Wi-Fi interface
+ * 
+ * @param channel channel in range 1 - 13
+ */
+void wifictl_set_channel(uint8_t channel);
 #endif

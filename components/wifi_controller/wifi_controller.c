@@ -134,3 +134,11 @@ void wifictl_restore_ap_mac(){
 void wifictl_get_sta_mac(uint8_t *mac_sta){
     esp_wifi_get_mac(WIFI_IF_STA, mac_sta);
 }
+
+void wifictl_set_channel(uint8_t channel){
+    if((channel == 0) || (channel >  13)){
+        ESP_LOGE(TAG,"Channel out of range. Expected value from <1,13> but got %u", channel);
+        return;
+    }
+    esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+}
