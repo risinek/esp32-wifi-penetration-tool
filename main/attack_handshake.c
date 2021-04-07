@@ -114,9 +114,12 @@ void attack_handshake_start(attack_config_t *attack_config){
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");
             attack_handshake_method_rogueap();
             break;
+        case ATTACK_HANDSHAKE_METHOD_PASSIVE:
+            ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_PASSIVE");
+            // No actions required. Passive handshake capture
+            break;
         default:
-            ESP_LOGD(TAG, "Method unknown! Fallback to ATTACK_HANDSHAKE_METHOD_BROADCAST");
-            attack_handshake_method_broadcast();
+            ESP_LOGD(TAG, "Method unknown! Fallback to ATTACK_HANDSHAKE_METHOD_PASSIVE");
     }
 }
 
@@ -129,6 +132,9 @@ void attack_handshake_stop(){
         case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
             wifictl_mgmt_ap_start();
             wifictl_restore_ap_mac();
+            break;
+        case ATTACK_HANDSHAKE_METHOD_PASSIVE:
+            // No actions required.
             break;
         default:
             ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");

@@ -317,7 +317,7 @@ const char page_index[] =
             "case AttackTypeEnum.ATTACK_TYPE_HANDSHAKE:\n"
                 "console.log(\"HANDSHAKE configuration\");\n"
                 "document.getElementById(\"attack_timeout\").value = 60;\n"
-                "setAttackMethods([\"DEAUTH_ROGUE_AP (PASSIVE)\", \"DEAUTH_BROADCAST (ACTIVE)\"]);\n"
+                "setAttackMethods([\"DEAUTH_ROGUE_AP (PASSIVE)\", \"DEAUTH_BROADCAST (ACTIVE)\", \"CAPTURE_ONLY (PASSIVE)\"]);\n"
                 "break;\n"
             "case AttackTypeEnum.ATTACK_TYPE_PMKID:\n"
                 "console.log(\"PMKID configuration\");\n"
