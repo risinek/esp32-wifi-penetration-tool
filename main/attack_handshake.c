@@ -13,6 +13,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_event.h"
 #include "esp_wifi_types.h"
 
 #include "attack.h"
