@@ -35,7 +35,7 @@ static void timer_send_deauth_frame(void *arg){
 /**
  * @details Starts periodic timer for sending deauthentication frame via timer_send_deauth_frame().
  */
-void attack_handshake_method_broadcast(const wifi_ap_record_t *ap_record, unsigned period_sec){
+void attack_method_broadcast(const wifi_ap_record_t *ap_record, unsigned period_sec){
     const esp_timer_create_args_t deauth_timer_args = {
         .callback = &timer_send_deauth_frame,
         .arg = (void *) ap_record
@@ -54,7 +54,7 @@ void attack_method_broadcast_stop(){
  * 
  * @param ap_record target AP that will be cloned/duplicated
  */
-void attack_handshake_method_rogueap(const wifi_ap_record_t *ap_record){
+void attack_method_rogueap(const wifi_ap_record_t *ap_record){
     ESP_LOGD(TAG, "Configuring Rogue AP");
     wifictl_set_ap_mac(ap_record->bssid);
     wifi_config_t ap_config = {
