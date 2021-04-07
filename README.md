@@ -8,6 +8,16 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
     <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
 </p>
 
+## Features
+- **PMKID capture**
+- **WPA/WPA2 handshake capture** and parsing
+- **Deauthentication attacks** using various methods
+- **Denial of Service attacks**
+- Formatting captured traffic into **PCAP format**
+- Parsing captured handshakes into **HCCAPX file** ready to be cracked by Hashcat
+- Passive handshake sniffing
+- Easily extensible framework for new attacks implementations
+- And more...
 ## Usage
 1. Build and flash it onto ESP32 (devkit or module)
 1. Power it
