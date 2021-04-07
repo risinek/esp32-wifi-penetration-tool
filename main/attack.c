@@ -20,6 +20,7 @@
 
 #include "attack_pmkid.h"
 #include "attack_handshake.h"
+#include "attack_dos.h"
 #include "webserver.h"
 #include "wifi_controller.h"
 
@@ -87,6 +88,10 @@ static void attack_timeout(void* arg){
         case ATTACK_TYPE_PASSIVE:
             ESP_LOGI(TAG, "Abort PASSIVE attack...");
             break;
+        case ATTACK_TYPE_DOS:
+            ESP_LOGI(TAG, "Abort DOS attack...");
+            attack_dos_stop();
+            break;
         default:
             ESP_LOGE(TAG, "Unknown attack type. Not aborting anything");
     }
@@ -130,7 +135,10 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
             attack_handshake_start(&attack_config);
             break;
         case ATTACK_TYPE_PASSIVE:
-            ESP_LOGI(TAG, "Passive attack with timeout...");
+            ESP_LOGW(TAG, "ATTACK_TYPE_PASSIVE not implemented yet!");
+            break;
+        case ATTACK_TYPE_DOS:
+            attack_dos_start(&attack_config);
             break;
         default:
             ESP_LOGE(TAG, "Unknown attack type!");

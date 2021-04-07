@@ -40,9 +40,10 @@
                 <p>
                     <label for="attack_type">Attack type:</label>
                     <select id="attack_type" onChange="updateConfigurableFields(this)" required>
-                        <option value="0" selected>ATTACK_TYPE_PASSIVE</option>
-                        <option value="1">ATTACK_TYPE_HANDSHAKE</option>
+                        <option value="0">ATTACK_TYPE_PASSIVE</option>
+                        <option value="1" selected>ATTACK_TYPE_HANDSHAKE</option>
                         <option value="2">ATTACK_TYPE_PMKID</option>
+                        <option value="3">ATTACK_TYPE_DOS</option>
                     </select>
                 </p>
                 <p>
@@ -71,7 +72,7 @@
     </section>
     <script>
     var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
-    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2};
+    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2, ATTACK_TYPE_DOS: 3};
     var selectedApElement = -1;
     var poll;
     var poll_interval = 1000;
@@ -168,6 +169,9 @@
             case AttackTypeEnum.ATTACK_TYPE_PMKID:
                 type = "ATTACK_TYPE_PMKID";
                 resultPmkid(attack_content, attack_content_size);
+                break;
+            case AttackTypeEnum.ATTACK_TYPE_DOS:
+                type = "ATTACK_TYPE_DOS";
                 break;
             default:
                 type = "UNKNOWN";
@@ -318,6 +322,11 @@
             case AttackTypeEnum.ATTACK_TYPE_PMKID:
                 console.log("PMKID configuration");
                 document.getElementById("attack_timeout").value = 5;
+                break;
+            case AttackTypeEnum.ATTACK_TYPE_DOS:
+                console.log("DOS configuration");
+                document.getElementById("attack_timeout").value = 600;
+                setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)"]);
                 break;
             default:
                 console.log("Unknown attack type");
