@@ -54,7 +54,7 @@
                 </p>
                 <p>
                     <label for="attack_timeout">Attack timeout (seconds):</label>
-                    <input type="number" min="0" id="attack_timeout" value="" required/>
+                    <input type="number" min="0" max="255" id="attack_timeout" value="" required/>
                 </p>
                 <p>
                     <button>Attack</button>
@@ -325,7 +325,7 @@
                 break;
             case AttackTypeEnum.ATTACK_TYPE_DOS:
                 console.log("DOS configuration");
-                document.getElementById("attack_timeout").value = 600;
+                document.getElementById("attack_timeout").value = 120;
                 setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)"]);
                 break;
             default:
