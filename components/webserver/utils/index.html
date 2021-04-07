@@ -326,7 +326,7 @@
             case AttackTypeEnum.ATTACK_TYPE_DOS:
                 console.log("DOS configuration");
                 document.getElementById("attack_timeout").value = 120;
-                setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)"]);
+                setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)", "DEAUTH_COMBINE_ALL"]);
                 break;
             default:
                 console.log("Unknown attack type");
