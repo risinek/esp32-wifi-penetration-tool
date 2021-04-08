@@ -17,13 +17,16 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
 - Parsing captured handshakes into **HCCAPX file** ready to be cracked by Hashcat
 - Passive handshake sniffing
 - Easily extensible framework for new attacks implementations
+- Management AP for easy configuration on the go using smartphone for example
 - And more...
 ## Usage
-1. Build and flash it onto ESP32 (devkit or module)
-1. Power it
+1. Build and flash project onto ESP32 (DevKit or module)
+1. Power ESP32
 1. Management AP is started automatically after boot
-1. Connect to this AP
-1. In browser open `192.168.4.1` and you should see a web client to configure and control this tool like this:
+1. Connect to this AP\
+By default: 
+*SSID:* `ManagementAP` and *password:* `mgmtadmin`
+1. In browser open `192.168.4.1` and you should see a web client to configure and control tool like this:
 
     ![Web client UI](doc/images/ui-config.png)
 
