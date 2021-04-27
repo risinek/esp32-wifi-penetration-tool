@@ -20,7 +20,9 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
 - Management AP for easy configuration on the go using smartphone for example
 - And more...
 
-**Demo video:** https://youtu.be/9I3BxRu86GE
+### Demo video
+[![Demonstration Youtube video](https://img.youtube.com/vi/9I3BxRu86GE/0.jpg)](https://www.youtube.com/watch?v=9I3BxRu86GE)
+
 
 ## Usage
 1. Build and flash project onto ESP32 (DevKit or module)
