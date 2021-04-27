@@ -19,6 +19,9 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
 - Easily extensible framework for new attacks implementations
 - Management AP for easy configuration on the go using smartphone for example
 - And more...
+
+**Demo video:** https://youtu.be/9I3BxRu86GE
+
 ## Usage
 1. Build and flash project onto ESP32 (DevKit or module)
 1. Power ESP32
