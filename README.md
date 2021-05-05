@@ -5,7 +5,7 @@ This project introduces an universal tool for ESP32 platform for implementing va
 Obviously cracking is not part of this project, as ESP32 is not sufficient to crack hashes in effective way. The rest can be done on this small, cheap, low-power SoC.
 
 <p align="center">
-    <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
+    <img src="doc/images/logo.png" alt="Logo">
 </p>
 
 ## Features
@@ -19,6 +19,11 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
 - Easily extensible framework for new attacks implementations
 - Management AP for easy configuration on the go using smartphone for example
 - And more...
+
+### Demo video
+[![Demonstration Youtube video](https://img.youtube.com/vi/9I3BxRu86GE/0.jpg)](https://www.youtube.com/watch?v=9I3BxRu86GE)
+
+
 ## Usage
 1. Build and flash project onto ESP32 (DevKit or module)
 1. Power ESP32
@@ -63,6 +68,10 @@ This project consists of multiple components, that can be reused in other projec
 This project was mostly build and tested on **ESP32-DEVKITC-32E**
 but there should not be any differences for any **ESP32-WROOM-32** modules.
 
+<p align="center">
+    <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
+</p>
+
 On the following pictures you can see a battery (Li-Pol accumulator) powered ESP32 DevKitC using following hardware:
 - **ESP32-DEVKITC-32E** (cost 213 CZK/8.2 EUR/9.6 USD)
 - 220mAh Li-Pol 3.7V accumulator (weights ±5g, cost 77 CZK/3 EUR/3.5 USD)
@@ -78,7 +87,7 @@ Altogether (without coin) this setup weights around 17g. This can be further dow
 This setup cost me around 300 CZK (± 11.50 EUR/13.50 USD). Using the modul directly that costs around 80 CZK (± 3 EUR/3.5 USD) we can get to price of 160 CZK (± 6.5 EUR/7.5 USD) which makes this tool really cheap and available to almost everybody.
 
 ### Power consumption
-Based on [Radioshuttle - Battery-Powered ESP32](https://www.radioshuttle.de/en/media-en/tech-infos-en/battery-powered-esp32/) article, ESP32 consumes around *80-180 mA* while operating on Wi-Fi interface. 
+Based on experimental measurements, ESP32 consumes around 100mA during attack executions. 
 
 ## Contributing
 Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes, so verbose documentation is welcome.
