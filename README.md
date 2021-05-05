@@ -25,7 +25,7 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
 
 
 ## Usage
-1. Build and flash project onto ESP32 (DevKit or module)
+1. [Build](#Build) and [flash](#Flash) project onto ESP32 (DevKit or module)
 1. Power ESP32
 1. Management AP is started automatically after boot
 1. Connect to this AP\
@@ -38,14 +38,25 @@ By default:
 ## Build
 This project is currently developed using ESP-IDF 4.1 (commit `5ef1b390026270503634ac3ec9f1ec2e364e23b2`). It may be broken on newer version.
 
-Project can be built and flashed in the usual ESP-IDF way:
+Project can be built in the usual ESP-IDF way:
 
 ```shell
 idf.py build
-idf.py flash
 ```
 
 Legacy method using `make` is not supported by this project.
+
+## Flash
+If you have setup ESP-IDF, the easiest way is to use `idf.py flash`.
+
+In case you don't want to setup whole ESP-IDF, you can use pre-build binaries included in [`build/`](build/) and flash them using [`esptool.py`](https://github.com/espressif/esptool) (requires Python).
+
+Example command (follow instructions in [esptool repo](https://github.com/espressif/esptool)):
+```
+esptool.py -p /dev/ttyS5 -b 115200 --after hard_reset write_flash --flash_mode dio --flash_freq 40m --flash_size detect 0x8000 build/partition_table/partition-table.bin 0x1000 build/bootloader/bootloader.bin 0x10000 build/esp32-wifi-penetration-tool.bin
+```
+
+On Windows you can use official [Flash Download Tool](https://www.espressif.com/en/support/download/other-tools).
 
 ## Documentation
 ### Wi-Fi attacks
