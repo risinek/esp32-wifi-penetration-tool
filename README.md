@@ -5,7 +5,7 @@ This project introduces an universal tool for ESP32 platform for implementing va
 Obviously cracking is not part of this project, as ESP32 is not sufficient to crack hashes in effective way. The rest can be done on this small, cheap, low-power SoC.
 
 <p align="center">
-    <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
+    <img src="doc/images/logo.png" alt="Logo">
 </p>
 
 ## Features
@@ -67,6 +67,10 @@ This project consists of multiple components, that can be reused in other projec
 ## Hardware 
 This project was mostly build and tested on **ESP32-DEVKITC-32E**
 but there should not be any differences for any **ESP32-WROOM-32** modules.
+
+<p align="center">
+    <img src="doc/images/soucastky_8b.png" alt="Hw components" width="400">
+</p>
 
 On the following pictures you can see a battery (Li-Pol accumulator) powered ESP32 DevKitC using following hardware:
 - **ESP32-DEVKITC-32E** (cost 213 CZK/8.2 EUR/9.6 USD)
