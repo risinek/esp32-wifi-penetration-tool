@@ -11,16 +11,15 @@ output_filename="page_${output_name}.h"
 echo """#ifndef PAGE_${output_name^^}_H
 #define PAGE_${output_name^^}_H
 
-const char page_${output_name,,}[] =""" > $output_filename
+// This file was generated using xxd""" > $output_filename
 
+# Gzip file and write to static array
+gzip --best "$1" -c > "page_${output_name}"
+xxd -i -u "page_${output_name}" >> $output_filename
+rm "page_${output_name}"
 
-cat $1 | sed 's/\\/\\\\/' | sed 's/http:\/\/192.168.4.1\///' | sed 's/"/\\"/g' | sed 's/ */&"/' | sed 's/$/\\n"&/' >> $output_filename
-
-echo """
-;
-#endif
-""" >> $output_filename
+echo -e "\n#endif" >> $output_filename
 
 pages_location="../pages"
-echo "Copying $output_filename to $pages_location/$output_filename"
-cp $output_filename $pages_location/$output_filename
+echo "Moving $output_filename to $pages_location/$output_filename"
+mv $output_filename $pages_location/$output_filename

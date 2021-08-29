@@ -3,9 +3,9 @@
  * @author risinek (risinek@gmail.com)
  * @date 2021-04-05
  * @copyright Copyright (c) 2021
- * 
+ *
  * @brief Implements Webserver component and all available enpoints.
- * 
+ *
  * Webserver is built on esp_http_server subcomponent from ESP-IDF
  * @see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_server.html
  */
@@ -30,14 +30,16 @@ ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
 
 /**
  * @brief Handlers for index/root \c / path endpoint
- * 
+ *
  * This endpoint provides index page source
- * @param req 
- * @return esp_err_t 
+ * @param req
+ * @return esp_err_t
  * @{
  */
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
-    return httpd_resp_send(req, page_index, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    return httpd_resp_send(req, (const char *)page_index, page_index_len);
 }
 
 static httpd_uri_t uri_root_get = {
@@ -50,10 +52,10 @@ static httpd_uri_t uri_root_get = {
 
 /**
  * @brief Handlers for \c /reset endpoint
- * 
- * This endpoint resets the attack logic to initial READY state. 
- * @param req 
- * @return esp_err_t 
+ *
+ * This endpoint resets the attack logic to initial READY state.
+ * @param req
+ * @return esp_err_t
  * @{
  */
 static esp_err_t uri_reset_head_handler(httpd_req_t *req) {
@@ -71,13 +73,13 @@ static httpd_uri_t uri_reset_head = {
 
 /**
  * @brief Handlers for \c /ap-list endpoint
- * 
+ *
  * This endpoint returns list of available APs nearby.
  * It calls wifi_controller ap_scanner and serialize their SSIDs into octet response.
  * @attention reponse may take few seconds
  * @attention client may be disconnected from ESP AP after calling this endpoint
- * @param req 
- * @return esp_err_t 
+ * @param req
+ * @return esp_err_t
  * @{
  */
 static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
@@ -85,10 +87,10 @@ static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
 
     const wifictl_ap_records_t *ap_records;
     ap_records = wifictl_get_ap_records();
-    
+
     // 33 SSID + 6 BSSID + 1 RSSI
     char resp_chunk[40];
-    
+
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     for(unsigned i = 0; i < ap_records->count; i++){
         memcpy(resp_chunk, ap_records->records[i].ssid, 33);
@@ -108,12 +110,12 @@ static httpd_uri_t uri_ap_list_get = {
 //@}
 
 /**
- * @brief Handlers for \c /run-attack endpoint  
- * 
- * This endpoint receives attack configuration from client. It deserialize it from octet stream to attack_request_t structure. 
- * @param req 
+ * @brief Handlers for \c /run-attack endpoint
+ *
+ * This endpoint receives attack configuration from client. It deserialize it from octet stream to attack_request_t structure.
+ * @param req
  * @return esp_err_t
- * @{ 
+ * @{
  */
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_request_t attack_request;
@@ -132,11 +134,11 @@ static httpd_uri_t uri_run_attack_post = {
 //@}
 
 /**
- * @brief Handlers for \c /status endpoint  
- * 
+ * @brief Handlers for \c /status endpoint
+ *
  * This endpoint fetches current status from main component attack wrapper, serialize it and sends it to client as octet stream.
- * @param req 
- * @return esp_err_t 
+ * @param req
+ * @return esp_err_t
  * @{
  */
 static esp_err_t uri_status_get_handler(httpd_req_t *req) {
@@ -163,13 +165,13 @@ static httpd_uri_t uri_status_get = {
 //@}
 
 /**
- * @brief Handlers for \c /capture.pcap endpoint  
- * 
+ * @brief Handlers for \c /capture.pcap endpoint
+ *
  * This endpoint forwards PCAP binary data from pcap_serializer via octet stream to client.
- * 
+ *
  * @note Most browsers will start download process when this endpoint is called.
- * @param req 
- * @return esp_err_t 
+ * @param req
+ * @return esp_err_t
  * @{
  */
 static esp_err_t uri_capture_pcap_get_handler(httpd_req_t *req){
@@ -187,13 +189,13 @@ static httpd_uri_t uri_capture_pcap_get = {
 //@}
 
 /**
- * @brief Handlers for \c /capture.hccapx endpoint  
- * 
+ * @brief Handlers for \c /capture.hccapx endpoint
+ *
  * This endpoint forwards HCCAPX binary data from hccapx_serializer via octet stream to client.
- * 
+ *
  * @note Most browsers will start download process when this endpoint is called.
- * @param req 
- * @return esp_err_t 
+ * @param req
+ * @return esp_err_t
  * @{
  */
 static esp_err_t uri_capture_hccapx_get_handler(httpd_req_t *req){
