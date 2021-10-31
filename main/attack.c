@@ -117,21 +117,37 @@ static void attack_request_handler(void *args, esp_event_base_t event_base,
                                    int32_t event_id, void *event_data) {
   ESP_LOGI(TAG, "Starting attack...");
   attack_request_t *attack_request = (attack_request_t *)event_data;
+  static attack_dos_config_t attack_dos_config = {};
   attack_config_t attack_config = {.type = attack_request->type,
                                    .method = attack_request->method,
-                                   .timeout = attack_request->timeout};
-  attack_config.ap_record = wifictl_get_ap_record(attack_request->ap_record_id);
+                                   .timeout = attack_request->timeout,
+                                   .attack_dos_config = &attack_dos_config};
+  attack_config.attack_dos_config->ap_record =
+      wifictl_get_ap_record(attack_request->ap_record_id);
 
   attack_status.state = RUNNING;
   attack_status.type = attack_config.type;
 
-  if (attack_config.ap_record == NULL) {
+  if (attack_request->client_mac_specified) {
+    attack_config.attack_dos_config->client_mac_specified = true;
+    memcpy(attack_config.attack_dos_config->client_mac,
+           attack_request->client_mac, 6);
+  } else {
+    attack_config.attack_dos_config->client_mac_specified = false;
+  }
+
+  if (attack_config.attack_dos_config->ap_record == NULL) {
     ESP_LOGE(TAG, "NPE: No attack_config.ap_record!");
     return;
   }
   // set timeout
-  ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle,
-                                       attack_config.timeout * 1000000));
+  if (attack_config.timeout) {
+    ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle,
+                                         attack_config.timeout * 1000000));
+  } else {
+    ESP_LOGW(TAG, "Timeout is 0, attack forever!");
+    ESP_ERROR_CHECK(esp_timer_delete(attack_timeout_handle));
+  }
   // start attack based on it's type
   switch (attack_config.type) {
   case ATTACK_TYPE_PMKID:

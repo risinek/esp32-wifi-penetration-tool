@@ -20,10 +20,13 @@ enum { WEBSERVER_EVENT_ATTACK_REQUEST, WEBSERVER_EVENT_ATTACK_RESET };
  */
 typedef struct {
   uint8_t ap_record_id; //< ID of chosen AP. It can be used to access ap_records
-                        //array from wifi_controller - ap_scanner
+                        // array from wifi_controller - ap_scanner
   uint8_t type;         //< Chosen type of attack
   uint8_t method;       //< Chosen method of attack
   uint8_t timeout;      //< Attack timeout in seconds
+  uint8_t client_mac_specified; //< Is client mac address specified
+  uint8_t client_mac[6];        //< MAC address of the client which will be
+                                // attacked
 } attack_request_t;
 
 /**

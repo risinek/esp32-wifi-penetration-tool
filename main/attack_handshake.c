@@ -53,7 +53,7 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base,
 void attack_handshake_start(attack_config_t *attack_config) {
   ESP_LOGI(TAG, "Starting handshake attack...");
   method = attack_config->method;
-  ap_record = attack_config->ap_record;
+  ap_record = attack_config->attack_dos_config->ap_record;
   pcap_serializer_init();
   hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
   wifictl_sniffer_filter_frame_types(true, false, false);
@@ -65,7 +65,7 @@ void attack_handshake_start(attack_config_t *attack_config) {
   switch (attack_config->method) {
   case ATTACK_HANDSHAKE_METHOD_BROADCAST:
     ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
-    attack_method_broadcast(ap_record, 5);
+    attack_method_broadcast(attack_config->attack_dos_config, 5);
     break;
   case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
     ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");

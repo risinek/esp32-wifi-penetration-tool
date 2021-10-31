@@ -14,6 +14,12 @@
 
 #include "esp_wifi_types.h"
 
+typedef struct {
+  const wifi_ap_record_t *ap_record;
+  bool client_mac_specified;
+  uint8_t client_mac[6];
+} attack_dos_config_t;
+
 /**
  * @brief Sends frame in frame_buffer using esp_wifi_80211_tx but bypasses
  * blocking mechanism
@@ -32,6 +38,6 @@ void wsl_bypasser_send_raw_frame(const uint8_t *frame_buffer, int size);
  *
  * @param ap_record AP record with valid AP information
  */
-void wsl_bypasser_send_deauth_frame(const wifi_ap_record_t *ap_record);
+void wsl_bypasser_send_deauth_frame(const attack_dos_config_t *attack_config);
 
 #endif

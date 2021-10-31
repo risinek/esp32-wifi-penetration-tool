@@ -25,16 +25,16 @@ void attack_dos_start(attack_config_t *attack_config) {
   switch (method) {
   case ATTACK_DOS_METHOD_BROADCAST:
     ESP_LOGD(TAG, "ATTACK_DOS_METHOD_BROADCAST");
-    attack_method_broadcast(attack_config->ap_record, 1);
+    attack_method_broadcast(attack_config->attack_dos_config, 1);
     break;
   case ATTACK_DOS_METHOD_ROGUE_AP:
     ESP_LOGD(TAG, "ATTACK_DOS_METHOD_ROGUE_AP");
-    attack_method_rogueap(attack_config->ap_record);
+    attack_method_rogueap(attack_config->attack_dos_config->ap_record);
     break;
   case ATTACK_DOS_METHOD_COMBINE_ALL:
     ESP_LOGD(TAG, "ATTACK_DOS_METHOD_ROGUE_AP");
-    attack_method_rogueap(attack_config->ap_record);
-    attack_method_broadcast(attack_config->ap_record, 1);
+    attack_method_rogueap(attack_config->attack_dos_config->ap_record);
+    attack_method_broadcast(attack_config->attack_dos_config, 1);
     break;
   default:
     ESP_LOGE(TAG, "Method unknown! DoS attack not started.");

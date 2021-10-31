@@ -58,13 +58,17 @@
                 </p>
                 <p>
                     <label for="attack_method">Attack method:</label>
-                    <select id="attack_method" required disabled>
+                    <select id="attack_method" onChange="updateAttackMethodFields(this)" required disabled>
                         <option value="" selected disabled hidden>NOT AVAILABLE</option>
                     </select>
                 </p>
                 <p>
                     <label for="attack_timeout">Attack timeout (seconds):</label>
                     <input type="number" min="0" max="255" id="attack_timeout" value="" required />
+                </p>
+                <p>
+                    <label for="attack_target_client">Attack target (client MAC address):</label>
+                    <input type="text" maxlength="17" id="attack_target_client" value="" disabled />
                 </p>
                 <p>
                     <button>Attack</button>
@@ -87,6 +91,9 @@
         const AttackTypeEnum = {
             ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2, ATTACK_TYPE_DOS: 3,
         };
+        const AttackMethodEnum = {
+            DEAUTH_ROGUE_AP: 0, DEAUTH_BROADCAST: 1, DEAUTH_COMBINE_ALL: 2,
+        };
         let selectedApElement = -1;
         let poll;
         const poll_interval = 1000;
@@ -97,7 +104,7 @@
         const defaultResultContent = document.getElementById('result').innerHTML;
         const defaultAttackMethods = document.getElementById('attack_method').outerHTML;
         function hideAllSections() {
-            document.getElementsByTagName('section').forEach((section) => { section.style.display = 'none'; });
+            Array.prototype.forEach.call(document.getElementsByTagName('section'), (section) => { section.style.display = 'none'; });
         }
         function uint8ToHex(uint8) {
             return (`00${uint8.toString(16)}`).slice(-2);
@@ -285,15 +292,28 @@
             }
             hideAllSections();
             document.getElementById('running').style.display = 'block';
-            const arrayBuffer = new ArrayBuffer(4);
+            const arrayBuffer = new ArrayBuffer(5);
             const uint8Array = new Uint8Array(arrayBuffer);
             uint8Array[0] = parseInt(selectedApElement.id, 10);
             uint8Array[1] = parseInt(document.getElementById('attack_type').value, 10);
             uint8Array[2] = parseInt(document.getElementById('attack_method').value, 10);
             uint8Array[3] = parseInt(document.getElementById('attack_timeout').value, 10);
+            uint8Array[4] = !!document.getElementById('attack_target_client').value;
+            let macAddress;
+            if (uint8Array[4] === 1) {
+                macAddress = new Uint8Array(document.getElementById('attack_target_client').value.split(':', 6).map((x) => parseInt(x, 16)));
+            }
             const oReq = new XMLHttpRequest();
             oReq.open('POST', 'http://192.168.4.1/run-attack', true);
-            oReq.send(arrayBuffer);
+            if (uint8Array[4] === 1) {
+                const buffer = new ArrayBuffer(uint8Array.byteLength + macAddress.byteLength);
+                const uint8 = new Uint8Array(buffer);
+                uint8.set(uint8Array);
+                uint8.set(macAddress, uint8Array.byteLength);
+                oReq.send(uint8);
+            } else {
+                oReq.send(arrayBuffer);
+            }
             getStatus();
             attack_timeout = parseInt(document.getElementById('attack_timeout').value, 10);
             time_elapsed = 0;
@@ -334,18 +354,40 @@
                     console.log('HANDSHAKE configuration');
                     document.getElementById('attack_timeout').value = 60;
                     setAttackMethods(['DEAUTH_ROGUE_AP (PASSIVE)', 'DEAUTH_BROADCAST (ACTIVE)', 'CAPTURE_ONLY (PASSIVE)']);
+                    document.getElementById('attack_target_client').removeAttribute('disabled');
                     break;
                 case AttackTypeEnum.ATTACK_TYPE_PMKID:
                     console.log('PMKID configuration');
                     document.getElementById('attack_timeout').value = 5;
+                    document.getElementById('attack_target_client').setAttribute('disabled', '');
                     break;
                 case AttackTypeEnum.ATTACK_TYPE_DOS:
                     console.log('DOS configuration');
                     document.getElementById('attack_timeout').value = 120;
                     setAttackMethods(['DEAUTH_ROGUE_AP (PASSIVE)', 'DEAUTH_BROADCAST (ACTIVE)', 'DEAUTH_COMBINE_ALL']);
+                    document.getElementById('attack_target_client').removeAttribute('disabled');
                     break;
                 default:
                     console.log('Unknown attack type');
+                    break;
+            }
+        }
+        function updateAttackMethodFields(el) {
+            switch (parseInt(el.value, 10)) {
+                case AttackMethodEnum.DEAUTH_ROGUE_AP:
+                    console.log('ROGUE_AP configuration');
+                    document.getElementById('attack_target_client').setAttribute('disabled', '');
+                    break;
+                case AttackMethodEnum.DEAUTH_BROADCAST:
+                    console.log('BROADCAST configuration');
+                    document.getElementById('attack_target_client').removeAttribute('disabled');
+                    break;
+                case AttackMethodEnum.DEAUTH_COMBINE_ALL:
+                    console.log('COMBINE_ALL configuration');
+                    document.getElementById('attack_target_client').removeAttribute('disabled');
+                    break;
+                default:
+                    console.log('Unknown attack method');
                     break;
             }
         }

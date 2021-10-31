@@ -11,6 +11,8 @@
 
 #include "esp_wifi_types.h"
 
+#include "wsl_bypasser.h"
+
 /**
  * @brief Starts periodic deauthentication frame broadcast
  *
@@ -18,7 +20,7 @@
  * deauthentication frame
  * @param period_sec period of broadcast in seconds
  */
-void attack_method_broadcast(const wifi_ap_record_t *ap_record,
+void attack_method_broadcast(const attack_dos_config_t *attack_config,
                              unsigned period_sec);
 
 /**

