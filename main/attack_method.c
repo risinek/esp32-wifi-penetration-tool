@@ -60,15 +60,6 @@ void attack_method_rogueap(const wifi_ap_record_t *ap_record) {
   ESP_LOGD(TAG, "Configuring Rogue AP");
   wifictl_set_ap_mac(ap_record->bssid);
 
-  uint8_t password[17];
-  esp_fill_random(password, sizeof(password) - sizeof(uint8_t));
-  for (uint8_t i = 0; i < 8; i++) {
-    if (password[i] == '\0') {
-      password[i] = '\1';
-    }
-  }
-  password[sizeof(password) / sizeof(uint8_t) - 1] = '\0';
-
   wifi_config_t ap_config = {
       .ap = {.ssid_len = strlen((char *)ap_record->ssid),
              .channel = ap_record->primary,
@@ -80,6 +71,12 @@ void attack_method_rogueap(const wifi_ap_record_t *ap_record) {
     ap_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
   }
   memcpy(ap_config.ap.ssid, ap_record->ssid, 32);
-  memcpy(ap_config.ap.password, password, sizeof(password));
+  esp_fill_random(ap_config.ap.password, 8);
+  for (uint8_t i = 0; i < 8; i++) {
+    if (ap_config.ap.password[i] == '\0') {
+      ap_config.ap.password[i] = '\1';
+    }
+  }
+  ap_config.ap.password[8] = '\0';
   wifictl_ap_start(&ap_config);
 }
