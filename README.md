@@ -75,6 +75,9 @@ This project consists of multiple components, that can be reused in other projec
 - [**PCAP Serializer**](components/pcap_serializer) component serializes captured frames into PCAP binary format and provides it to other components (mostly for webserver/UI)
 - [**HCCAPX Serializer**](components/hccapx_serializer) component serializes captured frames into HCCAPX binary format and provides it to other components (mostly for webserver/UI)
 
+### Further reading
+* [Academic paper about this project (PDF)](https://excel.fit.vutbr.cz/submissions/2021/048/48.pdf)
+
 ## Hardware 
 This project was mostly build and tested on **ESP32-DEVKITC-32E**
 but there should not be any differences for any **ESP32-WROOM-32** modules.
@@ -99,6 +102,12 @@ This setup cost me around 300 CZK (± 11.50 EUR/13.50 USD). Using the modul dire
 
 ### Power consumption
 Based on experimental measurements, ESP32 consumes around 100mA during attack executions. 
+
+## Similar projects
+* [GANESH-ICMC/esp32-deauther](https://github.com/GANESH-ICMC/esp32-deauther)
+* [SpacehuhnTech/esp8266_deauther](https://github.com/SpacehuhnTech/esp8266_deauther)
+* [justcallmekoko/ESP32Marauder](https://github.com/justcallmekoko/ESP32Marauder)
+* [EParisot/esp32-network-toolbox](https://www.tindie.com/products/klhnikov/esp32-network-toolbox/)
 
 ## Contributing
 Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes, so verbose documentation is welcome.
