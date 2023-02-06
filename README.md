@@ -108,6 +108,7 @@ Based on experimental measurements, ESP32 consumes around 100mA during attack ex
 * [SpacehuhnTech/esp8266_deauther](https://github.com/SpacehuhnTech/esp8266_deauther)
 * [justcallmekoko/ESP32Marauder](https://github.com/justcallmekoko/ESP32Marauder)
 * [EParisot/esp32-network-toolbox](https://www.tindie.com/products/klhnikov/esp32-network-toolbox/)
+* [Jeija/esp32free80211](https://github.com/Jeija/esp32free80211)
 
 ## Contributing
 Feel free to contribute. Don't hestitate to refactor current code base. Please stick to Doxygen notation when commenting new functions and files. This project is mainly build for educational and demonstration purposes, so verbose documentation is welcome.
