@@ -1,13 +1,5 @@
 .vscode
 .local_files
 build/*
-!build/*.bin
-!build/bootloader
-build/bootloader/*
-!build/bootloader/bootloader.bin
-!build/partition_table
-build/partition_table/*
-!build/partition_table/*.bin
 sdkconfig
 sdkconfig.old
-doc/api

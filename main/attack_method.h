@@ -11,13 +11,15 @@
 
 #include "esp_wifi_types.h"
 
+#include "attack.h"
+
 /**
  * @brief Starts periodic deauthentication frame broadcast
  * 
- * @param ap_record target AP record which BSSID will be used in deauthentication frame 
+ * @param ap_record array with target AP records which BSSID will be used in deauthentication frame 
  * @param period_sec period of broadcast in seconds 
  */
-void attack_method_broadcast(const wifi_ap_record_t *ap_record, unsigned period_sec);
+void attack_method_broadcast(ap_records_t* ap_records, unsigned period_sec);
 
 /**
  * @brief Stop periodic deauthentication frame broadcast
@@ -28,8 +30,8 @@ void attack_method_broadcast_stop();
  * @brief Starts duplicated AP with same BSSID as genuine AP from ap_record
  * 
  * This will execute deauthentication attack for given AP.
- * @param ap_record target AP that will be cloned/duplicated
+ * @param ap_record array with target AP records that will be cloned/duplicated
  */
-void attack_method_rogueap(const wifi_ap_record_t *ap_record);
+void attack_method_rogueap(ap_records_t* ap_records);
 
 #endif

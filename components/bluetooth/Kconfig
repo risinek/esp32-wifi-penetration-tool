@@ -1,0 +1,21 @@
+menu "C++ settings"
+
+config LIBCURL_PRESENT
+	bool "LibCurl present"
+	default false
+	help
+		Set to true to indicate that LibCurl is present.
+
+config U8G2_PRESENT
+	bool "U8G2 present"
+	default false
+	help
+		Set to true to indicate that U8G2 library is present.
+
+config MONGOOSE_PRESENT
+	bool "Mongoose present"
+	default false
+	help
+		Set to true to indicate that the Mongoose library is present.
+
+endmenu

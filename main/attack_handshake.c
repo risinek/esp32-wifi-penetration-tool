@@ -25,7 +25,7 @@
 
 static const char *TAG = "main:attack_handshake";
 static attack_handshake_methods_t method = -1;
-static const wifi_ap_record_t *ap_record = NULL;
+static ap_records_t ap_records = {0, NULL};
 
 /**
  * @brief Callback for DATA_FRAME_EVENT_EAPOLKEY_FRAME event.
@@ -50,7 +50,8 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
 void attack_handshake_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Starting handshake attack...");
     method = attack_config->method;
-    ap_record = attack_config->ap_record;
+    ap_records = attack_config->ap_records;  // Take ownership
+    const wifi_ap_record_t* ap_record = ap_records.records[0];
     pcap_serializer_init();
     hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
     wifictl_sniffer_filter_frame_types(true, false, false);
@@ -60,11 +61,11 @@ void attack_handshake_start(attack_config_t *attack_config){
     switch(attack_config->method){
         case ATTACK_HANDSHAKE_METHOD_BROADCAST:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
-            attack_method_broadcast(ap_record, 5);
+            attack_method_broadcast(&ap_records, 5);
             break;
         case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");
-            attack_method_rogueap(ap_record);
+            attack_method_rogueap(&ap_records);
             break;
         case ATTACK_HANDSHAKE_METHOD_PASSIVE:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_PASSIVE");
@@ -93,7 +94,11 @@ void attack_handshake_stop(){
     wifictl_sniffer_stop();
     frame_analyzer_capture_stop();
     ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &eapolkey_frame_handler));
-    ap_record = NULL;
+
     method = -1;
+    ap_records.len = 0;
+    free(ap_records.records);
+    ap_records.records = NULL;
+
     ESP_LOGD(TAG, "Handshake attack stopped");
 }

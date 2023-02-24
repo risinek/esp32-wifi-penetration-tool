@@ -49,13 +49,13 @@ static void wifi_init_apsta(){
 }
 
 void wifictl_ap_start(wifi_config_t *wifi_config) {
-    ESP_LOGD(TAG, "Starting AP...");
+    ESP_LOGD(TAG, "Starting AP with SSID '%s' ...", wifi_config->ap.ssid);
     if(!wifi_init){
         wifi_init_apsta();
     }
 
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
-    ESP_LOGI(TAG, "AP started with SSID=%s", wifi_config->ap.ssid);
+    ESP_LOGI(TAG, "AP started with SSID '%s'", wifi_config->ap.ssid);
 }
 
 void wifictl_ap_stop(){

@@ -23,7 +23,8 @@ typedef enum {
     ATTACK_TYPE_PASSIVE,
     ATTACK_TYPE_HANDSHAKE,
     ATTACK_TYPE_PMKID,
-    ATTACK_TYPE_DOS
+    ATTACK_TYPE_DOS,
+    ATTACK_TYPE_STOP_ATTACK
 } attack_type_t;
 
 /**
@@ -38,6 +39,11 @@ typedef enum {
     TIMEOUT     ///< last attack timed out. This option will be moved as sub category of FINISHED state.
 } attack_state_t;
 
+typedef struct {
+  uint8_t len;
+  const wifi_ap_record_t** records;
+} ap_records_t;
+
 /**
  * @brief Attack config parsed from webserver request
  * 
@@ -47,8 +53,14 @@ typedef struct {
     uint8_t type;
     uint8_t method;
     uint8_t timeout;
-    const wifi_ap_record_t *ap_record;
+    ap_records_t ap_records;
 } attack_config_t;
+// typedef struct {
+//     uint8_t type;
+//     uint8_t method;
+//     uint8_t timeout;
+//     const wifi_ap_record_t *ap_record;
+// } attack_config_t;
 
 /**
  * @brief Contains current attack status.

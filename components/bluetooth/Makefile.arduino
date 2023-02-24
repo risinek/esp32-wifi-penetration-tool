@@ -1,0 +1,82 @@
+# A Makefile that will build the Arduino libraries
+#
+# Targets
+# build_ble - Build the Arduino BLE library.  This will result in a ZIP that can be found at Arduino/ESP32_BLE.zip
+#
+
+#
+# The source file for BLE
+#
+BLE_FILES= \
+	BLE2902.cpp \
+	BLE2902.h \
+	BLE2904.cpp \
+	BLE2904.h \
+	BLEAddress.cpp \
+	BLEAddress.h \
+	BLEAdvertisedDevice.cpp \
+	BLEAdvertisedDevice.h \
+	BLEAdvertising.cpp \
+	BLEAdvertising.h \
+	BLEBeacon.cpp \
+	BLEBeacon.h \
+	BLECharacteristic.cpp \
+	BLECharacteristic.h \
+	BLECharacteristicMap.cpp \
+	BLEClient.cpp \
+	BLEClient.h \
+	BLEDescriptor.cpp \
+	BLEDescriptor.h \
+	BLEDescriptorMap.cpp \
+	BLEDevice.cpp \
+	BLEDevice.h \
+	BLEExceptions.cpp \
+	BLEExceptions.h \
+	BLEHIDDevice.cpp \
+	BLEHIDDevice.h \
+	BLERemoteCharacteristic.cpp \
+	BLERemoteCharacteristic.h \
+	BLERemoteDescriptor.cpp \
+	BLERemoteDescriptor.h \
+	BLERemoteService.cpp \
+	BLERemoteService.h \
+	BLEScan.cpp \
+	BLEScan.h \
+	BLEServer.cpp \
+	BLEServer.h \
+	BLEService.cpp \
+	BLEService.h \
+	BLEServiceMap.cpp \
+	BLESecurity.cpp \
+	BLESecurity.h \
+	BLEUtils.cpp \
+	BLEUtils.h \
+	BLEUUID.cpp \
+	BLEUUID.h \
+	BLEValue.cpp \
+	BLEValue.h \
+	FreeRTOS.h \
+	FreeRTOS.cpp \
+	GeneralUtils.h \
+	GeneralUtils.cpp \
+	HIDTypes.h \
+	HIDKeyboardTypes.h
+
+ARDUINO_LIBS=$(HOME)/Arduino/libraries
+
+build_ble:
+	rm -rf Arduino/ESP32_BLE
+	mkdir -p Arduino/ESP32_BLE/src
+	cp $(BLE_FILES) Arduino/ESP32_BLE/src
+	cp Arduino_ESP32_BLE.library.properties Arduino/ESP32_BLE/library.properties
+	mkdir -p Arduino/ESP32_BLE/examples
+	cp -R tests/BLETests/Arduino Arduino/ESP32_BLE/examples
+	rm -f Arduino/ESP32_BLE.zip
+	cd Arduino; zip -r ESP32_BLE.zip ESP32_BLE
+	rm -rf Arduino/ESP32_BLE
+	@echo "---------------------------------------"
+	@echo "ESP32_BLE.zip Arduino library now built"
+
+install: build_ble
+	rm -rf ${ARDUINO_LIBS}/ESP32_BLE
+	unzip Arduino/ESP32_BLE.zip -d $(ARDUINO_LIBS)

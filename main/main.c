@@ -16,6 +16,7 @@
 #include "esp_event.h"
 
 #include "attack.h"
+#include "bluetooth.h"
 #include "wifi_controller.h"
 #include "webserver.h"
 
@@ -28,4 +29,5 @@ void app_main(void)
     wifictl_mgmt_ap_start();
     attack_init();
     webserver_run();
+    bluetooth_init();
 }

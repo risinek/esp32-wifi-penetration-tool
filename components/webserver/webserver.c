@@ -118,12 +118,55 @@ static httpd_uri_t uri_ap_list_get = {
  * @{
  */
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
+    if (req->content_len > 300) {
+        esp_err_t res =
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
+                                "Input parameters are too long");
+        return res;
+    }
+
     attack_request_t attack_request;
-    httpd_req_recv(req, (char *)&attack_request, sizeof(attack_request_t));
+    void *rawData = malloc(req->content_len);
+    httpd_req_recv(req, (char *)rawData, req->content_len);
+
+    attack_request_t *raw_attack_request = rawData;
+    attack_request.type = raw_attack_request->type;
+    attack_request.method = raw_attack_request->method;
+    attack_request.timeout = raw_attack_request->timeout;
+    attack_request.ap_records_len = raw_attack_request->ap_records_len;
+    attack_request.ap_records_ids = malloc(attack_request.ap_records_len);
+
+    ESP_LOGD(TAG, "ESP32 received run-attack command with following parameters:");
+    ESP_LOGD(TAG, ">> type = %d", attack_request.type);
+    ESP_LOGD(TAG, ">> method = %d", attack_request.method);
+    ESP_LOGD(TAG, ">> timeout = %d", attack_request.timeout);
+    ESP_LOGD(TAG, ">> ap_records_len = %d", attack_request.ap_records_len);
+    ESP_LOGD(TAG, ">> ap_records_ids:");
+    for (int i = 0; i < attack_request.ap_records_len; ++i) {
+      ESP_LOGD(TAG, ">>>> id = %d", attack_request.ap_records_ids[i]);
+    }
+
+    void *field_ptr = &(raw_attack_request->ap_records_ids);
+    uint8_t *currentId = (uint8_t*)field_ptr;
+    for (int i = 0; i < attack_request.ap_records_len; ++i) {
+        attack_request.ap_records_ids[i] = *currentId;
+        currentId++;
+    }
+
+    free(rawData);
     esp_err_t res = httpd_resp_send(req, NULL, 0);
-    ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request, sizeof(attack_request_t), portMAX_DELAY));
+    ESP_ERROR_CHECK(esp_event_post(
+        WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request,
+        sizeof(attack_request_t), portMAX_DELAY));
     return res;
 }
+// static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
+//     attack_request_t attack_request;
+//     httpd_req_recv(req, (char *)&attack_request, sizeof(attack_request_t));
+//     esp_err_t res = httpd_resp_send(req, NULL, 0);
+//     ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request, sizeof(attack_request_t), portMAX_DELAY));
+//     return res;
+// }
 
 static httpd_uri_t uri_run_attack_post = {
     .uri = "/run-attack",

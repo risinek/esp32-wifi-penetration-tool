@@ -1,0 +1,8 @@
+/**
+ * @mainpage ESP32 C++ Utility Classes
+ * The ESP-IDF is the C language based libraries and functions available for working with the ESP32
+ * device.  This ESP-IDF component provides a set of C++ classes that encapsulate and extend *some* of the
+ * functions.
+ *
+ * The Github repository is [https://github.com/nkolban/esp32-snippets](https://github.com/nkolban/esp32-snippets).
+ */

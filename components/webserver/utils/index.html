@@ -44,6 +44,7 @@
                         <option value="1">ATTACK_TYPE_HANDSHAKE</option>
                         <option value="2" selected>ATTACK_TYPE_PMKID</option>
                         <option value="3">ATTACK_TYPE_DOS</option>
+                        <option value="4">ATTACK_TYPE_STOP_ATTACK</option>
                     </select>
                 </p>
                 <p>
@@ -72,8 +73,9 @@
     </section>
     <script>
     var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
-    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2, ATTACK_TYPE_DOS: 3};
-    var selectedApElement = -1;
+    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2, ATTACK_TYPE_DOS: 3, ATTACK_TYPE_STOP_ATTACK: 4};
+    var selectedApElements = [];
+    // var selectedApElement = -1;
     var poll;
     var poll_interval = 1000;
     var running_poll;
@@ -83,6 +85,10 @@
     var defaultResultContent = document.getElementById("result").innerHTML;
     var defaultAttackMethods = document.getElementById("attack_method").outerHTML;
     function getStatus() {
+        // console.log("LAMBIN Temporary ignore sending of request to ESP...");
+        // hideAllSections();
+        // showAttackConfig();
+
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
             var arrayBuffer = oReq.response;
@@ -179,6 +185,26 @@
         document.getElementById("result-meta").innerHTML += type + "<br>";
     }
     function refreshAps() {
+        // console.log("LAMBIN Simulate AP list");
+        // document.getElementById("ap-list").innerHTML = "<th>SSID</th><th>BSSID</th><th>RSSI</th>";
+        // for  (let i = 0; i < 5; i = i + 1) {
+        //     var tr = document.createElement('tr');
+        //     tr.setAttribute("id", i);
+        //     tr.setAttribute("onClick", "selectAp(this)");
+        //     var td_ssid = document.createElement('td');
+        //     var td_rssi = document.createElement('td');
+        //     var td_bssid = document.createElement('td');
+        //     td_ssid.innerHTML = "SSID_" + i;
+        //     td_bssid.innerHTML = "BSSID_" + i;
+        //     td_rssi.innerHTML = "RSSI_" + i;
+        //     tr.appendChild(td_ssid);
+        //     tr.appendChild(td_bssid);
+        //     tr.appendChild(td_rssi);
+        //     document.getElementById("ap-list").appendChild(tr);
+        // }
+
+
+
         document.getElementById("ap-list").innerHTML = "Loading (this may take a while)...";
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
@@ -213,27 +239,65 @@
         oReq.send();
     }
     function selectAp(el) {
-        console.log(el.id);
-        if(selectedApElement != -1){
-            selectedApElement.classList.remove("selected")
+        console.log("LAMBIN selected id = " + el.id);
+        if (document.getElementById("attack_type").value == AttackTypeEnum.ATTACK_TYPE_DOS) {
+          console.log("LAMBIN attack type is DOS -> allow multiple AP selection");
+        } else {
+          clearSelectedAPs();
         }
-        selectedApElement=el;
-        el.classList.add("selected");
+        addSelectedAP(el);
+
+        // console.log(el.id);
+        // if(selectedApElement != -1){
+        //     selectedApElement.classList.remove("selected");
+        // }
+        // selectedApElement=el;
+        // el.classList.add("selected");
+    }
+    function clearSelectedAPs() {
+      console.log("LAMBIN Selected APs:");
+      for (let i = 0; i < selectedApElements.length; i++) {
+          console.log("LAMBIN id = " + selectedApElements[i].id);
+          selectedApElements[i].classList.remove("selected");
+      }
+      selectedApElements = [];
+    }
+    function addSelectedAP(el) {
+      const index = selectedApElements.indexOf(el);
+      if (index > -1) {
+        el.classList.remove("selected");
+        selectedApElements.splice(index, 1);
+        return;
+      }
+      el.classList.add("selected");
+      selectedApElements.push(el);
     }
     function runAttack() {
-        if(selectedApElement == -1){
+        if(selectedApElements.length == 0){
             console.log("No AP selected. Attack not started.");
             document.getElementById("errors").innerHTML = "No AP selected. Attack not started.";
             return;
         }
         hideAllSections();
         document.getElementById("running").style.display = "block";
-        var arrayBuffer = new ArrayBuffer(4);
+
+        var arrayBuffer = new ArrayBuffer(4 + selectedApElements.length);
         var uint8Array = new Uint8Array(arrayBuffer);
-        uint8Array[0] = parseInt(selectedApElement.id);
-        uint8Array[1] = parseInt(document.getElementById("attack_type").value);
-        uint8Array[2] = parseInt(document.getElementById("attack_method").value);
-        uint8Array[3] = parseInt(document.getElementById("attack_timeout").value);
+        uint8Array[0] = parseInt(document.getElementById("attack_type").value);
+        uint8Array[1] = parseInt(document.getElementById("attack_method").value);
+        uint8Array[2] = parseInt(document.getElementById("attack_timeout").value);
+        uint8Array[3] = parseInt(selectedApElements.length);
+        for (let i = 0; i < selectedApElements.length; i++) {
+            uint8Array[4 + i] = selectedApElements[i].id;
+        }
+
+        // var arrayBuffer = new ArrayBuffer(4);
+        // var uint8Array = new Uint8Array(arrayBuffer);
+        // uint8Array[0] = parseInt(selectedApElement.id);
+        // uint8Array[1] = parseInt(document.getElementById("attack_type").value);
+        // uint8Array[2] = parseInt(document.getElementById("attack_method").value);
+        // uint8Array[3] = parseInt(document.getElementById("attack_timeout").value);
+
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
