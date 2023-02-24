@@ -24,16 +24,11 @@ enum {
 typedef struct {
       uint8_t type;
       uint8_t method;
-      uint8_t timeout;
+      uint16_t timeout;
+      uint16_t per_ap_timeout;
       uint8_t ap_records_len;
       uint8_t* ap_records_ids;
-} attack_request_t;
-// typedef struct {
-//     uint8_t ap_record_id;   //< ID of chosen AP. It can be used to access ap_records array from wifi_controller - ap_scanner
-//     uint8_t type;           //< Chosen type of attack
-//     uint8_t method;         //< Chosen method of attack
-//     uint8_t timeout;        //< Attack timeout in seconds
-// } attack_request_t;
+} __attribute__((packed)) attack_request_t;
 
 /**
  * @brief Initializes and starts webserver 

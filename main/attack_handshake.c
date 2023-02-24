@@ -58,14 +58,14 @@ void attack_handshake_start(attack_config_t *attack_config){
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
     ESP_ERROR_CHECK(esp_event_handler_register(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, &eapolkey_frame_handler, NULL));
-    switch(attack_config->method){
+    switch(method){
         case ATTACK_HANDSHAKE_METHOD_BROADCAST:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
             attack_method_broadcast(&ap_records, 5);
             break;
         case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");
-            attack_method_rogueap(&ap_records);
+            attack_method_rogueap(&ap_records, 0);
             break;
         case ATTACK_HANDSHAKE_METHOD_PASSIVE:
             ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_PASSIVE");

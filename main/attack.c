@@ -118,7 +118,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     ap_records_t ap_records;
     ap_records.len = attack_request->ap_records_len;
     ap_records.records = malloc(ap_records.len * sizeof(wifi_ap_record_t*));
-    // attack_config.ap_record = wifictl_get_ap_record(attack_request->ap_record_id);
     for (int i = 0; i < ap_records.len; ++i) {
         ap_records.records[i] = wifictl_get_ap_record(attack_request->ap_records_ids[i]);
         if (ap_records.records[i] == NULL) {
@@ -134,6 +133,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
       .type = attack_request->type,
       .method = attack_request->method,
       .timeout = attack_request->timeout,
+      .per_ap_timeout = attack_request->per_ap_timeout,
       .ap_records = ap_records
     };
 
@@ -148,11 +148,16 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     
 
 
-
+    // TODO(alambin):
+    // PRIORITIES:
+    // 9, 10, 8, 5, 6, 7
 
     // TODO(alambin):
+    // Bluetooth part:
     // 1. Implement Bluetooth PIN/password/passcode request.
     //    Currently we can reset device by writing characteristic, which is not so convenient.
+    //
+    // WiFi part:
     // 2. Update WebUI to support all new freatures:
     //    X 1. ATTACK_DOS_METHOD_BROADCAST_MULTI_AP
     //    2. ATTACK_TYPE_STOP_ATTACK
@@ -160,13 +165,33 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     //       Should display info that RougeAP attack can be stopped only by reset (hard or soft by connecting to ESP-32
     //       via Bluetooth)
     //    4. On WebUI side instead of setting ap_record_id as 1st field, it should be represented as list of size 1
-    // 3. We can track all clients which are trying to connect to WiFi APs. Then during broadcast attack on
-    //    given AP we will send not only broadcast deauth (which is ignored by most of devices), but also
-    //    deauth for all clients we observed. Not to blow up this list, we can clean it, say, once per day
+    // 3. Remember clients who are connecting to WiFi (is it possible only when we are in RougeAP mode and only for
+    //    those stations, which connect to this RougeAP?) and when sending deauf, send deauth to them explicitely (not
+    //    via broadcast). Such a targetted frames will not be ignored by some devices. Not to blow up this list, we can
+    //    clean it, say, once per day
     // 4. Need to make sure that all my changes are not breaking existing code. Ex. that proper status of attack will
     //    be returned by attack_get_status(), that each attack really has proper status (remember, that now we have
     //    infinite attacks and ability to interrupt attacks)
     // 5. Make sure that timeout in WebUI is handled well (even in case of infinite attack).
+    // 6. Web logger. Refer to one of my previous project, where buffered logger was used. Create new end-point page
+    //    (/log) and in response make simple page with text window containing buffered logs.
+    //    Buffer should contain only the latest N lines of logs. Make size configurable (via menuconfig?).
+    //    Try to find way to get stream of logs and send them not to Serial Port, but to this logger. May be some
+    //    hook/callback is provided by ESP to handle all outgoing logs from system?
+    // 7. Use config-time constants to set device ID (0-...) and use it to create constants for WiFi AP name, Bluetooth
+    //    device name, IP address. So that we can easily generate binaries for multiple ESP32 devices
+    // 8. Extend WebUI so that for infinit attacks it will
+    //    1. not show timeout window
+    //    2. not let send aby command except of STOP
+    //    3. To properly handle refresh page, ESP32 should know about infinit status and should return proper new status
+    //       code to WebUI on request of "/status"
+    // V 9. Implement multiple RougeAP attack
+    // 10. Test infinit and regular multiple AP attacks
+    // 11. Test multiple AP attack where our router
+    //     1. comes 1st in the list
+    //     2. comes 2nd in the list
+    // 12. "Black list of MACs" feature. Add MAC addresses list in WebUI. For those addresses need to send personal
+    //     deauth frame for every AP during broadcast attack
     
 
 
@@ -222,9 +247,9 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     // hard (button on board), either soft. Currently to trigger soft reset you need to connect to ESP-32 by Bluetooth
     if (((attack_config.timeout == 0) &&
          (attack_config.type == ATTACK_TYPE_DOS))) {
-        ESP_LOGI(
-            "Timeout is set to 0. Atack will not finish until reboot or "
-            "ATTACK_TYPE_STOP_ATTACK command is received");
+        ESP_LOGI(TAG,
+                 "Timeout is set to 0. Atack will not finish until reboot or "
+                 "ATTACK_TYPE_STOP_ATTACK command is received");
     } else {
         // Before starting timer, make sure previous attack is finished. If not
         // - finish it by simulating timeout

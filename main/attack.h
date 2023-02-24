@@ -52,7 +52,8 @@ typedef struct {
 typedef struct {
     uint8_t type;
     uint8_t method;
-    uint8_t timeout;
+    uint16_t timeout;
+    uint16_t per_ap_timeout;
     ap_records_t ap_records;
 } attack_config_t;
 // typedef struct {

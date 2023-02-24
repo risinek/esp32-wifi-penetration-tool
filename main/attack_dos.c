@@ -14,7 +14,6 @@
 
 #include "attack.h"
 #include "attack_method.h"
-#include "wifi_controller.h"
 
 static const char *TAG = "main:attack_dos";
 static attack_dos_methods_t method = -1;
@@ -31,11 +30,11 @@ void attack_dos_start(attack_config_t *attack_config) {
             break;
         case ATTACK_DOS_METHOD_ROGUE_AP:
             ESP_LOGD(TAG, "ATTACK_DOS_METHOD_ROGUE_AP");
-            attack_method_rogueap(&ap_records);
+            attack_method_rogueap(&ap_records, attack_config->per_ap_timeout);
             break;
         case ATTACK_DOS_METHOD_COMBINE_ALL:
             ESP_LOGD(TAG, "ATTACK_DOS_METHOD_COMBINE_ALL");
-            attack_method_rogueap(&ap_records);
+            attack_method_rogueap(&ap_records, attack_config->per_ap_timeout);
             attack_method_broadcast(&ap_records, 1);
             break;
         default:
@@ -49,13 +48,11 @@ void attack_dos_stop() {
             attack_method_broadcast_stop();
             break;
         case ATTACK_DOS_METHOD_ROGUE_AP:
-            wifictl_mgmt_ap_start();
-            wifictl_restore_ap_mac();
+            attack_method_rogueap_stop();
             break;
         case ATTACK_DOS_METHOD_COMBINE_ALL:
             attack_method_broadcast_stop();
-            wifictl_mgmt_ap_start();
-            wifictl_restore_ap_mac();
+            attack_method_rogueap_stop();
             break;
         default:
             ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");

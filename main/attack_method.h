@@ -32,6 +32,11 @@ void attack_method_broadcast_stop();
  * This will execute deauthentication attack for given AP.
  * @param ap_record array with target AP records that will be cloned/duplicated
  */
-void attack_method_rogueap(ap_records_t* ap_records);
+void attack_method_rogueap(ap_records_t* ap_records, uint16_t per_ap_timeout);
+
+/**
+ * @brief Stop Rogue AP attack
+ */
+void attack_method_rogueap_stop();
 
 #endif
