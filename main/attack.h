@@ -23,8 +23,7 @@ typedef enum {
     ATTACK_TYPE_PASSIVE,
     ATTACK_TYPE_HANDSHAKE,
     ATTACK_TYPE_PMKID,
-    ATTACK_TYPE_DOS,
-    ATTACK_TYPE_STOP_ATTACK
+    ATTACK_TYPE_DOS
 } attack_type_t;
 
 /**
@@ -33,10 +32,11 @@ typedef enum {
  * @note TIMEOUT will be removed in #64
  */
 typedef enum {
-    READY,      ///< no attack is in progress and results from previous attack run are available.
-    RUNNING,    ///< attack is in progress, attack_status_t.content may not be consistent.
-    FINISHED,   ///< last attack finsihed and results are available.
-    TIMEOUT     ///< last attack timed out. This option will be moved as sub category of FINISHED state.
+    READY,              ///< no attack is in progress and results from previous attack run are available.
+    RUNNING,            ///< attack is in progress, attack_status_t.content may not be consistent.
+    RUNNING_INFINITELY, // < attack is runninginfinitely long
+    FINISHED,           ///< last attack finsihed and results are available.
+    TIMEOUT             ///< last attack timed out. This option will be moved as sub category of FINISHED state.
 } attack_state_t;
 
 typedef struct {

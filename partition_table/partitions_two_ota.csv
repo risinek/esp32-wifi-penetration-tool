@@ -3,7 +3,7 @@
 nvs,      data, nvs,     0x9000,        0x4000,
 otadata,  data, ota,     0xd000,        0x2000,
 phy_init, data, phy,     0xf000,        0x1000,
-# Partitions are 2064384 (2MB - 32KB) bytes each
+# Partitions are 1984KB (2MB - 32KB) bytes each
 # to entirely utilize all available flash by 2 equal partitions
 ota_0,    app,  ota_0,   0x10000,       0x1F0000,
 ota_1,    app,  ota_1,   0x200000,      0x1F0000,

@@ -23,9 +23,9 @@
 </head>
 <body onLoad="getStatus()">
     <h1>ESP32 Wi-Fi Penetration Tool</h1>
-    <section id="errors"></section>
+    <section id="errors" style="color: red;"></section>
     <section id="loading">Loading... Please wait</section>
-    <section id="ready" style="display: none;">
+    <section id="attack_config" style="display: none;">
         <h2>Attack configuration</h2>
         <form onSubmit="runAttack(); return false;">
             <fieldset>
@@ -44,11 +44,10 @@
                         <option value="1">ATTACK_TYPE_HANDSHAKE</option>
                         <option value="2" selected>ATTACK_TYPE_PMKID</option>
                         <option value="3" title="Allows to select multiple APs">ATTACK_TYPE_DOS</option>
-                        <option value="4">ATTACK_TYPE_STOP_ATTACK</option>
                     </select>
                 </p>
                 <p>
-                  <label id="multiap_allowed_txt" style="display: none;">You can select several APs for DOS attack</label>
+                    <label id="multiap_allowed_txt" style="display: none; color: blue;">You can select several APs for DOS attack</label>
                 </p>
                 <p>
                     <label for="attack_method">Attack method:</label>
@@ -64,9 +63,14 @@
                   <label for="perap_attack_timeout">Per AP attack duration (seconds):</label>
                   <input type="number" min="0" max="65536" id="perap_attack_timeout" value="60" required/>
               </p>
-                <p>
-                    <button>Attack</button>
-                </p>
+              <p">
+                  <div id="infinit_attack_txt" style="display: none; color: blue;">Infinite DOS attack is in progress.<br>No other attacks are allowed at the same time.</div>
+              </p>
+              <p>
+                  <button id="start_attack_btn" style="float: left;">Start attack</button>
+                  <!-- <button id="stop_attack_btn" style="float: right; display: none;" onClick="stopAttack()">Stop attack</button> -->
+                  <input type="button" id="stop_attack_btn" style="float: right; display: none;" onClick="stopAttack()" value="Stop attack">
+              </p>
             </fieldset>
         </form>
     </section>
@@ -79,18 +83,17 @@
         <button type="button" onClick="resetAttack()">New attack</button>
     </section>
     <script>
-    var AttackStateEnum = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3};
-    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2, ATTACK_TYPE_DOS: 3, ATTACK_TYPE_STOP_ATTACK: 4};
+    var AttackStateEnum = { READY: 0, RUNNING: 1, RUNNING_INFINITELY: 2, FINISHED: 3, TIMEOUT: 4};
+    var AttackTypeEnum = { ATTACK_TYPE_PASSIVE: 0, ATTACK_TYPE_HANDSHAKE: 1, ATTACK_TYPE_PMKID: 2, ATTACK_TYPE_DOS: 3};
     var selectedApElements = [];
-    var poll;
-    var poll_interval = 1000;
-    var running_poll;
-    var running_poll_interval = 1000;
+    var polling_timer_id;
+    var polling_interval = 1000;
+    var polling_time_elapsed = 0;
     var attack_timeout = 0;
-    var time_elapsed = 0;
     var defaultResultContent = document.getElementById("result").innerHTML;
     var defaultAttackMethods = document.getElementById("attack_method").outerHTML;
     function getStatus() {
+      console.log("LAMBIN getStatus");
         // console.log("LAMBIN Temporary ignore sending of request to ESP...");
         // hideAllSections();
         // showAttackConfig();
@@ -104,16 +107,21 @@
                 var attack_content_size = parseInt(new Uint16Array(arrayBuffer, 2, 1));
                 var attack_content = new Uint8Array(arrayBuffer, 4);
                 console.log("attack_state=" + attack_state + "; attack_type=" + attack_type + "; attack_count_size=" + attack_content_size);
-                var status = "ERROR: Cannot parse attack state.";
                 hideAllSections();
                 switch(attack_state) {
                     case AttackStateEnum.READY:
                         showAttackConfig();
                         break;
                     case AttackStateEnum.RUNNING:
-                        showRunning();
+                        showRunningSection();
                         console.log("Poll");
-                        setTimeout(getStatus, poll_interval);
+                        setTimeout(getStatus, polling_interval);
+                        break;
+                    case AttackStateEnum.RUNNING_INFINITELY:
+                        // The only possible case, when we are here, is refresh of page with DOS broadcast
+                        // (NO Rogue AP) attack in progress
+                        showAttackConfig();
+                        setAttackConfigDosInfinite();
                         break;
                     case AttackStateEnum.FINISHED:
                         showResult("FINISHED", attack_type, attack_content_size, attack_content);
@@ -122,7 +130,7 @@
                         showResult("TIMEOUT", attack_type, attack_content_size, attack_content);
                         break;
                     default:
-                        document.getElementById("errors").innerHTML = "Error loading attack status! Unknown state.";
+                        showError("Error loading attack status! Unknown state.");
                 }
                 return;
                 
@@ -130,7 +138,7 @@
         };
         oReq.onerror = function() {
             console.log("Request error");
-            document.getElementById("errors").innerHTML = "Cannot reach ESP32. Check that you are connected to management AP. You might get disconnected during attack.";
+            showError("Cannot reach ESP32. Check that you are connected to management AP. You might get disconnected during attack.");
             getStatus();
         };
         oReq.ontimeout = function() {
@@ -146,26 +154,30 @@
             section.style.display = "none";
         };
     }
-    function showRunning(){
+    function showRunningSection(){
         hideAllSections();
         document.getElementById("running").style.display = "block";
     }
     function countProgress(){
-        if(time_elapsed >= attack_timeout){
-            document.getElementById("errors").innerHTML = "Please reconnect to management AP";
-            document.getElementById("errors").style.display = "block";
-            clearInterval(running_poll);
+        if(polling_time_elapsed >= attack_timeout){
+            showError("Please reconnect to management AP");
+            clearInterval(polling_timer_id);
         }
-        document.getElementById("running-progress").innerHTML = time_elapsed + "/" + attack_timeout + "s";
-        time_elapsed++;
+        document.getElementById("running-progress").innerHTML = polling_time_elapsed + "/" + attack_timeout + "s";
+        polling_time_elapsed++;
     }
     function showAttackConfig(){
-        document.getElementById("ready").style.display = "block";
+        console.log("LAMBIN showAttackConfig()");
+        document.getElementById("attack_config").style.display = "block";
         refreshAps();
+    }
+    function setAttackConfigDosInfinite() {
+        document.getElementById("start_attack_btn").disabled = true;
+        document.getElementById("stop_attack_btn").style.display = "block";
+        document.getElementById("infinit_attack_txt").style.display = "block";
     }
     function showResult(status, attack_type, attack_content_size, attack_content){
         hideAllSections();
-        clearInterval(poll);
         document.getElementById("result").innerHTML = defaultResultContent;
         document.getElementById("result").style.display = "block";
         document.getElementById("result-meta").innerHTML = status + "<br>";
@@ -191,6 +203,7 @@
         document.getElementById("result-meta").innerHTML += type + "<br>";
     }
     function refreshAps() {
+        // console.log("LAMBIN refreshAps()");
         // console.log("LAMBIN Simulate AP list");
         // document.getElementById("ap-list").innerHTML = "<th>SSID</th><th>BSSID</th><th>RSSI</th>";
         // for  (let i = 0; i < 5; i = i + 1) {
@@ -244,6 +257,13 @@
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
+    function stopAttack() {
+      console.log("LAMBIN stopAttack()");
+        sendResetRequest();
+        document.getElementById("start_attack_btn").disabled = false;
+        document.getElementById("stop_attack_btn").style.display = "none";
+        document.getElementById("infinit_attack_txt").style.display = "none";
+    }
     function selectAp(el) {
         console.log("LAMBIN selected id = " + el.id);
         if (document.getElementById("attack_type").value == AttackTypeEnum.ATTACK_TYPE_DOS) {
@@ -254,9 +274,7 @@
         addSelectedAP(el);
     }
     function clearSelectedAPs() {
-      console.log("LAMBIN Selected APs:");
       for (let i = 0; i < selectedApElements.length; i++) {
-          console.log("LAMBIN id = " + selectedApElements[i].id);
           selectedApElements[i].classList.remove("selected");
       }
       selectedApElements = [];
@@ -271,22 +289,34 @@
       el.classList.add("selected");
       selectedApElements.push(el);
     }
+    function hideErrorSection() {
+        document.getElementById("errors").style.display = "none";
+    }
+    function showError(message) {
+        document.getElementById("errors").innerHTML = message;
+        document.getElementById("errors").style.display = "block";
+    }
     function runAttack() {
+      console.log("LAMBIN runAttack()");
         if(selectedApElements.length == 0){
             console.log("No AP selected. Attack not started.");
-            document.getElementById("errors").innerHTML = "No AP selected. Attack not started.";
+            showError("No AP selected. Attack not started.");
             return;
         }
-        hideAllSections();
-        document.getElementById("running").style.display = "block";
+
         var selectedApElementsOffset = 7;
         var arrayBuffer = new ArrayBuffer(selectedApElementsOffset + selectedApElements.length);
         var uint8Array = new Uint8Array(arrayBuffer);
-        uint8Array[0] = parseInt(document.getElementById("attack_type").value);
+        var attackType = parseInt(document.getElementById("attack_type").value);
+        uint8Array[0] = attackType;
         uint8Array[1] = parseInt(document.getElementById("attack_method").value);
-        var timeout = parseInt(document.getElementById("attack_timeout").value);
-        uint8Array[2] = timeout & 0xff;           // low
-        uint8Array[3] = ((timeout >> 8) & 0xff);  // high
+        attack_timeout = parseInt(document.getElementById("attack_timeout").value);
+        if ((attack_timeout == 0) && (attackType != AttackTypeEnum.ATTACK_TYPE_DOS)) {
+            showError("Infinite attacks are supported only for DOS.");
+            return;
+        }
+        uint8Array[2] = attack_timeout & 0xff;           // low
+        uint8Array[3] = ((attack_timeout >> 8) & 0xff);  // high
         var perApTimeout = parseInt(document.getElementById("perap_attack_timeout").value);
         uint8Array[4] = perApTimeout & 0xff;            // low
         uint8Array[5] = ((perApTimeout >> 8) & 0xff);   // high
@@ -295,20 +325,38 @@
             uint8Array[selectedApElementsOffset + i] = selectedApElements[i].id;
         }
         clearSelectedAPs();
+
         var oReq = new XMLHttpRequest();
         oReq.open("POST", "http://192.168.4.1/run-attack", true);
         oReq.send(arrayBuffer);
-        getStatus();
-        attack_timeout = parseInt(document.getElementById("attack_timeout").value);
-        time_elapsed = 0;
-        running_poll = setInterval(countProgress, running_poll_interval);
+
+        if (attack_timeout != 0) {
+            // Not ifinite attack
+            hideAllSections();
+            document.getElementById("running").style.display = "block";
+            getStatus();
+            polling_time_elapsed = 0;
+            polling_timer_id = setInterval(countProgress, polling_interval);
+            return;
+        } 
+        
+        if (attackType == AttackTypeEnum.ATTACK_TYPE_DOS) {
+            // If attack is ifinite, do not show its progress and do not perform polling of status
+            hideErrorSection();
+            setAttackConfigDosInfinite();
+        }
     }
-    function resetAttack(){
-        hideAllSections();
-        showAttackConfig();
+    function sendResetRequest() {
+        console.log("LAMBIN sendResetRequest()");
         var oReq = new XMLHttpRequest();
         oReq.open("HEAD", "http://192.168.4.1/reset", true);
         oReq.send();
+    }
+    function resetAttack(){
+        console.log("LAMBIN resetAttack()");
+        hideAllSections();
+        showAttackConfig();
+        sendResetRequest();
     }
     function resultPmkid(attack_content, attack_content_size){
         var mac_ap = "";

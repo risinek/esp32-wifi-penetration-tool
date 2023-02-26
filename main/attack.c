@@ -102,7 +102,7 @@ static void attack_timeout(void* arg){
  * 
  * This function handles WEBSERVER_EVENT_ATTACK_REQUEST event from event loop.
  * It parses attack_request_t structure and set initial values to attack_status.
- * It sets attack state to RUNNING.
+ * It sets attack state to RUNNING or RUNNING_INFINITELY.
  * It starts attack timeout timer.
  * It starts attack based on chosen type.
  * 
@@ -137,20 +137,13 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
       .ap_records = ap_records
     };
 
-    attack_status.state = RUNNING;
-    attack_status.type = attack_config.type;
-
-    // if(attack_config.ap_record == NULL){
-    //     ESP_LOGE(TAG, "NPE: No attack_config.ap_record!");
-    //     return;
-    // }
 
     
 
 
     // TODO(alambin):
     // PRIORITIES:
-    // 9, 10, 8, 5, 6, 7
+    // 15, 18, 5, 6, 7
 
     // TODO(alambin):
     // Bluetooth part:
@@ -160,7 +153,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     // WiFi part:
     // 2. Update WebUI to support all new freatures:
     //    X 1. ATTACK_DOS_METHOD_BROADCAST_MULTI_AP
-    //    2. ATTACK_TYPE_STOP_ATTACK
+    //    X 2. ATTACK_TYPE_STOP_ATTACK
     //    3. If attack is DOS, then we can run it forever by setting timeout to 0.
     //       Should display info that RougeAP attack can be stopped only by reset (hard or soft by connecting to ESP-32
     //       via Bluetooth)
@@ -168,7 +161,9 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     // 3. Remember clients who are connecting to WiFi (is it possible only when we are in RougeAP mode and only for
     //    those stations, which connect to this RougeAP?) and when sending deauf, send deauth to them explicitely (not
     //    via broadcast). Such a targetted frames will not be ignored by some devices. Not to blow up this list, we can
-    //    clean it, say, once per day
+    //    clean it, say, once per day IF itexceeds specified size.
+    //    I REALLY need MAC addresses from 5G network to add them to black list on UI later
+    //    1. Make new end-point to read this list
     // 4. Need to make sure that all my changes are not breaking existing code. Ex. that proper status of attack will
     //    be returned by attack_get_status(), that each attack really has proper status (remember, that now we have
     //    infinite attacks and ability to interrupt attacks)
@@ -177,21 +172,42 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     //    (/log) and in response make simple page with text window containing buffered logs.
     //    Buffer should contain only the latest N lines of logs. Make size configurable (via menuconfig?).
     //    Try to find way to get stream of logs and send them not to Serial Port, but to this logger. May be some
-    //    hook/callback is provided by ESP to handle all outgoing logs from system?
+    //    hook/callback is provided by ESP to handle all outgoing logs from system (esp_log_set_vprintf ???)?
     // 7. Use config-time constants to set device ID (0-...) and use it to create constants for WiFi AP name, Bluetooth
     //    device name, IP address. So that we can easily generate binaries for multiple ESP32 devices
-    // 8. Extend WebUI so that for infinit attacks it will
-    //    1. not show timeout window
-    //    2. not let send aby command except of STOP
-    //    3. To properly handle refresh page, ESP32 should know about infinit status and should return proper new status
-    //       code to WebUI on request of "/status"
+    //    How to change IP adress in index.html?
+    // V 8. Extend WebUI so that for infinit attacks it will
+    //    V 1. not show timeout window
+    //    V 2. Shows status about infinit attack somewhere
+    //    V 3. Show button to stop attack (refer to "resetAttack()", but without changes in UI)
+    //    V 4. not let send any command except of STOP
+    //    V 5. To properly handle refresh page, ESP32 should know about infinit status and should return proper new status
+    //         code to WebUI on request of "/status"
     // V 9. Implement multiple RougeAP attack
-    // 10. Test infinit and regular multiple AP attacks
-    // 11. Test multiple AP attack where our router
-    //     1. comes 1st in the list
-    //     2. comes 2nd in the list
+    // v 10. Test infinit and regular multiple AP attacks
+    // V 11. Test multiple AP attack where our router
+    //     V 1. comes 1st in the list
+    //     V 2. comes 2nd in the list
     // 12. "Black list of MACs" feature. Add MAC addresses list in WebUI. For those addresses need to send personal
     //     deauth frame for every AP during broadcast attack
+    // 13. Stability test (aster most of changes are done). Keep ESP32 running as long as possible, running different
+    //     attacks. The goal is to make sure that after different use cases it is still up and running
+    // 14. "Stop attack" doesn't make sense in method which includes Rogue AP, because we will simple can not send any
+    //     request to ESP32. Actually after initiating such attack the only thing we can do in UI is to show message
+    //     that ESP32's WiFi will be off during all attack. The only way to make it available again - reboot via
+    //     Bluetooth
+    //     1. Need to analyze other cases, when ESP32 will not be available and probably adapt behavior of UI for it
+    // 15. Check if there is such thing as Bluetooth logger for ESP32
+    //     This one looks like without buffering? https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino
+    // 16. Blink red LED few times at startup (FREERTOS task?) and then turn it off
+    // 17. BUG: if DOS Braadcast attack is in progress and you refresh page, list of APs looks like read by ESP (see its
+    //     logs), but not displayed on WebUI. Connection to ESP is lost. May be ESP kills its AP when tries to send this
+    //     list to WebUI? Ah, may be incorrect handling of request to "/status" when we start WebUI during attack?
+    //     Hm. Not wlways reproducible
+    // 18. Bluetooth new command - "stop" to stop attack and restore original AP (it is most probably done as part of
+    //     attack_timeout()/stop_attack())
+    // 19. New commands for Bluetooth - blink LED, start LED, stop LED. To make device easier to be found (if forgot
+    //     where is it)
     
 
 
@@ -245,31 +261,29 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     // In case it is DOS broadcast and timeout is 0, do not set timer and let attack to run forever
     // NOTE! In case of RougeAP attack, new AP will be established forever. The only way to stop it is reset: either
     // hard (button on board), either soft. Currently to trigger soft reset you need to connect to ESP-32 by Bluetooth
-    if (((attack_config.timeout == 0) &&
-         (attack_config.type == ATTACK_TYPE_DOS))) {
+    if (((attack_config.timeout == 0) && (attack_config.type == ATTACK_TYPE_DOS))) {
         ESP_LOGI(TAG,
-                 "Timeout is set to 0. Atack will not finish until reboot or "
-                 "ATTACK_TYPE_STOP_ATTACK command is received");
+                 "Timeout is set to 0. Atack will not finish until reboot (via Bluetooth) or 'reset' command");
     } else {
-        // Before starting timer, make sure previous attack is finished. If not
-        // - finish it by simulating timeout
-        esp_err_t stop_result = esp_timer_start_once(
-            attack_timeout_handle, attack_config.timeout * 1000000);
-        if (stop_result != ESP_OK) {
-            if (stop_result == ESP_ERR_INVALID_STATE) {
-              // Previous attack is still in progress. Try to stop it and start
-              // timer again
+        // Before starting timer, make sure previous attack is finished. If not - finish it by simulating timeout
+        esp_err_t start_result = esp_timer_start_once(attack_timeout_handle, attack_config.timeout * 1000000);
+        if (start_result != ESP_OK) {
+            if (start_result == ESP_ERR_INVALID_STATE) {
+              // Previous attack is still in progress. Try to stop it and start timer again
               esp_timer_stop(attack_timeout_handle);
-              // Simulate timeout event
-              attack_timeout(NULL);
+              attack_timeout(NULL);  // Simulate timeout event
 
-              ESP_ERROR_CHECK(esp_timer_start_once(
-                  attack_timeout_handle, attack_config.timeout * 1000000));
+              ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle, attack_config.timeout * 1000000));
             } else {
-              ESP_ERROR_CHECK(stop_result);
+              ESP_ERROR_CHECK(start_result);
+              return;
             }
         }
     }
+
+    attack_status.state =
+        (((attack_config.timeout == 0) && (attack_config.type == ATTACK_TYPE_DOS))) ? RUNNING_INFINITELY : RUNNING;
+    attack_status.type = attack_config.type;
 
     // start attack based on it's type
     switch(attack_config.type) {
@@ -285,17 +299,10 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
         case ATTACK_TYPE_DOS:
             attack_dos_start(&attack_config);
             break;
-        case ATTACK_TYPE_STOP_ATTACK:
-            // Stop timer if it was initiated by previous attack.
-            esp_timer_stop(attack_timeout_handle);
-            // Simulate timeout event. We should not call attack_update_status(FINISHED), because it will not finalize
-            // attack properly (ex. it will not call attack_dos_stop(), etc.)
-            attack_timeout(NULL);
-            free(attack_config.ap_records.records);
-            break;
         default:
             ESP_LOGE(TAG, "Unknown attack type!");
             free(attack_config.ap_records.records);
+            return;
     }
 }
 
@@ -310,7 +317,14 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
  * @param event_data not used
  */
 static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    ESP_LOGD(TAG, "Resetting attack status...");
+    ESP_LOGD(TAG, "Resetting attack...");
+
+    // Stop timer if it was initiated by previous attack.
+    esp_timer_stop(attack_timeout_handle);
+    // Simulate timeout event. We should not call attack_update_status(FINISHED), because it will not finalize
+    // attack properly (ex. it will not call attack_dos_stop(), etc.)
+    attack_timeout(NULL);
+
     if(attack_status.content){
         free(attack_status.content);
         attack_status.content = NULL;
