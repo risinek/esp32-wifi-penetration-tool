@@ -20,7 +20,7 @@ class BluetoothSerial {
   using OnBtDataReceviedCallbackType = std::function<void(std::string receivedData)>;
   static BluetoothSerial& instance();
   bool init(OnBtDataReceviedCallbackType dataReceviedCallback);
-  void send(std::string message);
+  bool send(std::string message);
 
  private:
   BluetoothSerial() = default;
@@ -31,13 +31,18 @@ class BluetoothSerial {
   // 1. Requires external lock
   // 2. Moves extracted data to mCurrentTransmittedChunk
   void extractDataChunkToTransmit();
+  // NOTE!
+  // 1. Requires external lock
+  // 2. mTotalTxDataLength must be set to current size of mTxData
+  void freeOldTXData();
 
   OnBtDataReceviedCallbackType mDataReceviedCallback{nullptr};
 
   // This data can be accessed from multiple threads, so it is protected by mutex
   std::shared_timed_mutex mMutex;
-  uint32_t mWriteHandle{0};
-  std::vector<std::string> mLogs;
+  uint32_t mTerminalConnectionHandle{0};
+  std::vector<std::string> mTxData;
+  uint32_t mTotalTxDataLength{0};
   std::string mCurrentTransmittedChunk;
   bool mIsTransmissionEvenSequenceInProgress{false};
 

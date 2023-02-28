@@ -16,11 +16,12 @@
 #include <string>
 
 namespace {
-const char* LOG_TAG = "BT";
-const char* kSppServerName = "ESP32_SPP_SERVER";
-const char* kDeviceBLEName = CONFIG_MGMT_AP_SSID;
-esp_bt_pin_code_t kPpinCode = {1, 2, 3, 4};  // Max 16 byte
-constexpr size_t kBtTxBufSize = ESP_SPP_MAX_MTU - 1;
+const char* LOG_TAG{"BT"};
+const char* kSppServerName{"ESP32_SPP_SERVER"};
+const char* kDeviceBLEName{CONFIG_MGMT_AP_SSID};
+esp_bt_pin_code_t kPpinCode{1, 2, 3, 4};             // Max 16 byte
+constexpr size_t kBtTxBufSize{ESP_SPP_MAX_MTU - 1};  // Size of BT buffer for each sending chunk
+constexpr uint32_t kMaxTxBufSize{10 * 1024};         // Size of TX data which is going to be cached
 
 std::string pinToStr(const esp_bt_pin_code_t& pin) {
   std::string result;
@@ -119,7 +120,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
       ESP_LOGD(LOG_TAG, "ESP_SPP_CLOSE_EVT");
       {
         std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
-        btSerial.mWriteHandle = 0;
+        btSerial.mTerminalConnectionHandle = 0;
       }
       break;
 
@@ -150,7 +151,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
       ESP_LOGD(LOG_TAG, "ESP_SPP_SRV_OPEN_EVT");
       {
         std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
-        btSerial.mWriteHandle = param->srv_open.handle;
+        btSerial.mTerminalConnectionHandle = param->srv_open.handle;
       }
       btSerial.transmitChunkOfData();
 #ifdef PRINT_RX_SPEED
@@ -272,25 +273,33 @@ bool BluetoothSerial::init(OnBtDataReceviedCallbackType dataReceviedCallback) {
   return true;
 }
 
-void BluetoothSerial::send(std::string message) {
+bool BluetoothSerial::send(std::string message) {
+  mTotalTxDataLength += message.length();
+
   std::lock_guard<std::shared_timed_mutex> lock(mMutex);
-  mLogs.emplace_back(std::move(message));
+  mTxData.emplace_back(std::move(message));
 
-  ESP_LOGD(LOG_TAG, "BluetoothSerial::send() log_size = %d", mLogs.size());
+  bool doesMessageFitBuffer{(mTotalTxDataLength <= kMaxTxBufSize)};
+  if (!doesMessageFitBuffer) {
+    freeOldTXData();
+  }
 
-  if (mWriteHandle == 0) {
+  if (mTerminalConnectionHandle == 0) {
     // We can not start sending logs, because no terminal is connected
-    return;
+    return doesMessageFitBuffer;
   }
 
   if (mIsTransmissionEvenSequenceInProgress == true) {
     // Newly added logs will be transmitted later as part of transmission event sequence
-    return;
+    return doesMessageFitBuffer;
   }
 
   extractDataChunkToTransmit();
   mIsTransmissionEvenSequenceInProgress = true;
-  esp_spp_write(mWriteHandle, mCurrentTransmittedChunk.length(), (uint8_t*)mCurrentTransmittedChunk.c_str());
+  esp_spp_write(mTerminalConnectionHandle, mCurrentTransmittedChunk.length(),
+                (uint8_t*)mCurrentTransmittedChunk.c_str());
+
+  return doesMessageFitBuffer;
 }
 
 void BluetoothSerial::onBtDataRecevied(std::string receivedData) {
@@ -328,7 +337,7 @@ void BluetoothSerial::transmitChunkOfData() {
   ESP_LOGI(LOG_TAG, "BluetoothSerial::transmitChunkOfData()");
 
   std::lock_guard<std::shared_timed_mutex> lock(mMutex);
-  if (mWriteHandle == 0) {
+  if (mTerminalConnectionHandle == 0) {
     return;
   }
 
@@ -338,7 +347,8 @@ void BluetoothSerial::transmitChunkOfData() {
     return;
   }
   mIsTransmissionEvenSequenceInProgress = true;
-  esp_spp_write(mWriteHandle, mCurrentTransmittedChunk.length(), (uint8_t*)mCurrentTransmittedChunk.c_str());
+  esp_spp_write(mTerminalConnectionHandle, mCurrentTransmittedChunk.length(),
+                (uint8_t*)mCurrentTransmittedChunk.c_str());
 }
 
 void BluetoothSerial::extractDataChunkToTransmit() {
@@ -347,7 +357,7 @@ void BluetoothSerial::extractDataChunkToTransmit() {
   }
 
   size_t resultLen{0};
-  for (auto& curLine : mLogs) {
+  for (auto& curLine : mTxData) {
     if (curLine.length() <= (kBtTxBufSize - resultLen)) {
       // Current log line entirely fits buffer
       mCurrentTransmittedChunk += curLine;
@@ -362,8 +372,30 @@ void BluetoothSerial::extractDataChunkToTransmit() {
       break;
     }
   }
+  mTotalTxDataLength -= mCurrentTransmittedChunk.length();
 
   // Remove extracted lines
-  mLogs.erase(std::remove_if(mLogs.begin(), mLogs.end(), [&](const std::string& line) { return line.empty(); }),
-              mLogs.end());
+  mTxData.erase(std::remove_if(mTxData.begin(), mTxData.end(), [&](const std::string& line) { return line.empty(); }),
+                mTxData.end());
+}
+
+void BluetoothSerial::freeOldTXData() {
+  for (int i = 0; (i < mTxData.size()) && (mTotalTxDataLength > kMaxTxBufSize); ++i) {
+    auto& curLine = mTxData[i];
+    if ((mTotalTxDataLength - curLine.length()) >= kMaxTxBufSize) {
+      // Current log line can be entirely deletted from buffer
+      mTotalTxDataLength -= curLine.length();
+      curLine = "";
+    } else {
+      // Delete only part of current log line
+      auto symbolsToDelete = mTotalTxDataLength - kMaxTxBufSize;
+      curLine = curLine.substr(symbolsToDelete);
+      mTotalTxDataLength -= symbolsToDelete;
+      break;
+    }
+  }
+
+  // Remove freed lines
+  mTxData.erase(std::remove_if(mTxData.begin(), mTxData.end(), [&](const std::string& line) { return line.empty(); }),
+                mTxData.end());
 }

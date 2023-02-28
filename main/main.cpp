@@ -30,6 +30,20 @@ SerialCommandDispatcher serialCommandDispatcher;
 extern "C" {
 #endif
 
+void testBT() {
+  ESP_LOGD(TAG, "Testing BT transmition");
+
+  for (int i = 0; i < 10; ++i) {
+    std::string line(10, '0' + i);
+    BluetoothSerial::instance().send(std::move(line));
+  }
+
+  for (int i = 0; i < 50; ++i) {
+    std::string line(i+1, '0' + i);
+    BluetoothSerial::instance().send(std::move(line));
+  }
+}
+
 void app_main(void) {
   ESP_LOGD(TAG, "app_main started");
   ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -45,6 +59,8 @@ void app_main(void) {
     ESP_LOGD(TAG, "RESETTING ESP32");
     esp_restart();
   });
+
+  // testBT();
 }
 
 #ifdef __cplusplus
