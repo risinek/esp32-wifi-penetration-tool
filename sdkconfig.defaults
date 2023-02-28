@@ -2,10 +2,14 @@ CONFIG_ESP32_WIFI_NVS_ENABLED=n
 
 # These settings are required to build BT stack
 CONFIG_BT_ENABLED=y
-CONFIG_BTDM_CTRL_MODE_BLE_ONLY=y
-CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY=n
+CONFIG_BTDM_CTRL_MODE_BLE_ONLY=n
+CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY=y
 CONFIG_BTDM_CTRL_MODE_BTDM=n
-CONFIG_CXX_EXCEPTIONS=y
+CONFIG_BT_CLASSIC_ENABLED=y
+CONFIG_BT_SPP_ENABLED=y
+CONFIG_BT_BLE_ENABLED=n
+# Uncomment it if you want legacy style of Bluetooth pairing - using PIN
+# CONFIG_BT_SSP_ENABLED=n
 
 # These settings are required to use custom partition table to enable OTA feature
 CONFIG_PARTITION_TABLE_CUSTOM=y
@@ -15,3 +19,9 @@ CONFIG_PARTITION_TABLE_OFFSET=0x8000
 CONFIG_PARTITION_TABLE_MD5=y
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# In case you have problems with watchdog timer (ex. executing long test), then you can disable it.
+# Remember that this is very bad practice and you should avoid it by all means
+# CONFIG_ESP_TASK_WDT_TIMEOUT_S=50
+# CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0=n
+# CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1=n

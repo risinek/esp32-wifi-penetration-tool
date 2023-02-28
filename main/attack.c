@@ -190,6 +190,15 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     //     V 2. comes 2nd in the list
     // 12. "Black list of MACs" feature. Add MAC addresses list in WebUI. For those addresses need to send personal
     //     deauth frame for every AP during broadcast attack
+    //     1. Also need to have black list of router's MACs. If one of them is detected, its SSID should be printed on
+    //        WebUI. So, if user will change SSID, they will be anyway dosplayed.
+    //        Ex. use pre-defined list of such MACs in WebUI. After scanning is done, WebUI can check list of returned
+    //        SSIDs to find those ones from the black list
+    //     2. It would be cool to send black list of router MACs to ESP32 so that it could scan from time to time, if
+    //        network with given MAC appeared, then it is automatically added to the current attack.
+    //        Or we can just run task from time to time, which checks original list of APs, read their MACs and makes
+    //        sure they have the same names. If name is changed, then we should update appropriate entire
+    //        wifi_ap_record_t record in origial list.
     // 13. Stability test (aster most of changes are done). Keep ESP32 running as long as possible, running different
     //     attacks. The goal is to make sure that after different use cases it is still up and running
     // 14. "Stop attack" doesn't make sense in method which includes Rogue AP, because we will simple can not send any
@@ -199,15 +208,22 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
     //     1. Need to analyze other cases, when ESP32 will not be available and probably adapt behavior of UI for it
     // 15. Check if there is such thing as Bluetooth logger for ESP32
     //     This one looks like without buffering? https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino
+    //     V 1. Too many dependencies on Arduino. Try to use ESP SPP (serial port) example
+    //     V 2. BT trasfering (not only receiving). Refer to bt_spp_initiator code
+    //     3. Implement buferisation (refer to another my code for ESP32)
+    //     4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
+    //     5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
     // 16. Blink red LED few times at startup (FREERTOS task?) and then turn it off
     // 17. BUG: if DOS Braadcast attack is in progress and you refresh page, list of APs looks like read by ESP (see its
     //     logs), but not displayed on WebUI. Connection to ESP is lost. May be ESP kills its AP when tries to send this
     //     list to WebUI? Ah, may be incorrect handling of request to "/status" when we start WebUI during attack?
     //     Hm. Not wlways reproducible
     // 18. Bluetooth new command - "stop" to stop attack and restore original AP (it is most probably done as part of
-    //     attack_timeout()/stop_attack())
+    //     attack_timeout()/stop_attack()). Can we just call attack_reset_handler()?
+    //     Q: what;s difference from regular reboot?
     // 19. New commands for Bluetooth - blink LED, start LED, stop LED. To make device easier to be found (if forgot
     //     where is it)
+    // 20. OTA
     
 
 
