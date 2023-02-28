@@ -34,6 +34,10 @@ typedef struct __attribute__((__packed__)){
     uint8_t eapol[256];
 } hccapx_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Creates new HCCAPX buffer for given SSID.
  * 
@@ -61,4 +65,8 @@ hccapx_t *hccapx_serializer_get();
  */
 void hccapx_serializer_add_frame(data_frame_t *frame);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // HCCAPX_SERIALIZER_H

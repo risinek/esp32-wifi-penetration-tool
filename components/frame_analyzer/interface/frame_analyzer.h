@@ -28,6 +28,10 @@ typedef enum {
     SEARCH_PMKID
 } search_type_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Starts frame analysis based on given search type and BSSID.
  * 
@@ -42,4 +46,8 @@ void frame_analyzer_capture_start(search_type_t search_type, const uint8_t *bssi
  */
 void frame_analyzer_capture_stop();
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // FRAME_ANALYZER_H

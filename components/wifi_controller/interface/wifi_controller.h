@@ -17,6 +17,10 @@
 
 #include "esp_wifi_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Starts AP with given config
  * 
@@ -83,4 +87,9 @@ void wifictl_get_sta_mac(uint8_t *mac_sta);
  * @param channel channel in range 1 - 13
  */
 void wifictl_set_channel(uint8_t channel);
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // WIFI_CONTROLLER_H

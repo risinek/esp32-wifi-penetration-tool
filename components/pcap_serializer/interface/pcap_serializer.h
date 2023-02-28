@@ -38,6 +38,10 @@ typedef struct {
         uint32_t orig_len;       /* actual length of packet */
 } pcap_record_header_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Prepares new empty buffer for PCAP formatted binary data. 
  * 
@@ -79,4 +83,8 @@ unsigned pcap_serializer_get_size();
  */
 uint8_t *pcap_serializer_get_buffer();
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // PCAP_SERIALIZER_H

@@ -20,6 +20,10 @@ enum {
     SNIFFER_EVENT_CAPTURED_CTRL
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Sets sniffer filter for specific frame types. 
  * 
@@ -42,4 +46,8 @@ void wifictl_sniffer_start(uint8_t channel);
  */
 void wifictl_sniffer_stop();
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // SNIFFER_H

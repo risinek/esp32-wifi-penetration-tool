@@ -20,6 +20,10 @@ typedef struct {
     wifi_ap_record_t records[CONFIG_SCAN_MAX_AP];
 } wifictl_ap_records_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Switches ESP into scanning mode and stores result.
  * 
@@ -41,4 +45,8 @@ const wifictl_ap_records_t *wifictl_get_ap_records();
  */
 const wifi_ap_record_t *wifictl_get_ap_record(unsigned index);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // AP_SCANNER_H

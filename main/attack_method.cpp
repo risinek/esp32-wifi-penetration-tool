@@ -17,15 +17,17 @@
 #include "wifi_controller.h"
 #include "wsl_bypasser.h"
 
-static const char* TAG = "main:attack_method";
-static esp_timer_handle_t deauth_timer_handle;
-static esp_timer_handle_t rogueap_timer_handle;
+namespace {
+const char* TAG = "main:attack_method";
+esp_timer_handle_t deauth_timer_handle;
+esp_timer_handle_t rogueap_timer_handle;
 
 typedef struct {
   uint8_t current_ap_idx;
   ap_records_t* ap_records;
 } multiple_rogue_ap_data_t;
-static multiple_rogue_ap_data_t* gMmultipleRogueApData = NULL;
+multiple_rogue_ap_data_t* gMmultipleRogueApData = NULL;
+}  // namespace
 
 /**
  * @brief Callback for periodic deauthentication frame timer
@@ -65,13 +67,22 @@ void attack_method_broadcast_stop() {
 void start_rogue_ap(const wifi_ap_record_t* ap_record) {
   ESP_LOGD(TAG, "Starting Rogue AP with SSID '%s'", ap_record->ssid);
   wifictl_set_ap_mac(ap_record->bssid);
-  wifi_config_t ap_config = {
-      .ap = {.ssid_len = strlen((char*)ap_record->ssid),
-             .channel = ap_record->primary,
-             .authmode = ap_record->authmode,
-             .password = "dummypassword",
-             .max_connection = 1},
-  };
+  wifi_config_t ap_config = {.ap = {
+                                 "",                                       // SSID
+                                 "dummypassword",                          // Password
+                                 (uint8_t)strlen((char*)ap_record->ssid),  // ssid_len
+                                 ap_record->primary,                       // channel
+                                 ap_record->authmode,                      // authmode
+                                 0,                                        // ssid_hidden
+                                 1,                                        // max_connection
+                                 0                                         // beacon_interval
+                             }};
+
+  // .ap = {.ssid_len = (uint8_t)strlen((char*)ap_record->ssid),
+  //        .channel = ap_record->primary,
+  //        .authmode = ap_record->authmode,
+  //        .password = "dummypassword",
+  //        .max_connection = 1}};
   mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
   wifictl_ap_start(&ap_config);
 }
@@ -101,7 +112,7 @@ void timer_change_rogue_ap(void* arg) {
  * @param per_ap_timeout how long to establish each Rogue AP
  */
 void start_multiple_rogue_ap_attack(ap_records_t* ap_records, uint16_t per_ap_timeout) {
-  gMmultipleRogueApData = malloc(sizeof(multiple_rogue_ap_data_t));
+  gMmultipleRogueApData = (multiple_rogue_ap_data_t*)malloc(sizeof(multiple_rogue_ap_data_t));
   gMmultipleRogueApData->current_ap_idx = 0;
   gMmultipleRogueApData->ap_records = ap_records;
 

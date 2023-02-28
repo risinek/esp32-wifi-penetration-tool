@@ -129,13 +129,13 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     void *rawData = malloc(req->content_len);
     httpd_req_recv(req, (char *)rawData, req->content_len);
 
-    attack_request_t *raw_attack_request = rawData;
+    attack_request_t *raw_attack_request = (attack_request_t *)rawData;
     attack_request.type = raw_attack_request->type;
     attack_request.method = raw_attack_request->method;
     attack_request.timeout = raw_attack_request->timeout;
     attack_request.per_ap_timeout = raw_attack_request->per_ap_timeout;
     attack_request.ap_records_len = raw_attack_request->ap_records_len;
-    attack_request.ap_records_ids = malloc(attack_request.ap_records_len);
+    attack_request.ap_records_ids = (uint8_t*)malloc(attack_request.ap_records_len);
 
     ESP_LOGD(TAG, "ESP32 received run-attack command with following parameters:");
     ESP_LOGD(TAG, ">> type = %d", attack_request.type);

@@ -13,6 +13,10 @@
 
 #include "esp_wifi_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Sends frame in frame_buffer using esp_wifi_80211_tx but bypasses blocking mechanism
  * 
@@ -31,4 +35,8 @@ void wsl_bypasser_send_raw_frame(const uint8_t *frame_buffer, int size);
  */
 void wsl_bypasser_send_deauth_frame(const wifi_ap_record_t *ap_record);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // WSL_BYPASSER_H
