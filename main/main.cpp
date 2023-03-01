@@ -81,6 +81,9 @@ void app_main(void) {
     gBtLogsForwarder.stopForwarding();
     BluetoothSerial::instance().limitBTLogs(false);
   });
+  gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kBtTerminalConnected, []() {
+    BluetoothSerial::instance().send(gSerialCommandDispatcher.getSupportedCommands());
+  });
 
 #ifdef CONFIG_ENABLE_UNIT_TESTS
   // testBT();

@@ -136,7 +136,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
         ESP_LOGD(LOG_TAG, "ESP_SPP_DATA_IND_EVT len=%d", param->data_ind.len);
       }
       // Called when data is received by ESP32
-      BluetoothSerial::instance().onBtDataRecevied(std::string{(const char*)param->data_ind.data, param->data_ind.len});
+      btSerial.onBtDataRecevied(std::string{(const char*)param->data_ind.data, param->data_ind.len});
 
 #ifdef PRINT_RX_SPEED
       gettimeofday(&btSerial.mReceiveTimeNew, NULL);
@@ -154,6 +154,9 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
         std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
         btSerial.mTerminalConnectionHandle = param->srv_open.handle;
       }
+      // Send fake command to SerialCommandDispatcher, so that it will return list of supported commands
+      btSerial.onBtDataRecevied("btterminalconnected");
+
       btSerial.transmitChunkOfData();
 #ifdef PRINT_RX_SPEED
       gettimeofday(&btSerial.mReceiveTimeOld, NULL);
@@ -276,6 +279,12 @@ bool BluetoothSerial::init(OnBtDataReceviedCallbackType dataReceviedCallback, ui
   esp_bt_gap_set_pin(pin_type, 0, pin_code);
 
   return true;
+}
+
+bool BluetoothSerial::send(std::string message) {
+  std::vector<char> data{message.begin(), message.end()};
+  message.clear();
+  return send(std::move(data));
 }
 
 bool BluetoothSerial::send(std::vector<char> message) {

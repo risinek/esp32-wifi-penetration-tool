@@ -11,6 +11,7 @@ const std::map<std::string, SerialCommandDispatcher::CommandType> kCommandNames 
     {"stoplogs", SerialCommandDispatcher::CommandType::kStopLogs},
     {"ledon", SerialCommandDispatcher::CommandType::kLedOn},
     {"ledoff", SerialCommandDispatcher::CommandType::kLedOff},
+    {"btterminalconnected", SerialCommandDispatcher::CommandType::kBtTerminalConnected},
 };
 }  // namespace
 
@@ -33,6 +34,23 @@ void SerialCommandDispatcher::onNewSymbols(std::string symbols) {
     process(mCurrentlyReceivedSymbols);
     mCurrentlyReceivedSymbols.clear();
   }
+}
+
+std::string SerialCommandDispatcher::getSupportedCommands() {
+  std::string result{
+      "\n\r\n\r\n\r\n\r\n\rWelcome to ESP32 WiFi penetration tool\n\r"
+      "Supported commands: ["};
+  for (const auto& commandPair : kCommandNames) {
+    if (commandPair.first == "btterminalconnected") {
+      // Skip "fake" command
+      continue;
+    }
+    result += commandPair.first + ", ";
+  }
+  result.pop_back();
+  result.pop_back();
+  result += "]\n\r";
+  return result;
 }
 
 void SerialCommandDispatcher::process(const std::string& command) {

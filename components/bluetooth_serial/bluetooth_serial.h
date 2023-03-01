@@ -4,7 +4,6 @@
 // #define PRINT_RX_SPEED
 // #define PRINT_TX_SPEED
 
-#include <deque>
 #include <functional>
 #include <shared_mutex>
 #include <string>
@@ -23,6 +22,7 @@ class BluetoothSerial {
   static BluetoothSerial& instance();
   bool init(OnBtDataReceviedCallbackType dataReceviedCallback, uint32_t maxTxBufSize = 16 * 1024);
 
+  bool send(std::string message);
   bool send(std::vector<char> message);
   // This function will slightly reduce amount oflogs, printed inside this class
   // This is useful when terminal connection is established via Bluetooth to avoid a lot ofechoed messages
