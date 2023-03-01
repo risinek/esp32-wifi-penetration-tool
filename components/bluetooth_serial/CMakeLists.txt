@@ -2,7 +2,14 @@
 set(COMPONENT_REQUIRES
   "bt"
 )
+
+# By some reason it is impossible to add "tests" to COMPONENT_PRIV_REQUIRES variable in "if" statement
+# in this CMake. As a workaround we are adding tests headers into COMPONENT_PRIV_INCLUDEDIRS
 set(COMPONENT_PRIV_REQUIRES )
+
+if(DEFINED CONFIG_ENABLE_UNIT_TESTS)
+  set(COMPONENT_PRIV_INCLUDEDIRS "${COMPONENT_PRIV_INCLUDEDIRS} ../tests")
+endif()
 
 file(GLOB COMPONENT_SRCS
   LIST_DIRECTORIES false

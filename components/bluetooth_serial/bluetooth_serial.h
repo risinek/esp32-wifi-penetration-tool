@@ -4,12 +4,14 @@
 // #define PRINT_RX_SPEED
 // #define PRINT_TX_SPEED
 
+#include <deque>
 #include <functional>
 #include <shared_mutex>
 #include <string>
 #include <vector>
 
 #include "esp_spp_api.h"
+#include "ring_buffer.h"
 
 #if defined(PRINT_RX_SPEED) || defined(PRINT_TX_SPEED)
 #include "sys/time.h"
@@ -19,8 +21,12 @@ class BluetoothSerial {
  public:
   using OnBtDataReceviedCallbackType = std::function<void(std::string receivedData)>;
   static BluetoothSerial& instance();
-  bool init(OnBtDataReceviedCallbackType dataReceviedCallback);
-  bool send(std::string message);
+  bool init(OnBtDataReceviedCallbackType dataReceviedCallback, uint32_t maxTxBufSize = 16 * 1024);
+
+  bool send(std::vector<char> message);
+  // This function will slightly reduce amount oflogs, printed inside this class
+  // This is useful when terminal connection is established via Bluetooth to avoid a lot ofechoed messages
+  void limitBTLogs(bool isLimited);
 
  private:
   BluetoothSerial() = default;
@@ -31,20 +37,17 @@ class BluetoothSerial {
   // 1. Requires external lock
   // 2. Moves extracted data to mCurrentTransmittedChunk
   void extractDataChunkToTransmit();
-  // NOTE!
-  // 1. Requires external lock
-  // 2. mTotalTxDataLength must be set to current size of mTxData
-  void freeOldTXData();
 
   OnBtDataReceviedCallbackType mDataReceviedCallback{nullptr};
 
   // This data can be accessed from multiple threads, so it is protected by mutex
   std::shared_timed_mutex mMutex;
   uint32_t mTerminalConnectionHandle{0};
-  std::vector<std::string> mTxData;
-  uint32_t mTotalTxDataLength{0};
-  std::string mCurrentTransmittedChunk;
+  RingBuffer mTxData;
+  uint32_t mMaxTxBufSize{16 * 1024};
+  std::vector<char> mCurrentTransmittedChunk;
   bool mIsTransmissionEvenSequenceInProgress{false};
+  bool mIsLimitedLogs{false};
 
 #ifdef PRINT_RX_SPEED
   void printRXSpeed();

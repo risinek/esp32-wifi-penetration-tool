@@ -45,7 +45,7 @@ void attack_append_status_content(uint8_t *buffer, unsigned size) {
     return;
   }
   // temporarily save new location in case of realloc failure to preserve current content
-  char *reallocated_content = (char*)realloc(attack_status.content, attack_status.content_size + size);
+  char *reallocated_content = (char *)realloc(attack_status.content, attack_status.content_size + size);
   if (reallocated_content == NULL) {
     ESP_LOGE(TAG, "Error reallocating status content! Status content may not be complete.");
     return;
@@ -116,7 +116,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   attack_request_t *attack_request = (attack_request_t *)event_data;
   ap_records_t ap_records;
   ap_records.len = attack_request->ap_records_len;
-  ap_records.records = (const wifi_ap_record_t**)malloc(ap_records.len * sizeof(wifi_ap_record_t *));
+  ap_records.records = (const wifi_ap_record_t **)malloc(ap_records.len * sizeof(wifi_ap_record_t *));
   for (int i = 0; i < ap_records.len; ++i) {
     ap_records.records[i] = wifictl_get_ap_record(attack_request->ap_records_ids[i]);
     if (ap_records.records[i] == NULL) {
@@ -194,9 +194,9 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //        wifi_ap_record_t record in origial list.
   // 13. Stability test (aster most of changes are done). Keep ESP32 running as long as possible, running different
   //     attacks. The goal is to make sure that after different use cases it is still up and running
-  // 14. "Stop attack" doesn't make sense in method which includes Rogue AP, because we will simple can not send any
-  //     request to ESP32. Actually after initiating such attack the only thing we can do in UI is to show message
-  //     that ESP32's WiFi will be off during all attack. The only way to make it available again - reboot via
+  // 14. "Stop attack" button in WebUIdoesn't make sense in method which includes Rogue AP, because we will simple can
+  //     not send any request to ESP32. Actually after initiating such attack the only thing we can do in UI is to show
+  //     message that ESP32's WiFi will be off during all attack. The only way to make it available again - reboot via
   //     Bluetooth
   //     1. Need to analyze other cases, when ESP32 will not be available and probably adapt behavior of UI for it
   // 15. Check if there is such thing as Bluetooth logger for ESP32
@@ -204,9 +204,10 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino
   //     V 1. Too many dependencies on Arduino. Try to use ESP SPP (serial port) example
   //     V 2. BT trasfering (not only receiving). Refer to bt_spp_initiator code
-  //     3. Implement buferisation (refer to another my code for ESP32)
-  //     4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
-  //     5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
+  //     V 3. Implement buferisation (refer to another my code for ESP32)
+  //     V 4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
+  //     V 5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
+  //     6. Implement output of all supported commands when BT terminal is connected
   // 16. Blink red LED few times at startup (FREERTOS task?) and then turn it off
   // 17. BUG: if DOS Braadcast attack is in progress and you refresh page, list of APs looks like read by ESP (see its
   //     logs), but not displayed on WebUI. Connection to ESP is lost. May be ESP kills its AP when tries to send this

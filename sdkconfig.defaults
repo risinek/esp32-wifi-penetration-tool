@@ -20,6 +20,9 @@ CONFIG_PARTITION_TABLE_MD5=y
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
 
+# Enable or disable unit-tests
+CONFIG_ENABLE_UNIT_TESTS=n
+
 # In case you have problems with watchdog timer (ex. executing long test), then you can disable it.
 # Remember that this is very bad practice and you should avoid it by all means
 # CONFIG_ESP_TASK_WDT_TIMEOUT_S=50
