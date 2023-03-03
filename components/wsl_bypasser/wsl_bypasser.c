@@ -49,7 +49,6 @@ void wsl_bypasser_send_raw_frame(const uint8_t *frame_buffer, int size){
 }
 
 void wsl_bypasser_send_deauth_frame(const wifi_ap_record_t *ap_record){
-    ESP_LOGD(TAG, "Sending deauth frame to AP with SSID '%s' ...", ap_record->ssid);
     uint8_t deauth_frame[sizeof(deauth_frame_default)];
     memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
     memcpy(&deauth_frame[10], ap_record->bssid, 6);

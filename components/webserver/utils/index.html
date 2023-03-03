@@ -90,11 +90,17 @@
     var polling_interval = 1000;
     var polling_time_elapsed = 0;
     var attack_timeout = 0;
+    // Default IP. Will be replaced with particular device IP during build
+    // by components\webserver\utils\convert_html_to_header_file.py
+    var ESP32_IP = "192.168.4.1"
+    var ESP32URLPrefix = "http://" + ESP32_IP
     var defaultResultContent = document.getElementById("result").innerHTML;
     var defaultAttackMethods = document.getElementById("attack_method").outerHTML;
     function getStatus() {
-      console.log("LAMBIN getStatus");
+        console.log("LAMBIN getStatus");
+        // var test = ESP32URLPrefix+"/ap-list"
         // console.log("LAMBIN Temporary ignore sending of request to ESP...");
+        // console.log("LAMBIN test = " + test)
         // hideAllSections();
         // showAttackConfig();
 
@@ -145,7 +151,7 @@
             console.log("Request timeout");
             getStatus();  
         };
-        oReq.open("GET", "http://192.168.4.1/status", true);
+        oReq.open("GET", ESP32URLPrefix+"/status", true);
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
@@ -253,7 +259,7 @@
         oReq.onerror = function() {
             document.getElementById("ap-list").innerHTML = "ERROR";
         };
-        oReq.open("GET", "http://192.168.4.1/ap-list", true);
+        oReq.open("GET", ESP32URLPrefix+"/ap-list", true);
         oReq.responseType = "arraybuffer";
         oReq.send();
     }
@@ -327,7 +333,7 @@
         clearSelectedAPs();
 
         var oReq = new XMLHttpRequest();
-        oReq.open("POST", "http://192.168.4.1/run-attack", true);
+        oReq.open("POST", ESP32URLPrefix+"/run-attack", true);
         oReq.send(arrayBuffer);
 
         if (attack_timeout != 0) {
@@ -349,7 +355,7 @@
     function sendResetRequest() {
         console.log("LAMBIN sendResetRequest()");
         var oReq = new XMLHttpRequest();
-        oReq.open("HEAD", "http://192.168.4.1/reset", true);
+        oReq.open("HEAD", ESP32URLPrefix+"/reset", true);
         oReq.send();
     }
     function resetAttack(){

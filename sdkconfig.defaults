@@ -1,3 +1,7 @@
+# Device ID. Use it in case you have multiple ESP32 with the same firmware.
+# This ID is used to generate unique IP addresses, WiFi access poin names, Bluetooth device names, etc.
+CONFIG_DEVICE_ID=1
+
 CONFIG_ESP32_WIFI_NVS_ENABLED=n
 
 # These settings are required to build BT stack

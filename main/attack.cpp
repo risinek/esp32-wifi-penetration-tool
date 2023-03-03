@@ -29,6 +29,8 @@ attack_status_t attack_status = {.state = READY, .type = (uint8_t)-1, .content_s
 esp_timer_handle_t attack_timeout_handle;
 }  // namespace
 
+bool gShouldLimitAttackLogs = false;
+
 const attack_status_t *attack_get_status() { return &attack_status; }
 
 void attack_update_status(attack_state_t state) {
@@ -136,11 +138,11 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
 
   // TODO(alambin):
   // PRIORITIES:
-  // 15, 18, 5, 6, 7
+  // 20, 18, 3, 12, 21, 
 
   // TODO(alambin):
   // Bluetooth part:
-  // 1. Implement Bluetooth PIN/password/passcode request.
+  // V 1. Implement Bluetooth PIN/password/passcode request.
   //    Currently we can reset device by writing characteristic, which is not so convenient.
   //
   // WiFi part:
@@ -161,12 +163,12 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //    be returned by attack_get_status(), that each attack really has proper status (remember, that now we have
   //    infinite attacks and ability to interrupt attacks)
   // 5. Make sure that timeout in WebUI is handled well (even in case of infinite attack).
-  // 6. Web logger. Refer to one of my previous project, where buffered logger was used. Create new end-point page
+  // V 6. Web logger. Refer to one of my previous project, where buffered logger was used. Create new end-point page
   //    (/log) and in response make simple page with text window containing buffered logs.
   //    Buffer should contain only the latest N lines of logs. Make size configurable (via menuconfig?).
   //    Try to find way to get stream of logs and send them not to Serial Port, but to this logger. May be some
   //    hook/callback is provided by ESP to handle all outgoing logs from system (esp_log_set_vprintf ???)?
-  // 7. Use config-time constants to set device ID (0-...) and use it to create constants for WiFi AP name, Bluetooth
+  // V 7. Use config-time constants to set device ID (0-...) and use it to create constants for WiFi AP name, Bluetooth
   //    device name, IP address. So that we can easily generate binaries for multiple ESP32 devices
   //    How to change IP adress in index.html?
   // V 8. Extend WebUI so that for infinit attacks it will
@@ -199,7 +201,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     message that ESP32's WiFi will be off during all attack. The only way to make it available again - reboot via
   //     Bluetooth
   //     1. Need to analyze other cases, when ESP32 will not be available and probably adapt behavior of UI for it
-  // 15. Check if there is such thing as Bluetooth logger for ESP32
+  // V 15. Check if there is such thing as Bluetooth logger for ESP32
   //     This one looks like without buffering?
   //     https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino
   //     V 1. Too many dependencies on Arduino. Try to use ESP SPP (serial port) example
@@ -207,7 +209,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     V 3. Implement buferisation (refer to another my code for ESP32)
   //     V 4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
   //     V 5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
-  //     6. Implement output of all supported commands when BT terminal is connected
+  //     V 6. Implement output of all supported commands when BT terminal is connected
   // 16. Blink red LED few times at startup (FREERTOS task?) and then turn it off
   // 17. BUG: if DOS Braadcast attack is in progress and you refresh page, list of APs looks like read by ESP (see its
   //     logs), but not displayed on WebUI. Connection to ESP is lost. May be ESP kills its AP when tries to send this
@@ -219,6 +221,14 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   // 19. New commands for Bluetooth - blink LED, start LED, stop LED. To make device easier to be found (if forgot
   //     where is it)
   // 20. OTA
+  // 21. Return attack status in JSON
+  //     1. Adapt WebUI
+  //     2. New BT command "getattackstatus"
+  // 22. Update Read.me file. Add info about new features, including
+  //     - It is possible to build firmware for mutiple ESP32 devices, which will run the same software. These firmares
+  //       should differ by DEVICE_ID, to make ESP32 use different WiFi access points names, Bluetooth device
+  //       names, IP addresses, etc. DEVICE_ID can be set in sdkconfig or provided in common like
+  //       (ex. "idf.py build -DDEVICE_ID=2")
 
   // 5. Broadcast attack can be extended on multiple Access Points.
   //    We can introduce new method - ATTACK_DOS_METHOD_BROADCAST. If it is selected in WebUI, we can allow to
@@ -353,3 +363,6 @@ void attack_init() {
   ESP_ERROR_CHECK(
       esp_event_handler_register(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, &attack_reset_handler, NULL));
 }
+
+// TODO(alambn): can we do it in better way than extern var amound multiple components?
+void attack_limit_logs(bool isLimited) { gShouldLimitAttackLogs = isLimited; }

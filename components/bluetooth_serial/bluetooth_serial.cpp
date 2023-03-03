@@ -1,6 +1,7 @@
 #include "bluetooth_serial.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "device_id.h"
 #include "esp_bt.h"
 #include "esp_bt_device.h"
 #include "esp_bt_main.h"
@@ -18,7 +19,6 @@
 namespace {
 const char* LOG_TAG{"BT"};
 const char* kSppServerName{"ESP32_SPP_SERVER"};
-const char* kDeviceBLEName{CONFIG_MGMT_AP_SSID};
 esp_bt_pin_code_t kPpinCode{1, 2, 3, 4};             // Max 16 byte
 constexpr size_t kBtTxBufSize{ESP_SPP_MAX_MTU - 1};  // Size of BT buffer for each sending chunk
 
@@ -98,7 +98,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
     case ESP_SPP_INIT_EVT: {
       // Called when device is started
       ESP_LOGD(LOG_TAG, "ESP_SPP_INIT_EVT");
-      esp_bt_dev_set_device_name(kDeviceBLEName);
+      esp_bt_dev_set_device_name(gThisDeviceBTDeviceName.c_str());
       esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
       const esp_spp_sec_t sec_mask = ESP_SPP_SEC_AUTHENTICATE;
       const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
@@ -121,6 +121,8 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
         std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
         btSerial.mTerminalConnectionHandle = 0;
       }
+      // Send fake command to SerialCommandDispatcher about terminal disconnection
+      btSerial.onBtDataRecevied("btterminalconnected 0");
       break;
 
     case ESP_SPP_START_EVT:
@@ -155,7 +157,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
         btSerial.mTerminalConnectionHandle = param->srv_open.handle;
       }
       // Send fake command to SerialCommandDispatcher, so that it will return list of supported commands
-      btSerial.onBtDataRecevied("btterminalconnected");
+      btSerial.onBtDataRecevied("btterminalconnected 1");
 
       btSerial.transmitChunkOfData();
 #ifdef PRINT_RX_SPEED

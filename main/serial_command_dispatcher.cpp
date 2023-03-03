@@ -1,6 +1,8 @@
 #include "serial_command_dispatcher.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include <algorithm>
+
 #include "esp_log.h"
 
 namespace {
@@ -9,8 +11,11 @@ const std::map<std::string, SerialCommandDispatcher::CommandType> kCommandNames 
     {"reset", SerialCommandDispatcher::CommandType::kReset},
     {"startlogs", SerialCommandDispatcher::CommandType::kStartLogs},
     {"stoplogs", SerialCommandDispatcher::CommandType::kStopLogs},
+    {"limitlogs", SerialCommandDispatcher::CommandType::kLimitLogs},
+    {"setloglevel", SerialCommandDispatcher::CommandType::kSetLogLevel},
     {"ledon", SerialCommandDispatcher::CommandType::kLedOn},
     {"ledoff", SerialCommandDispatcher::CommandType::kLedOff},
+    {"help", SerialCommandDispatcher::CommandType::kHelp},
     {"btterminalconnected", SerialCommandDispatcher::CommandType::kBtTerminalConnected},
 };
 }  // namespace
@@ -37,9 +42,7 @@ void SerialCommandDispatcher::onNewSymbols(std::string symbols) {
 }
 
 std::string SerialCommandDispatcher::getSupportedCommands() {
-  std::string result{
-      "\n\r\n\r\n\r\n\r\n\rWelcome to ESP32 WiFi penetration tool\n\r"
-      "Supported commands: ["};
+  std::string result{"["};
   for (const auto& commandPair : kCommandNames) {
     if (commandPair.first == "btterminalconnected") {
       // Skip "fake" command
@@ -54,17 +57,45 @@ std::string SerialCommandDispatcher::getSupportedCommands() {
 }
 
 void SerialCommandDispatcher::process(const std::string& command) {
-  auto itType = kCommandNames.find(command);
-  if (itType == kCommandNames.end()) {
-    ESP_LOGE(LOG_TAG, "Unsupported command '%s'", command.c_str());
+  std::string commandName;
+  std::string params;
+  auto commandStartPos = command.find_first_not_of(' ');
+  if (commandStartPos == std::string::npos) {
     return;
+  }
+  auto commandEndPos = command.find(' ', commandStartPos);
+  if (commandEndPos == std::string::npos) {
+    commandName = command.substr(commandStartPos);
+  } else {
+    commandName = command.substr(commandStartPos, commandEndPos - commandStartPos);
+    // Trim spaces in param
+    auto firstNonSpacePos = command.find_first_not_of(' ', commandEndPos);
+    if (firstNonSpacePos != std::string::npos) {
+      auto lastNonSpacePos = command.find_last_not_of(' ');
+      auto paramLen =
+          (lastNonSpacePos == std::string::npos) ? std::string::npos : (lastNonSpacePos - firstNonSpacePos + 1);
+      params = command.substr(firstNonSpacePos, paramLen);
+      std::transform(params.begin(), params.end(), params.begin(), [](unsigned char c) { return std::tolower(c); });
+    }
+  }
+  std::transform(commandName.begin(), commandName.end(), commandName.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+
+  auto itType = kCommandNames.find(commandName);
+  if (itType == kCommandNames.end()) {
+    ESP_LOGE(LOG_TAG, "Unsupported command '%s'", commandName.c_str());
+    return;
+  }
+  if (params.empty()) {
+    ESP_LOGI(LOG_TAG, "Received command '%s'", commandName.c_str());
+  } else {
+    ESP_LOGI(LOG_TAG, "Received command '%s' with params '%s'", commandName.c_str(), params.c_str());
   }
 
-  ESP_LOGI(LOG_TAG, "Received command '%s'", command.c_str());
   auto itHandler = mHandlers.find(itType->second);
   if (itHandler == mHandlers.end()) {
-    ESP_LOGE(LOG_TAG, "No handler set for command '%s'", command.c_str());
+    ESP_LOGE(LOG_TAG, "No handler set for command '%s'", commandName.c_str());
     return;
   }
-  itHandler->second();
+  itHandler->second(params);
 }

@@ -1,9 +1,0 @@
-menu "WiFi Penetration Tool"
-
-config ENABLE_UNIT_TESTS
-	bool "Enable unit tests"
-	default false
-	help
-		Set to true to enable ubit tests.
-
-endmenu

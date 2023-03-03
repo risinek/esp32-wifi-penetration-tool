@@ -16,6 +16,9 @@
 #include "sys/time.h"
 #endif
 
+// Currently no PIN is required to pair ESP32. All you need is to confirm on your PC that displayed code is the same as
+// printed by ESP32 in logs. Authentyification by PIN is enabled in case SSP is disabled in menu config. In that case
+// default PIN is "1234"
 class BluetoothSerial {
  public:
   using OnBtDataReceviedCallbackType = std::function<void(std::string receivedData)>;

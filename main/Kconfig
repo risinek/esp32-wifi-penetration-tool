@@ -1,0 +1,19 @@
+menu "WiFi Penetration Tool"
+
+config DEVICE_ID
+  int "Device ID"
+  range 1 240
+  default 1
+  help
+      Use it in case you have multiple ESP32 with the same firmware.
+      This ID is used to generate unique IP addresses, WiFi access poin names,
+      Bluetooth device names, etc.
+
+
+config ENABLE_UNIT_TESTS
+  bool "Enable unit tests"
+  default false
+  help
+    Set to true to enable ubit tests.
+
+endmenu

@@ -113,4 +113,6 @@ char *attack_alloc_result_content(unsigned size);
  */
 void attack_append_status_content(uint8_t *buffer, unsigned size);
 
+void attack_limit_logs(bool isLimited);
+
 #endif
