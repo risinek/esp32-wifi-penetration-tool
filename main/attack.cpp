@@ -138,7 +138,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
 
   // TODO(alambin):
   // PRIORITIES:
-  // 20, 18, 3, 12, 21, 
+  // 20, 23, 18, 3, 12, 21
 
   // TODO(alambin):
   // Bluetooth part:
@@ -159,6 +159,9 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //    clean it, say, once per day IF itexceeds specified size.
   //    I REALLY need MAC addresses from 5G network to add them to black list on UI later
   //    1. Make new end-point to read this list
+  //    2. Example: D:\Temp\Arduino\esp-idf\examples\wifi\getting_started\softAP\main\softap_example_main.c
+  //       Looks like we need to handle event WIFI_EVENT_AP_STACONNECTED in wifi_event_handler(), which is set by
+  //       esp_event_handler_register
   // 4. Need to make sure that all my changes are not breaking existing code. Ex. that proper status of attack will
   //    be returned by attack_get_status(), that each attack really has proper status (remember, that now we have
   //    infinite attacks and ability to interrupt attacks)
@@ -229,6 +232,16 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //       should differ by DEVICE_ID, to make ESP32 use different WiFi access points names, Bluetooth device
   //       names, IP addresses, etc. DEVICE_ID can be set in sdkconfig or provided in common like
   //       (ex. "idf.py build -DDEVICE_ID=2")
+  // 23. How to improve WiFi antenna?
+  //     Can try this:
+  //     1. https://peterneufeld.wordpress.com/2021/10/14/esp32-range-extender-antenna-modification/
+  //        It gives just 3 db (+1.5 dB with 4 mm shorter wire - refer to comments):
+  //     2. https://community.home-assistant.io/t/how-to-add-an-external-antenna-to-an-esp-board/131601
+  //        Looks more promissing, up to -90 -> -65 !!!. But need solder iron and clue.
+  //        Possible(?) antenna ("esp32 ăng ten") - https://shopee.vn/%C4%82ng-Ten-Khu%E1%BA%BFch-%C4%90%E1%BA%A1i-T%C3%ADn-Hi%E1%BB%87u-FM-AM-G%E1%BA%AFn-N%C3%B3c-Xe-H%C6%A1i-Benz-Bmw-Audi-Toyota-9-11-16-Inch-i.267737919.4436223296?sp_atk=4bac905a-a588-4f02-9af3-0359c20b77a3&xptdk=4bac905a-a588-4f02-9af3-0359c20b77a3
+  //     4. As an option - buy ESP-WHROOM-32U. But I don't want to spend more money.
+  // 24. Make pre-configured attack per DEVICE_ID. Ex. after reboot if device is not configured for 5-10 min, it starts
+  //     pre-configured attack. HTTP or BT interactions reset counter
 
   // 5. Broadcast attack can be extended on multiple Access Points.
   //    We can introduce new method - ATTACK_DOS_METHOD_BROADCAST. If it is selected in WebUI, we can allow to

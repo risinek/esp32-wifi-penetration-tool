@@ -107,6 +107,7 @@ void setSerialCommandsHandlers() {
       SerialCommandDispatcher::CommandType::kBtTerminalConnected, [](const std::string& param) {
         if (param == "1") {
           BluetoothSerial::instance().limitBTLogs(true);
+          // Hide it if you don't wan't people to know what is this Bluetooth device about
           std::string greeting{
               "\n\r\n\r\n\r\n\r\n\rWelcome to ESP32 WiFi penetration tool\n\r"
               "Supported commands: "};

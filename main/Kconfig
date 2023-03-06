@@ -2,7 +2,7 @@ menu "WiFi Penetration Tool"
 
 config DEVICE_ID
   int "Device ID"
-  range 1 240
+  range 1 140
   default 1
   help
       Use it in case you have multiple ESP32 with the same firmware.

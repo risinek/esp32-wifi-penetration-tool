@@ -17,7 +17,7 @@ shutil.rmtree(working_dir, ignore_errors=True)
 os.mkdir(working_dir)
 
 default_ip = "192.168.4.1"
-new_ip_range_begin = 10
+new_ip_range_begin = 100
 this_device_ap_ip = "192.168.4." + str(new_ip_range_begin + int(sys.argv[3]))
 for file_name in os.listdir(html_dir):
     if file_name.endswith(".html"):

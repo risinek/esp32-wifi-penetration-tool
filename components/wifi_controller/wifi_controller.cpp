@@ -52,8 +52,7 @@ static void wifi_init_apsta() {
   ESP_ERROR_CHECK(esp_wifi_start());
   wifi_init = true;
 
-  // TODO(alambin): implement
-  ESP_LOGD(LOG_TAG, "LAMBIN THIS_DEVICE_AP_IP = '%s'", gThisDeviceApIP.c_str());
+  ESP_LOGD(LOG_TAG, "THIS_DEVICE_AP_IP = '%s'", gThisDeviceApIP.c_str());
   uint32_t localIP = ipaddr_addr(gThisDeviceApIP.c_str());
   uint32_t ip_255_255_255_0 = ipaddr_addr("255.255.255.0");  // 0xFFFFFF00;
   set_esp_interface_ip(ESP_IF_WIFI_AP, ap_netif, localIP, localIP, ip_255_255_255_0);
@@ -150,6 +149,16 @@ void wifictl_set_channel(uint8_t channel) {
   esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
 }
 
+void configure_dhcp_server(esp_netif_t *esp_netif) {
+  dhcps_lease_t dhcps_poll;
+  dhcps_poll.enable = true;
+  uint32_t len = sizeof(dhcps_poll);
+  IP4_ADDR(&dhcps_poll.start_ip, 192, 168, 4, 10);
+  IP4_ADDR(&dhcps_poll.end_ip, 192, 168, 4, gThisDeviceApIPRangeStart - 1);
+  ESP_ERROR_CHECK(
+      esp_netif_dhcps_option(esp_netif, ESP_NETIF_OP_SET, ESP_NETIF_REQUESTED_IP_ADDRESS, &dhcps_poll, len));
+}
+
 void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uint32_t local_ip, uint32_t gateway,
                           uint32_t subnet) {
   esp_netif_ip_info_t info;
@@ -172,6 +181,7 @@ void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uin
   } else {
     ESP_ERROR_CHECK(esp_netif_dhcps_stop(esp_netif));
     ESP_ERROR_CHECK(esp_netif_set_ip_info(esp_netif, &info));
+    configure_dhcp_server(esp_netif);
     ESP_ERROR_CHECK(esp_netif_dhcps_start(esp_netif));
   }
 }
