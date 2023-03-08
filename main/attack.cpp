@@ -141,11 +141,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   // 23, 18, 3, 12, 21
 
   // TODO(alambin):
-  // Bluetooth part:
-  // V 1. Implement Bluetooth PIN/password/passcode request.
-  //    Currently we can reset device by writing characteristic, which is not so convenient.
-  //
-  // WiFi part:
   // 2. Update WebUI to support all new freatures:
   //    X 1. ATTACK_DOS_METHOD_BROADCAST_MULTI_AP
   //    X 2. ATTACK_TYPE_STOP_ATTACK
@@ -166,26 +161,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //    be returned by attack_get_status(), that each attack really has proper status (remember, that now we have
   //    infinite attacks and ability to interrupt attacks)
   // 5. Make sure that timeout in WebUI is handled well (even in case of infinite attack).
-  // V 6. Web logger. Refer to one of my previous project, where buffered logger was used. Create new end-point page
-  //    (/log) and in response make simple page with text window containing buffered logs.
-  //    Buffer should contain only the latest N lines of logs. Make size configurable (via menuconfig?).
-  //    Try to find way to get stream of logs and send them not to Serial Port, but to this logger. May be some
-  //    hook/callback is provided by ESP to handle all outgoing logs from system (esp_log_set_vprintf ???)?
-  // V 7. Use config-time constants to set device ID (0-...) and use it to create constants for WiFi AP name, Bluetooth
-  //    device name, IP address. So that we can easily generate binaries for multiple ESP32 devices
-  //    How to change IP adress in index.html?
-  // V 8. Extend WebUI so that for infinit attacks it will
-  //    V 1. not show timeout window
-  //    V 2. Shows status about infinit attack somewhere
-  //    V 3. Show button to stop attack (refer to "resetAttack()", but without changes in UI)
-  //    V 4. not let send any command except of STOP
-  //    V 5. To properly handle refresh page, ESP32 should know about infinit status and should return proper new status
-  //         code to WebUI on request of "/status"
-  // V 9. Implement multiple RougeAP attack
-  // v 10. Test infinit and regular multiple AP attacks
-  // V 11. Test multiple AP attack where our router
-  //     V 1. comes 1st in the list
-  //     V 2. comes 2nd in the list
   // 12. "Black list of MACs" feature. Add MAC addresses list in WebUI. For those addresses need to send personal
   //     deauth frame for every AP during broadcast attack
   //     1. Also need to have black list of router's MACs. If one of them is detected, its SSID should be printed on
@@ -204,15 +179,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     message that ESP32's WiFi will be off during all attack. The only way to make it available again - reboot via
   //     Bluetooth
   //     1. Need to analyze other cases, when ESP32 will not be available and probably adapt behavior of UI for it
-  // V 15. Check if there is such thing as Bluetooth logger for ESP32
-  //     This one looks like without buffering?
-  //     https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino
-  //     V 1. Too many dependencies on Arduino. Try to use ESP SPP (serial port) example
-  //     V 2. BT trasfering (not only receiving). Refer to bt_spp_initiator code
-  //     V 3. Implement buferisation (refer to another my code for ESP32)
-  //     V 4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
-  //     V 5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
-  //     V 6. Implement output of all supported commands when BT terminal is connected
   // 16. Blink red LED few times at startup (FREERTOS task?) and then turn it off
   // 17. BUG: if DOS Braadcast attack is in progress and you refresh page, list of APs looks like read by ESP (see its
   //     logs), but not displayed on WebUI. Connection to ESP is lost. May be ESP kills its AP when tries to send this
@@ -234,13 +200,19 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //        It gives just 3 db (+1.5 dB with 4 mm shorter wire - refer to comments):
   //     2. https://community.home-assistant.io/t/how-to-add-an-external-antenna-to-an-esp-board/131601
   //        Looks more promissing, up to -90 -> -65 !!!. But need solder iron and clue.
-  //        Possible(?) antenna ("esp32 ăng ten") - https://shopee.vn/%C4%82ng-Ten-Khu%E1%BA%BFch-%C4%90%E1%BA%A1i-T%C3%ADn-Hi%E1%BB%87u-FM-AM-G%E1%BA%AFn-N%C3%B3c-Xe-H%C6%A1i-Benz-Bmw-Audi-Toyota-9-11-16-Inch-i.267737919.4436223296?sp_atk=4bac905a-a588-4f02-9af3-0359c20b77a3&xptdk=4bac905a-a588-4f02-9af3-0359c20b77a3
+  //        Possible(?) antenna ("esp32 ăng ten") -
+  //        https://shopee.vn/%C4%82ng-Ten-Khu%E1%BA%BFch-%C4%90%E1%BA%A1i-T%C3%ADn-Hi%E1%BB%87u-FM-AM-G%E1%BA%AFn-N%C3%B3c-Xe-H%C6%A1i-Benz-Bmw-Audi-Toyota-9-11-16-Inch-i.267737919.4436223296?sp_atk=4bac905a-a588-4f02-9af3-0359c20b77a3&xptdk=4bac905a-a588-4f02-9af3-0359c20b77a3
   //     4. As an option - buy ESP-WHROOM-32U. But I don't want to spend more money.
   // 24. Make pre-configured attack per DEVICE_ID. Ex. after reboot if device is not configured for 5-10 min, it starts
   //     pre-configured attack. HTTP or BT interactions reset counter
   // 25. How to report to WebUI about progress of OTA? The only way I know to send messages from client to web-server
   //     is web-sockets. Can we avoid such an overcomplication?
+  // 26. BUG: impossible to set config variable via command line as "idf.py build -DDEVICE_ID=2"
+  //     Is it possible in principle?
 
+  // DONE:
+  // V 1. Implement Bluetooth PIN/password/passcode request.
+  //    Currently we can reset device by writing characteristic, which is not so convenient.
   // V 5. Broadcast attack can be extended on multiple Access Points.
   //    We can introduce new method - ATTACK_DOS_METHOD_BROADCAST. If it is selected in WebUI, we can allow to
   //    select multiple APs. Then we send more data in HTTP Post request: ap_list_len, ap0, ap1, ...
@@ -251,6 +223,35 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //    Need either find approve in documentation, either try it with board.
   //    Idea: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_server.html
   //         "Use content_len provided in httpd_req_t structure to know the length of data to be fetched"
+  // V 6. Web logger. Refer to one of my previous project, where buffered logger was used. Create new end-point page
+  //    (/log) and in response make simple page with text window containing buffered logs.
+  //    Buffer should contain only the latest N lines of logs. Make size configurable (via menuconfig?).
+  //    Try to find way to get stream of logs and send them not to Serial Port, but to this logger. May be some
+  //    hook/callback is provided by ESP to handle all outgoing logs from system (esp_log_set_vprintf ???)?
+  // V 7. Use config-time constants to set device ID (0-...) and use it to create constants for WiFi AP name, Bluetooth
+  //    device name, IP address. So that we can easily generate binaries for multiple ESP32 devices
+  //    How to change IP adress in index.html?
+  // V 8. Extend WebUI so that for infinit attacks it will
+  //    V 1. not show timeout window
+  //    V 2. Shows status about infinit attack somewhere
+  //    V 3. Show button to stop attack (refer to "resetAttack()", but without changes in UI)
+  //    V 4. not let send any command except of STOP
+  //    V 5. To properly handle refresh page, ESP32 should know about infinit status and should return proper new status
+  //         code to WebUI on request of "/status"
+  // V 9. Implement multiple RougeAP attack
+  // v 10. Test infinit and regular multiple AP attacks
+  // V 11. Test multiple AP attack where our router
+  //     V 1. comes 1st in the list
+  //     V 2. comes 2nd in the list
+  // V 15. Check if there is such thing as Bluetooth logger for ESP32
+  //     This one looks like without buffering?
+  //     https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino
+  //     V 1. Too many dependencies on Arduino. Try to use ESP SPP (serial port) example
+  //     V 2. BT trasfering (not only receiving). Refer to bt_spp_initiator code
+  //     V 3. Implement buferisation (refer to another my code for ESP32)
+  //     V 4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
+  //     V 5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
+  //     V 6. Implement output of all supported commands when BT terminal is connected
 
   // Set timeout to stop attack.
   // In case it is DOS broadcast and timeout is 0, do not set timer and let attack to run forever

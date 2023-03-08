@@ -1,4 +1,4 @@
-# Descriotion
+# Description
 
 This project is a fork of "ESP32 Wi-Fi Penetration Tool" by risinek. Original repo can be found [here](https://github.com/risinek/esp32-wifi-penetration-tool). Below you can find description of original project.<br>
 The goal of this fork is to make ESP32 to be more autonomous, so that you can place it near attack target, configure it and it will continue attack for a long time. Because of that this project was extended with such features as OTA, Bluetooth console, etc.
@@ -85,7 +85,7 @@ All you need to do is just to pair ESP32 with your PC, open "Control panel", ope
 
 ## Support of multiple devices with the same firmware
 
-It is possible to build firmware for mutiple ESP32 devices, which will run the same software. These firmwares should differ by DEVICE_ID, to make ESP32 use different WiFi access points names, Bluetooth device names, IP addresses, etc. DEVICE_ID can be set via menuconfig (in "sdkconfig" file) or provided in command line (ex. "idf.py build -DDEVICE_ID=2")<br>
+It is possible to build firmware for mutiple ESP32 devices, which will run the same software. These firmwares should differ by DEVICE_ID, to make ESP32 use different WiFi access points names, Bluetooth device names, IP addresses, etc. DEVICE_ID can be set via menuconfig or in "sdkconfig" file<br>
 This parameter will make your devices to have Bluetooth device name and WiFi AP name "ManagementAP<DDEVICE_ID>". IP addreses will be "192.168.4<100 + DDEVICE_ID>"<br>
 
 <br>
