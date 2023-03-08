@@ -1,3 +1,112 @@
+# Descriotion
+
+This project is a fork of "ESP32 Wi-Fi Penetration Tool" by risinek. Original repo can be found [here](https://github.com/risinek/esp32-wifi-penetration-tool). Below you can find description of original project.<br>
+The goal of this fork is to make ESP32 to be more autonomous, so that you can place it near attack target, configure it and it will continue attack for a long time. Because of that this project was extended with such features as OTA, Bluetooth console, etc.
+
+<br>
+
+Main new features:
+- OTA updates
+- Bluetooth terminal
+- Support of multiple devices with the same firmware
+- Infinite DOS attacks
+- Multi-AP DOS attacks
+ 
+<br>
+
+## OTA
+**NOTE!** For now there is no way to track progress of OTA update. It can be implemented using WebSockets, but binary is already huge in size, so it would be better to find simpler solution to send status reports from ESP32 to WebUI.<br>
+Originally Bluetooth terminal was used for triggering OTA update. But according to Espressif, when you use Bluetooth and WiFi together, they work not stable: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/coexist.html Ex. in my case when ESP's WiFi is configured as AP, I connect to it from PC and when you connect Bluetooth terminal, PC starts continuously disconnecting and connecting again. Sometimes not connecting back, etc. This is not proper connection for using OTA, so I decided not to use Bluetooth for it. I used ESP-IDF v 4.1, as suggested by risinek. If these issues are fixed in the latest ESP-IDF versions, you can try using them, but make sure WiFi attacks are still working.<br><br>
+There are 2 possible ways to transfer data for OTA - using HTTP or HTTPS. For simplicity HTTP is currently used.
+Before running real OTA on device, test your environment, connection, etc. Here are useful links:
+- https://github.com/espressif/esp-idf/blob/master/examples/system/ota/README.md#run-https-server
+- https://github.com/espressif/esp-idf/issues/5240#issuecomment-639292839
+
+It is very important to check that port on PC, hosting OTA updates, is opened.<br>
+To avoid issues with corruption of transferred images by openssl, you can create server by Python. You can use files in folder "https_test" for testing HTTP or HTTPS connections.
+
+<br>
+
+### HTTP
+
+This project is already adapted for using HTTP, so no changes in sources are required.
+
+Steps:
+1. Start ESP32, conect PC to ESP's AP. Check IP address, assigned to your PC. Usually it is "192.168.4.10".
+2. Copy binary you want to upload to "https_test\server"
+3. Open terminal in "https_test\server" and start HTTP server by command
+```
+python -m http.server 8070
+```
+4. Open terminal in "https_test\client" and test connection by following command. Replace IP address with address of your PC in ESP32's WiFi network (refer to step 1) and name of binary file with name of your binary
+```
+curl -v http://192.168.4.10:8070/blink.bin -o received.file
+```
+5. If everything works well you will find new file "received.file" in folder "https_test\client". Make sure it has exactly the same size as the one in folder "https_test\server"
+
+<br>
+
+### HTTPS
+
+First you will need to adapt sources to use HTTPS. You can refer to "simple_ota_example", which goes with ESP IDF.
+In particular, you will need to
+1. Place server's certificate ("ca_cert.pem") to components\ota\server_certs
+2. Uncomment lines in components\ota\component.mk and components\ota\CMakeLists.txt to include certificate in ESP32's binary
+3. Set configuration variable "CONFIG_OTA_ALLOW_HTTP" to "n"
+4. Set "cert_pem" member of esp_http_client_config_t structure (".cert_pem = (char *)server_cert_pem_start,")
+5. Anything else that I'm missing here?
+<br>
+
+Testing of connection is nearly the same as in case of HTTP. There are only 2 differences:
+1. To start HTTPS server use command
+```
+python .\secure_server.py . ..\certs\
+```
+2. To test connection use following command (again, do not forget to replace IP address with yours)
+```
+curl -k -v https://192.168.4.10:8070/blink.bin -o received.file
+```
+
+<br>
+
+When you made sure HTTP(S) connection works well, you can run trigger OTA update via WebUI of ESP32. For testing purposes you can use binary "https_test\server\blink.bin", which will blink LED on ESP32
+
+<br>
+<br>
+
+## Bluetooth terminal
+
+The main reason why Bluetooth terminal was implemented, is to have ability to reset ESP32 remotely. Ex. you are doing infinite DOS attack, ESP32 is always offering different APs and it will never be accessible via its original AP. If you don't have physical access to ESP32, you can reset it remotely using Bluetooth terminal.<br>
+By default simple pairing with Bluetooth device is enabled, which doesn't require you to enter PIN code. If you do want to use PIN, then you need to set configuration variable CONFIG_BT_SSP_ENABLED to "n". Default PIN is "1234". Name of Bluetooth device is specified in "components\device_id\device_id.h" file in "gThisDeviceBTDeviceName" variable and by default is "ManagementAP1"<br>
+All you need to do is just to pair ESP32 with your PC, open "Control panel", open "Devices and Printers" and check which COM port is used for your device. After that configure your terminal app (ex. Putty) to use this port at speed 9600. You can try higher speeds, if you want.<br>
+
+
+<br>
+
+## Support of multiple devices with the same firmware
+
+It is possible to build firmware for mutiple ESP32 devices, which will run the same software. These firmwares should differ by DEVICE_ID, to make ESP32 use different WiFi access points names, Bluetooth device names, IP addresses, etc. DEVICE_ID can be set via menuconfig (in "sdkconfig" file) or provided in command line (ex. "idf.py build -DDEVICE_ID=2")<br>
+This parameter will make your devices to have Bluetooth device name and WiFi AP name "ManagementAP<DDEVICE_ID>". IP addreses will be "192.168.4<100 + DDEVICE_ID>"<br>
+
+<br>
+
+## Infinite DOS attacks
+
+For any DOS attack you can set "Overall attack duration" to 0 and make infinite attack.<br>
+
+<br>
+
+## Multi-AP DOS attacks
+
+For any DOS attack you can select multiple access points (APs) and attack duration per each AP. So, having one ESP32 you can attack multiple APs one after another.
+
+<br>
+
+
+<br><br><br>
+
+
+
 # ESP32 Wi-Fi Penetration Tool
 
 This project introduces an universal tool for ESP32 platform for implementing various Wi-Fi attacks. It provides some common functionality that is commonly used in Wi-Fi attacks and makes implementing new attacks a bit simpler. It also includes Wi-Fi attacks itself like capturing PMKIDs from handshakes, or handshakes themselves by different methods like starting rogue duplicated AP or sending deauthentication frames directly, etc...

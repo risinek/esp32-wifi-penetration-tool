@@ -11,6 +11,9 @@
 
 #include "esp_event.h"
 
+#include <string>
+#include <functional>
+
 ESP_EVENT_DECLARE_BASE(WEBSERVER_EVENTS);
 enum {
     WEBSERVER_EVENT_ATTACK_REQUEST,
@@ -30,17 +33,11 @@ typedef struct {
       uint8_t* ap_records_ids;
 } __attribute__((packed)) attack_request_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief Initializes and starts webserver 
  */
 void webserver_run();
 
-#ifdef __cplusplus
-}
-#endif
+void setWebserverOnOtaRequestHandler(std::function<void(const std::string& param)> onOtaRequestHandler);
 
 #endif  // WEBSERVER_H

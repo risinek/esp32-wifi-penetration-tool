@@ -11,13 +11,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
-#include "esp_log.h"
 #include "esp_err.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
-static const char *TAG = "wsl_bypasser";
 /**
  * @brief Deauthentication frame template
  * 

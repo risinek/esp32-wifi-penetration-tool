@@ -74,6 +74,17 @@
             </fieldset>
         </form>
     </section>
+    <section id="ota_config" style="display: none;"></section>
+      <fieldset>
+        <legend>OTA configuration</legend>
+        <p>
+          <label for="ota_url">OTA URL:</label>
+          <input type="url" id="ota_url" size="40" pattern="http://.*" value="http://192.168.4.10:8070/blink.bin" required/>
+          <div id="start_ota_status" style="color: blue;"></div>
+      </p>
+      <input type="button" id="start_ota_btn" style="float: left;" onClick="startOTA()" value="Start OTA">
+      </fieldset>
+    </section>
     <section id="running" style="display: none;">
         Time elapsed: <span id="running-progress"></span>
     </section>
@@ -92,18 +103,21 @@
     var attack_timeout = 0;
     // Default IP. Will be replaced with particular device IP during build
     // by components\webserver\utils\convert_html_to_header_file.py
-    var ESP32_IP = "192.168.4.1"
+    var ESP32_IP = "{IP_WILL_BE_PLACED_HERE}"
     var ESP32URLPrefix = "http://" + ESP32_IP
     var defaultResultContent = document.getElementById("result").innerHTML;
     var defaultAttackMethods = document.getElementById("attack_method").outerHTML;
     function getStatus() {
         console.log("LAMBIN getStatus");
+
+        // Uncomment it to debug on PC
         // var test = ESP32URLPrefix+"/ap-list"
         // console.log("LAMBIN Temporary ignore sending of request to ESP...");
         // console.log("LAMBIN test = " + test)
         // hideAllSections();
         // showAttackConfig();
 
+        // Comment it to debug on PC
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
             var arrayBuffer = oReq.response;
@@ -209,6 +223,7 @@
         document.getElementById("result-meta").innerHTML += type + "<br>";
     }
     function refreshAps() {
+        // Uncomment it to debug on PC
         // console.log("LAMBIN refreshAps()");
         // console.log("LAMBIN Simulate AP list");
         // document.getElementById("ap-list").innerHTML = "<th>SSID</th><th>BSSID</th><th>RSSI</th>";
@@ -228,8 +243,7 @@
         //     document.getElementById("ap-list").appendChild(tr);
         // }
 
-
-
+        // Comment it to debug on PC
         document.getElementById("ap-list").innerHTML = "Loading (this may take a while)...";
         var oReq = new XMLHttpRequest();
         oReq.onload = function() {
@@ -465,6 +479,35 @@
             option.selected = true;
             document.getElementById("attack_method").appendChild(option);
         });
+    }
+    function startOTA() {
+      var oReq = new XMLHttpRequest();
+      oReq.onload = function() {
+        var otaStatus = oReq.response;
+          document.getElementById("start_ota_status").style.display = "block";
+          document.getElementById("start_ota_status").innerHTML = otaStatus;
+          if (otaStatus.includes("ERROR:")) {
+            document.getElementById("start_ota_status").style.color = "red";
+          }
+      };
+      oReq.onerror = function() {
+        console.log("Request error");
+        showError("Cannot reach ESP32. Check that you are connected to management AP. You might get disconnected during attack.");
+      };
+      oReq.open("POST", ESP32URLPrefix+"/update", true);
+      oReq.responseType = "text";
+
+      var otaURL = document.getElementById("ota_url").value;
+      var arrayBuffer = new ArrayBuffer(otaURL.length);
+      var uint8View = new Uint8Array(arrayBuffer);
+      for (var i = 0; i < otaURL.length; i++) {
+        uint8View[i] = 0xFF & otaURL.charCodeAt(i);
+      }
+      oReq.send(arrayBuffer);
+
+      document.getElementById("start_ota_status").style.display = "block";
+      document.getElementById("start_ota_status").innerHTML = "Request is sent..."
+      document.getElementById("start_ota_status").style.color = "blue";
     }
     </script>
 </body>

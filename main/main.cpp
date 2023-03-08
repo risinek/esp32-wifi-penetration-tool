@@ -19,6 +19,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "ota.h"
 #include "serial_command_dispatcher.h"
 #include "webserver.h"
 #include "wifi_controller.h"
@@ -31,6 +32,7 @@ namespace {
 const char* LOG_TAG = "main";
 SerialCommandDispatcher gSerialCommandDispatcher;
 BtLogsForwarder gBtLogsForwarder;
+Ota gOta;
 }  // namespace
 
 #ifdef __cplusplus
@@ -128,9 +130,15 @@ void app_main(void) {
   ESP_LOGD(LOG_TAG, "app_main() started. Device ID='%d'", CONFIG_DEVICE_ID);
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   wifictl_mgmt_ap_start();
+  // This causes error: "wifi:Error! Should enable WiFi modem sleep when both WiFi and Bluetooth are enabled!!!!!!"
+  // Disabling of powersafe more for WiFi is required to improve WiFi speed for OTA.
+  // wifictl_disable_powersafe();
+
   attack_init();
-  webserver_run();
   setSerialCommandsHandlers();
+
+  webserver_run();
+  setWebserverOnOtaRequestHandler([](const std::string& url) { gOta.connectToServer(url); });
 
   attack_limit_logs(true);
 

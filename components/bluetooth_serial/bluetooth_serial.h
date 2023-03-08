@@ -1,9 +1,6 @@
 #ifndef BT_SERIAL_H_
 #define BT_SERIAL_H_
 
-// #define PRINT_RX_SPEED
-// #define PRINT_TX_SPEED
-
 #include <functional>
 #include <shared_mutex>
 #include <string>
@@ -11,10 +8,6 @@
 
 #include "esp_spp_api.h"
 #include "ring_buffer.h"
-
-#if defined(PRINT_RX_SPEED) || defined(PRINT_TX_SPEED)
-#include "sys/time.h"
-#endif
 
 // Currently no PIN is required to pair ESP32. All you need is to confirm on your PC that displayed code is the same as
 // printed by ESP32 in logs. Authentyification by PIN is enabled in case SSP is disabled in menu config. In that case
@@ -49,21 +42,8 @@ class BluetoothSerial {
   RingBuffer mTxData;
   uint32_t mMaxTxBufSize{16 * 1024};
   std::vector<char> mCurrentTransmittedChunk;
-  bool mIsTransmissionEvenSequenceInProgress{false};
+  bool mIsTransmissionRequestInProgress{false};
   bool mIsLimitedLogs{false};
-
-#ifdef PRINT_RX_SPEED
-  void printRXSpeed();
-  timeval mReceiveTimeNew;
-  timeval mReceiveTimeOld;
-  uint32_t mRXDataSizeTransSend{0};
-#endif
-#ifdef PRINT_RX_SPEED
-  void printTXSpeed();
-  timeval mTransmitTimeNew;
-  timeval mTransmitTimeOld;
-  uint32_t mTXDataSizeTransSend{0};
-#endif
 };
 
 #endif  // BT_SERIAL_HPP_

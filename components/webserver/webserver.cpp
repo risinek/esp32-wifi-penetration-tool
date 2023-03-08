@@ -137,7 +137,7 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_request.ap_records_len = raw_attack_request->ap_records_len;
     attack_request.ap_records_ids = (uint8_t*)malloc(attack_request.ap_records_len);
 
-    ESP_LOGD(TAG, "ESP32 received run-attack command with following parameters:");
+    ESP_LOGD(TAG, "ESP32 received 'run-attack' command with following parameters:");
     ESP_LOGD(TAG, ">> type = %d", attack_request.type);
     ESP_LOGD(TAG, ">> method = %d", attack_request.method);
     ESP_LOGD(TAG, ">> timeout = %d", attack_request.timeout);
@@ -250,6 +250,39 @@ static httpd_uri_t uri_capture_hccapx_get = {
 };
 //@}
 
+// TODO(all): It is still C code by nature. So, we are using C approach (global variables)
+// Need to refactor it in C++ way
+static std::function<void(const std::string &param)> gOnOtaRequestHandler = nullptr;
+void setWebserverOnOtaRequestHandler(std::function<void(const std::string &param)> onOtaRequestHandler) {
+    gOnOtaRequestHandler = std::move(onOtaRequestHandler);
+}
+
+static esp_err_t start_ota_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "text/html");
+
+    std::string otaURL;
+    if (req->content_len != 0) {
+        char *rawData = new char[req->content_len + 1];
+        httpd_req_recv(req, (char *)rawData, req->content_len);
+        rawData[req->content_len] = '\0';
+        otaURL = rawData;
+        delete[] rawData;
+    }
+
+    ESP_LOGD(TAG, "ESP32 received 'update' command with following parameters: otaURL = '%s'", otaURL.c_str());
+    if (gOnOtaRequestHandler == nullptr) {
+        std::string message{"ERROR: no handler set for 'update' command"};
+        ESP_LOGE(TAG, "%s", message.c_str());
+        return httpd_resp_send(req, message.c_str(), message.length());
+    }
+
+    gOnOtaRequestHandler(otaURL);
+    return httpd_resp_send(req, "Request accepted. Wait for some time till update is finished", HTTPD_RESP_USE_STRLEN);
+}
+
+static httpd_uri_t uri_update_post = {
+    .uri = "/update", .method = HTTP_POST, .handler = start_ota_handler, .user_ctx = NULL};
+
 void webserver_run(){
     ESP_LOGD(TAG, "Running webserver");
 
@@ -264,4 +297,5 @@ void webserver_run(){
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_status_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_capture_pcap_get));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_capture_hccapx_get));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri_update_post));
 }

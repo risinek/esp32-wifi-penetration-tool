@@ -185,3 +185,5 @@ void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uin
     ESP_ERROR_CHECK(esp_netif_dhcps_start(esp_netif));
   }
 }
+
+void wifictl_disable_powersafe() { esp_wifi_set_ps(WIFI_PS_NONE); }

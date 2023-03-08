@@ -138,7 +138,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
 
   // TODO(alambin):
   // PRIORITIES:
-  // 20, 23, 18, 3, 12, 21
+  // 23, 18, 3, 12, 21
 
   // TODO(alambin):
   // Bluetooth part:
@@ -223,15 +223,11 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     Q: what;s difference from regular reboot?
   // 19. New commands for Bluetooth - blink LED, start LED, stop LED. To make device easier to be found (if forgot
   //     where is it)
-  // 20. OTA
+  // V 20. OTA
   // 21. Return attack status in JSON
   //     1. Adapt WebUI
   //     2. New BT command "getattackstatus"
-  // 22. Update Read.me file. Add info about new features, including
-  //     - It is possible to build firmware for mutiple ESP32 devices, which will run the same software. These firmares
-  //       should differ by DEVICE_ID, to make ESP32 use different WiFi access points names, Bluetooth device
-  //       names, IP addresses, etc. DEVICE_ID can be set in sdkconfig or provided in common like
-  //       (ex. "idf.py build -DDEVICE_ID=2")
+  // 22. Update Read.me file. Add info about new features
   // 23. How to improve WiFi antenna?
   //     Can try this:
   //     1. https://peterneufeld.wordpress.com/2021/10/14/esp32-range-extender-antenna-modification/
@@ -242,8 +238,10 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     4. As an option - buy ESP-WHROOM-32U. But I don't want to spend more money.
   // 24. Make pre-configured attack per DEVICE_ID. Ex. after reboot if device is not configured for 5-10 min, it starts
   //     pre-configured attack. HTTP or BT interactions reset counter
+  // 25. How to report to WebUI about progress of OTA? The only way I know to send messages from client to web-server
+  //     is web-sockets. Can we avoid such an overcomplication?
 
-  // 5. Broadcast attack can be extended on multiple Access Points.
+  // V 5. Broadcast attack can be extended on multiple Access Points.
   //    We can introduce new method - ATTACK_DOS_METHOD_BROADCAST. If it is selected in WebUI, we can allow to
   //    select multiple APs. Then we send more data in HTTP Post request: ap_list_len, ap0, ap1, ...
   //    Sending is not a problem, but how to read data with various sise on ESp32 side?
@@ -253,37 +251,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //    Need either find approve in documentation, either try it with board.
   //    Idea: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_server.html
   //         "Use content_len provided in httpd_req_t structure to know the length of data to be fetched"
-  //         So, attack_request_t should be
-  // typedef struct {
-  //     uint8_t type;
-  //     uint8_t method;
-  //     uint8_t timeout;
-  //     uint8_t ap_record_len;
-  //     uint8_t* ap_record_ids;
-  // } attack_request_t;
-  //
-  // And code to read data should be
-  // attack_request_t attack_request;
-  // void *rawData = malloc(req->content_len);
-  // attack_request_t* raw_attack_request = rawData;
-  // httpd_req_recv(req, (char *)rawData, req->content_len);
-
-  // attack_request.type = raw_attack_request.type;
-  // attack_request.method = raw_attack_request.method;
-  // attack_request.tytimeoute = raw_attack_request.timeout;
-  // attack_request.ap_record_len = raw_attack_request.ap_record_len;
-  // attack_request.ap_record_ids = malloc(attack_request.ap_record_len);
-
-  // uint8_t* currentId = &(uint8_t)(raw_attack_request.ap_record_ids)
-  // for (int i = 0; i < attack_request.ap_record_len; ++i) {
-  //     attack_request.ap_record_ids[i] = *currentId;
-  //     currentId++;
-  // }
-  //
-  // Try this code FIRST to pass 1 value and print logs. If it works, extend to multiple values and make sure
-  // by logs that it works
-
-  // DO NOT FORGET TO FREE attack_request.ap_record_ids SOMEWHERE
 
   // Set timeout to stop attack.
   // In case it is DOS broadcast and timeout is 0, do not set timer and let attack to run forever
@@ -377,5 +344,6 @@ void attack_init() {
       esp_event_handler_register(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, &attack_reset_handler, NULL));
 }
 
-// TODO(alambn): can we do it in better way than extern var amound multiple components?
+// TODO(all): It is still C code by nature. So, we are using C approach (global variables)
+// Need to refactor it in C++ way
 void attack_limit_logs(bool isLimited) { gShouldLimitAttackLogs = isLimited; }
