@@ -108,23 +108,19 @@ void setSerialCommandsHandlers() {
   gSerialCommandDispatcher.setCommandHandler(
       SerialCommandDispatcher::CommandType::kBtTerminalConnected, [](const std::string& param) {
         if (param == "1") {
-          BluetoothSerial::instance().limitBTLogs(true);
           // Hide it if you don't wan't people to know what is this Bluetooth device about
           std::string greeting{
               "\n\r\n\r\n\r\n\r\n\rWelcome to ESP32 WiFi penetration tool\n\r"
               "Supported commands: "};
           BluetoothSerial::instance().send(greeting + gSerialCommandDispatcher.getSupportedCommands());
-        } else {
-          // Should limit logs from BT, otherwise there will be infinite stream of logs from BT about sent messages,
-          // which will cause more messages to send, etc.
-          BluetoothSerial::instance().limitBTLogs(false);
         }
       });
 }
 
 void app_main(void) {
-  BluetoothSerial::instance().init(
-      [](std::string receivedData) { gSerialCommandDispatcher.onNewSymbols(std::move(receivedData)); });
+  BluetoothSerial::instance().init(&gBtLogsForwarder, [](std::string receivedData) {
+    gSerialCommandDispatcher.onNewSymbols(std::move(receivedData));
+  });
   gBtLogsForwarder.startForwarding();
 
   ESP_LOGD(LOG_TAG, "app_main() started. Device ID='%d'", CONFIG_DEVICE_ID);

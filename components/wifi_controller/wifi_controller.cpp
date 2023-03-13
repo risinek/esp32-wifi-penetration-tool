@@ -22,7 +22,31 @@ static bool wifi_init = false;
 static uint8_t original_mac_ap[6];
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id,
-                               void *event_data) {}
+                               void *event_data) {
+  if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+    wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
+  } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+    wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
+  } else if (event_id == WIFI_EVENT_STA_CONNECTED) {
+    ESP_LOGI(LOG_TAG, "LAMBIN station event WIFI_EVENT_STA_CONNECTED");
+  } else {
+    ESP_LOGI(LOG_TAG, "LAMBIN station unhandled event with event_base=%s, ID=%d", event_base, event_id);
+  }
+}
+
+static void wifi_event_handler2(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id,
+                                void *event_data) {
+  ESP_LOGI(LOG_TAG, "LAMBIN station event wifi_event_handler2 for event WIFI_EVENT_AP_STACONNECTED");
+}
+static void wifi_event_handler3(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id,
+                                void *event_data) {
+  ESP_LOGI(LOG_TAG, "LAMBIN station event wifi_event_handler3 for event WIFI_EVENT_AP_STADISCONNECTED");
+}
+
+void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uint32_t local_ip, uint32_t gateway,
+                          uint32_t subnet);
 
 void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uint32_t local_ip, uint32_t gateway,
                           uint32_t subnet);
@@ -45,6 +69,7 @@ static void wifi_init_apsta() {
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+  // ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_event_handler2, NULL));
 
   // save original AP MAC address
   ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_AP, original_mac_ap));
@@ -65,6 +90,23 @@ void wifictl_ap_start(wifi_config_t *wifi_config) {
   }
 
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
+
+  // Looks like there are messages in logs from 2 layers - some default ("event task" or "driver") and user task
+  // Below code looks like setup handlers for user task. So, if I caonnect ManagementAP and pass authentification,
+  // then default task calls user handler and I can see also logs with "LAMBIN". But if I connect to "Pho Ha Noi 5G"
+  // and fail authentification, probably default layer doesn't call user level at all
+  //
+  // Proove: https://demo-dijiudu.readthedocs.io/en/latest/api-guides/wifi.html#wi-fi-connect-phase
+  // "In step 4.2, the Wi-Fi connection may fail because, for example, the password is wrong, the AP is not found, etc.
+  // In a case like this, <SYSTEM_EVENT_STA_DISCONNECTED> will arise and the reason for such a failure will be provided"
+  //
+  // Fuck it! Ignore non-authorised attempts. Just make sure in night logs that someone really can authentificate and
+  // callback for them is really called
+  //
+  // ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+  // ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_event_handler2, NULL));
+  // ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_event_handler3, NULL));
+  // ESP_ERROR_CHECK(esp_event_handler_register(SC_EVENT, WIFI_EVENT_AP_STACONNECTED, &system_event_handler, NULL));
 }
 
 void wifictl_ap_stop() {

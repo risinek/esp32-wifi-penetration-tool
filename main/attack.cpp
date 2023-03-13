@@ -138,7 +138,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
 
   // TODO(alambin):
   // PRIORITIES:
-  // 23, 18, 3, 12, 21
+  // 23, 3, 12, 21
 
   // TODO(alambin):
   // 2. Update WebUI to support all new freatures:
@@ -184,9 +184,6 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     logs), but not displayed on WebUI. Connection to ESP is lost. May be ESP kills its AP when tries to send this
   //     list to WebUI? Ah, may be incorrect handling of request to "/status" when we start WebUI during attack?
   //     Hm. Not wlways reproducible
-  // 18. Bluetooth new command - "stop" to stop attack and restore original AP (it is most probably done as part of
-  //     attack_timeout()/stop_attack()). Can we just call attack_reset_handler()?
-  //     Q: what;s difference from regular reboot?
   // 19. New commands for Bluetooth - blink LED, start LED, stop LED. To make device easier to be found (if forgot
   //     where is it)
   // V 20. OTA
@@ -209,6 +206,10 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     is web-sockets. Can we avoid such an overcomplication?
   // 26. BUG: impossible to set config variable via command line as "idf.py build -DDEVICE_ID=2"
   //     Is it possible in principle?
+  // 27. BUG: device#2 seems to corrupt logs sent to BT. Check if bug is still reproducible after the latest BT fix
+  // 28. BUG: if connection is lost during OTA, you will have infinite messages
+  //          "Image bytes read". They appear once per second and never end. Even when connection is recovered
+  //          As a improvement, I can try to find python HTTP server, which shows transferred data.
 
   // DONE:
   // V 1. Implement Bluetooth PIN/password/passcode request.
@@ -252,6 +253,9 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     V 4. Implement rest logging logic: get logs from ESP32 system, buffer them and periodiaclly send to BT
   //     V 5. Implement parsing of commands received from BT. Don't forget reimplement existing 'reset'
   //     V 6. Implement output of all supported commands when BT terminal is connected
+  // X 18. Bluetooth new command - "stop" to stop attack and restore original AP (it is most probably done as part of
+  //     attack_timeout()/stop_attack()). Can we just call attack_reset_handler()?
+  //     Refuse: No difference from regular reboot
 
   // Set timeout to stop attack.
   // In case it is DOS broadcast and timeout is 0, do not set timer and let attack to run forever

@@ -132,11 +132,13 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
       break;
 
     case ESP_SPP_CLOSE_EVT:
+      btSerial.limitBTLogs(false);
       // Called when terminal cvonnection closed
-      ESP_LOGD(LOG_TAG, "ESP_SPP_CLOSE_EVT");
+      btSerial.limitedPrint(ESP_LOG_DEBUG, LOG_TAG, "ESP_SPP_CLOSE_EVT");
       {
         std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
         btSerial.mTerminalConnectionHandle = 0;
+        btSerial.mIsTransmissionRequestInProgress = false;
       }
       // Send fake command to SerialCommandDispatcher about terminal disconnection
       btSerial.onBtDataRecevied("btterminalconnected 0");
@@ -151,9 +153,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
       break;
 
     case ESP_SPP_DATA_IND_EVT:
-      if (!btSerial.mIsLimitedLogs) {
-        ESP_LOGD(LOG_TAG, "ESP_SPP_DATA_IND_EVT len=%d", param->data_ind.len);
-      }
+      btSerial.limitedPrint(ESP_LOG_DEBUG, LOG_TAG, "ESP_SPP_DATA_IND_EVT len=%d\n\r", param->data_ind.len);
       // Called when data is received by ESP32
       btSerial.onBtDataRecevied(std::string{(const char*)param->data_ind.data, param->data_ind.len});
       break;
@@ -165,6 +165,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
         std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
         btSerial.mTerminalConnectionHandle = param->srv_open.handle;
       }
+      btSerial.limitBTLogs(true);
       // Send fake command to SerialCommandDispatcher, so that it will return list of supported commands
       btSerial.onBtDataRecevied("btterminalconnected 1");
 
@@ -185,10 +186,8 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
 
     case ESP_SPP_WRITE_EVT:
       // Called when BT write operation complete. Check if BT write buffer is full and if not - write more
-      if (!btSerial.mIsLimitedLogs) {
-        ESP_LOGI(LOG_TAG, "ESP_SPP_WRITE_EVT len=%d cong=%d, status=%d", param->write.len, param->write.cong,
-                 param->write.status);
-      }
+      btSerial.limitedPrint(ESP_LOG_INFO, LOG_TAG, "ESP_SPP_WRITE_EVT len=%d cong=%d, status=%d\n\r", param->write.len,
+                            param->write.cong, param->write.status);
 
       {
         std::unique_lock<std::shared_timed_mutex> lock(btSerial.mMutex);
@@ -196,10 +195,9 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
         if (param->write.status == ESP_SPP_SUCCESS) {
           btSerial.mCurrentTransmittedChunk.clear();
         } else {
-          if (!btSerial.mIsLimitedLogs) {
-            lock.unlock();
-            ESP_LOGE(LOG_TAG, "Failed to send chunk of data via Bluetooth. Trying to send it again.");
-          }
+          lock.unlock();
+          btSerial.limitedPrint(ESP_LOG_ERROR, LOG_TAG,
+                                "Failed to send chunk of data via Bluetooth. Trying to send it again.\n\r");
         }
       }
       if (param->write.cong == 0) {
@@ -218,7 +216,9 @@ BluetoothSerial& BluetoothSerial::instance() {
   return instance;
 }
 
-bool BluetoothSerial::init(OnBtDataReceviedCallbackType dataReceviedCallback, uint32_t maxTxBufSize) {
+bool BluetoothSerial::init(BtLogsForwarder* btLogsForwarder, OnBtDataReceviedCallbackType dataReceviedCallback,
+                           uint32_t maxTxBufSize) {
+  mBtLogsForwarder = btLogsForwarder;
   mDataReceviedCallback = std::move(dataReceviedCallback);
   mMaxTxBufSize = maxTxBufSize;
   mTxData.resize(mMaxTxBufSize);
@@ -317,39 +317,6 @@ bool BluetoothSerial::send(std::vector<char> message) {
   return doesMessageFitBuffer;
 }
 
-void BluetoothSerial::limitBTLogs(bool isLimited) {
-  mIsLimitedLogs = isLimited;
-
-  // Gather all tags from following files:
-  //     esp-idf\components\bt\host\bluedroid\common\include\common\bt_trace.h
-  //     esp-idf\components\bt\common\include\bt_common.h
-  static const std::map<const char*, uint8_t> btLogTags = {
-      {"BT_HCI", CONFIG_BT_LOG_HCI_TRACE_LEVEL},     {"BT_BTM", CONFIG_BT_LOG_BTM_TRACE_LEVEL},
-      {"BT_L2CAP", CONFIG_BT_LOG_L2CAP_TRACE_LEVEL}, {"BT_RFCOMM", CONFIG_BT_LOG_RFCOMM_TRACE_LEVEL},
-      {"BT_SDP", CONFIG_BT_LOG_SDP_TRACE_LEVEL},     {"BT_GAP", CONFIG_BT_LOG_GAP_TRACE_LEVEL},
-      {"BT_BNEP", CONFIG_BT_LOG_BNEP_TRACE_LEVEL},   {"BT_PAN", CONFIG_BT_LOG_PAN_TRACE_LEVEL},
-      {"BT_A2D", CONFIG_BT_LOG_A2D_TRACE_LEVEL},     {"BT_AVDT", CONFIG_BT_LOG_AVDT_TRACE_LEVEL},
-      {"BT_AVCT", CONFIG_BT_LOG_AVCT_TRACE_LEVEL},   {"BT_AVRC", CONFIG_BT_LOG_AVRC_TRACE_LEVEL},
-      {"BT_MCA", CONFIG_BT_LOG_MCA_TRACE_LEVEL},     {"BT_HIDH", CONFIG_BT_LOG_HID_TRACE_LEVEL},
-      {"BT_APPL", CONFIG_BT_LOG_APPL_TRACE_LEVEL},   {"BT_GATT", CONFIG_BT_LOG_GATT_TRACE_LEVEL},
-      {"BT_SMP", CONFIG_BT_LOG_SMP_TRACE_LEVEL},     {"BT_BTIF", CONFIG_BT_LOG_BTIF_TRACE_LEVEL},
-      {"BT_BTC", CONFIG_BT_LOG_BTC_TRACE_LEVEL},     {"BT_OSI", CONFIG_BT_LOG_OSI_TRACE_LEVEL},
-      {"BT_BLUFI", CONFIG_BT_LOG_BLUFI_TRACE_LEVEL}, {"BT_HCI", CONFIG_BT_LOG_HCI_TRACE_LEVEL},
-      {"BT_HCI", CONFIG_BT_LOG_HCI_TRACE_LEVEL},     {"BT_HCI", CONFIG_BT_LOG_HCI_TRACE_LEVEL},
-      {"BT_HCI", CONFIG_BT_LOG_HCI_TRACE_LEVEL},     {"BT_LOG", 4}};
-
-  if (isLimited) {
-    // Increase log level to avoid flood of logs
-    for (const auto& tag_pair : btLogTags) {
-      esp_log_level_set(tag_pair.first, ESP_LOG_WARN);
-    }
-  } else {
-    for (const auto& tag_pair : btLogTags) {
-      esp_log_level_set(tag_pair.first, config_to_bt_log_level_t(tag_pair.second));
-    }
-  }
-}
-
 void BluetoothSerial::onBtDataRecevied(std::string receivedData) {
   if (nullptr != mDataReceviedCallback) {
     mDataReceviedCallback(std::move(receivedData));
@@ -387,4 +354,54 @@ void BluetoothSerial::extractDataChunkToTransmit() {
     return;
   }
   mCurrentTransmittedChunk = mTxData.extract(kBtTxBufSize);
+}
+
+void BluetoothSerial::limitBTLogs(bool isLimited) {
+  mIsLimitedLogs = isLimited;
+
+  // Gather all tags from following files:
+  //     esp-idf\components\bt\host\bluedroid\common\include\common\bt_trace.h
+  //     esp-idf\components\bt\common\include\bt_common.h
+  static const std::map<const char*, uint8_t> btLogTags = {
+      {"BT_HCI", CONFIG_BT_LOG_HCI_TRACE_LEVEL},     {"BT_BTM", CONFIG_BT_LOG_BTM_TRACE_LEVEL},
+      {"BT_L2CAP", CONFIG_BT_LOG_L2CAP_TRACE_LEVEL}, {"BT_RFCOMM", CONFIG_BT_LOG_RFCOMM_TRACE_LEVEL},
+      {"BT_SDP", CONFIG_BT_LOG_SDP_TRACE_LEVEL},     {"BT_GAP", CONFIG_BT_LOG_GAP_TRACE_LEVEL},
+      {"BT_BNEP", CONFIG_BT_LOG_BNEP_TRACE_LEVEL},   {"BT_PAN", CONFIG_BT_LOG_PAN_TRACE_LEVEL},
+      {"BT_A2D", CONFIG_BT_LOG_A2D_TRACE_LEVEL},     {"BT_AVDT", CONFIG_BT_LOG_AVDT_TRACE_LEVEL},
+      {"BT_AVCT", CONFIG_BT_LOG_AVCT_TRACE_LEVEL},   {"BT_AVRC", CONFIG_BT_LOG_AVRC_TRACE_LEVEL},
+      {"BT_MCA", CONFIG_BT_LOG_MCA_TRACE_LEVEL},     {"BT_HIDH", CONFIG_BT_LOG_HID_TRACE_LEVEL},
+      {"BT_APPL", CONFIG_BT_LOG_APPL_TRACE_LEVEL},   {"BT_GATT", CONFIG_BT_LOG_GATT_TRACE_LEVEL},
+      {"BT_SMP", CONFIG_BT_LOG_SMP_TRACE_LEVEL},     {"BT_BTIF", CONFIG_BT_LOG_BTIF_TRACE_LEVEL},
+      {"BT_BTC", CONFIG_BT_LOG_BTC_TRACE_LEVEL},     {"BT_OSI", CONFIG_BT_LOG_OSI_TRACE_LEVEL},
+      {"BT_BLUFI", CONFIG_BT_LOG_BLUFI_TRACE_LEVEL}, {"BT_LOG", 4}};
+
+  if (isLimited) {
+    // Increase log level to avoid flood of logs
+    for (const auto& tag_pair : btLogTags) {
+      esp_log_level_set(tag_pair.first, ESP_LOG_WARN);
+    }
+  } else {
+    for (const auto& tag_pair : btLogTags) {
+      esp_log_level_set(tag_pair.first, config_to_bt_log_level_t(tag_pair.second));
+    }
+  }
+}
+
+void BluetoothSerial::limitedPrint(uint8_t logLevel, const char* tag, const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+
+  if (!mIsLimitedLogs) {
+    esp_log_writev((esp_log_level_t)logLevel, tag, format, args);
+    va_end(args);
+    return;
+  }
+
+  if (!mBtLogsForwarder) {
+    va_end(args);
+    return;
+  }
+
+  mBtLogsForwarder->printToSerial(format, args);
+  va_end(args);
 }

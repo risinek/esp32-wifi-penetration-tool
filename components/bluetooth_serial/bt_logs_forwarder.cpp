@@ -8,7 +8,6 @@
 
 namespace {
 const char* LOG_TAG{"BT_FWD"};
-vprintf_like_t gSerialVprintf{nullptr};
 
 std::vector<char> vformat(const char* format, va_list args) {
   va_list copy;
@@ -26,30 +25,43 @@ std::vector<char> vformat(const char* format, va_list args) {
 
   return {};
 }
+}  // namespace
 
-int btVprintf(const char* format, va_list args) {
+BtLogsForwarder::ESPLogFn BtLogsForwarder::mSerialVprintf{nullptr};
+
+BtLogsForwarder::BtLogsForwarder() {
+  mSerialVprintf = esp_log_set_vprintf(nullptr);
+  esp_log_set_vprintf(mSerialVprintf);
+}
+
+void BtLogsForwarder::startForwarding() {
+  if (mIsForwarding) {
+    ESP_LOGE(LOG_TAG, "BT logs forwarding is already enabled");
+    return;
+  }
+  mIsForwarding = true;
+  esp_log_set_vprintf(btVprintf);
+}
+
+void BtLogsForwarder::stopForwarding() {
+  if (!mIsForwarding) {
+    ESP_LOGE(LOG_TAG, "BT logs forwarding is already disabled");
+    return;
+  }
+  mIsForwarding = false;
+  esp_log_set_vprintf(mSerialVprintf);
+}
+
+void BtLogsForwarder::printToSerial(const char* format, va_list& args) {
+  if (mSerialVprintf != nullptr) {
+    mSerialVprintf(format, args);
+  }
+}
+
+int BtLogsForwarder::btVprintf(const char* format, va_list args) {
   auto message = vformat(format, args);
   if (!message.empty()) {
     BluetoothSerial::instance().send(std::move(message));
   }
-  return gSerialVprintf(format, args);
-}
-
-}  // namespace
-
-void BtLogsForwarder::startForwarding() {
-  if (gSerialVprintf != nullptr) {
-    ESP_LOGE(LOG_TAG, "BT logs forwarding is already enabled");
-    return;
-  }
-  gSerialVprintf = esp_log_set_vprintf(btVprintf);
-}
-
-void BtLogsForwarder::stopForwarding() {
-  if (gSerialVprintf == nullptr) {
-    ESP_LOGE(LOG_TAG, "BT logs forwarding is already disabled");
-    return;
-  }
-  esp_log_set_vprintf(gSerialVprintf);
-  gSerialVprintf = nullptr;
+  return mSerialVprintf(format, args);
 }
