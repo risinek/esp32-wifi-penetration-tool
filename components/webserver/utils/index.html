@@ -79,7 +79,7 @@
         <legend>OTA configuration</legend>
         <p>
           <label for="ota_url">OTA URL:</label>
-          <input type="url" id="ota_url" size="40" pattern="http://.*" value="http://192.168.4.10:8070/blink.bin" required/>
+          <input type="url" id="ota_url" size="40" pattern="http://.*" value="http://192.168.4.10:8070/{DEVICE_ID_WILL_BE_PLACED_HERE}/wpt{DEVICE_ID_WILL_BE_PLACED_HERE}.bin" required/>
           <div id="start_ota_status" style="color: blue;"></div>
       </p>
       <input type="button" id="start_ota_btn" style="float: left;" onClick="startOTA()" value="Start OTA">

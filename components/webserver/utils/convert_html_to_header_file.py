@@ -17,8 +17,10 @@ shutil.rmtree(working_dir, ignore_errors=True)
 os.mkdir(working_dir)
 
 default_ip_placeholder = "{IP_WILL_BE_PLACED_HERE}"
+device_id_placeholder = "{DEVICE_ID_WILL_BE_PLACED_HERE}"
 new_ip_range_begin = 100
-this_device_ap_ip = "192.168.4." + str(new_ip_range_begin + int(sys.argv[3]))
+device_id_str = sys.argv[3]
+this_device_ap_ip = "192.168.4." + str(new_ip_range_begin + int(device_id_str))
 for file_name in os.listdir(html_dir):
     if file_name.endswith(".html"):
         # Read HTML file
@@ -29,6 +31,8 @@ for file_name in os.listdir(html_dir):
 
         # Replace default IP with particular device IP
         filedata = filedata.replace(default_ip_placeholder, this_device_ap_ip)
+        # Insert device ID
+        filedata = filedata.replace(device_id_placeholder, device_id_str)
 
         # Generate content of header file
         new_header_name_wo_ext = os.path.splitext(file_name)[0]
