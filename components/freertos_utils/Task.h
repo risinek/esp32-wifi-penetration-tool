@@ -55,7 +55,7 @@ class Task {
   static void delay(int ms);
 
  private:
-  xTaskHandle m_handle;
+  TaskHandle_t m_handle;
   void* m_taskData;
   static void runTask(void* data);
   std::string m_taskName;

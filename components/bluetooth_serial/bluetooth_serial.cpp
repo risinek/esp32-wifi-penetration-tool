@@ -34,14 +34,14 @@ void esp_bt_gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t* par
         ESP_LOGD(LOG_TAG, "authentication success: %s", param->auth_cmpl.device_name);
         esp_log_buffer_hex(LOG_TAG, param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
       } else {
-        ESP_LOGE(LOG_TAG, "authentication failed, status:%d", param->auth_cmpl.stat);
+        ESP_LOGE(LOG_TAG, "authentication failed, status:%d", (int)param->auth_cmpl.stat);
       }
       break;
     }
 
     case ESP_BT_GAP_PIN_REQ_EVT: {
       // Called when user entered PIN (authentyification by PIN is enabled in case SSP is disabled)
-      ESP_LOGD(LOG_TAG, "ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
+      ESP_LOGD(LOG_TAG, "ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", (int)param->pin_req.min_16_digit);
       if (param->pin_req.min_16_digit) {
         ESP_LOGD(LOG_TAG, "Input pin code: 0000 0000 0000 0000");
         esp_bt_pin_code_t pin_code = {0};
@@ -58,11 +58,11 @@ void esp_bt_gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t* par
     // Executed only if no legacy style of Bluetooth devices pairing (using PIN) is enabled
     case ESP_BT_GAP_CFM_REQ_EVT:
       // Called when start simplified pairing of device
-      ESP_LOGD(LOG_TAG, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
+      ESP_LOGD(LOG_TAG, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", (int)param->cfm_req.num_val);
       esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
       break;
     case ESP_BT_GAP_KEY_NOTIF_EVT:
-      ESP_LOGD(LOG_TAG, "ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", param->key_notif.passkey);
+      ESP_LOGD(LOG_TAG, "ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", (int)param->key_notif.passkey);
       break;
     case ESP_BT_GAP_KEY_REQ_EVT:
       ESP_LOGD(LOG_TAG, "ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
@@ -263,8 +263,9 @@ bool BluetoothSerial::init(BtLogsForwarder* btLogsForwarder, OnBtDataReceviedCal
     return false;
   }
 
-  const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
-  if ((ret = esp_spp_init(esp_spp_mode)) != ESP_OK) {
+  esp_spp_cfg_t ssp_config{};
+  ssp_config.mode = ESP_SPP_MODE_CB;
+  if ((ret = esp_spp_enhanced_init(&ssp_config)) != ESP_OK) {
     ESP_LOGE(LOG_TAG, "%s spp init failed: %s\n", __func__, esp_err_to_name(ret));
     return false;
   }

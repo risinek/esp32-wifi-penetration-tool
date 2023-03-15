@@ -340,7 +340,8 @@ static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_
  * Registers event loop event handlers.
  */
 void attack_init() {
-  const esp_timer_create_args_t attack_timeout_args = {.callback = &attack_timeout};
+  esp_timer_create_args_t attack_timeout_args{};
+  attack_timeout_args.callback = &attack_timeout;
   ESP_ERROR_CHECK(esp_timer_create(&attack_timeout_args, &attack_timeout_handle));
 
   ESP_ERROR_CHECK(

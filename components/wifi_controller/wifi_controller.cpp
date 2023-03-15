@@ -10,9 +10,11 @@
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
+#include "lwip/ip_addr.h"
 
 static const char *LOG_TAG = "wifi_controller";
 /**
@@ -25,14 +27,14 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
                                void *event_data) {
   if (event_id == WIFI_EVENT_AP_STACONNECTED) {
     wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
-    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
+    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " join, AID=%d", MAC2STR(event->mac), (int)event->aid);
   } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
     wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
-    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
+    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " leave, AID=%d", MAC2STR(event->mac), (int)event->aid);
   } else if (event_id == WIFI_EVENT_STA_CONNECTED) {
     ESP_LOGI(LOG_TAG, "LAMBIN station event WIFI_EVENT_STA_CONNECTED");
   } else {
-    ESP_LOGI(LOG_TAG, "LAMBIN station unhandled event with event_base=%s, ID=%d", event_base, event_id);
+    ESP_LOGI(LOG_TAG, "LAMBIN station unhandled event with event_base=%s, ID=%d", event_base, (int)event_id);
   }
 }
 
@@ -89,7 +91,7 @@ void wifictl_ap_start(wifi_config_t *wifi_config) {
     wifi_init_apsta();
   }
 
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, wifi_config));
 
   // Looks like there are messages in logs from 2 layers - some default ("event task" or "driver") and user task
   // Below code looks like setup handlers for user task. So, if I caonnect ManagementAP and pass authentification,
@@ -114,12 +116,12 @@ void wifictl_ap_stop() {
   wifi_config_t wifi_config;
   wifi_config.ap.max_connection = 0;
 
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
   ESP_LOGD(LOG_TAG, "AP stopped");
 }
 
 void wifictl_mgmt_ap_start() {
-  wifi_config_t mgmt_wifi_config;
+  wifi_config_t mgmt_wifi_config{};
   // Copy SSID
   constexpr uint8_t max_size_of_ssid = sizeof(mgmt_wifi_config.ap.ssid) - 1;
   auto lenSsid = (gThisDeviceSSID.length() > max_size_of_ssid) ? max_size_of_ssid : gThisDeviceSSID.length();
@@ -163,7 +165,7 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
 
   ESP_LOGD(LOG_TAG, ".ssid=%s", sta_wifi_config.sta.ssid);
 
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &sta_wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_wifi_config));
   ESP_ERROR_CHECK(esp_wifi_connect());
 }
 
@@ -192,6 +194,13 @@ void wifictl_set_channel(uint8_t channel) {
 }
 
 void configure_dhcp_server(esp_netif_t *esp_netif) {
+  // This type definition is missing in ESP IDF v5.0.1 sources by some reason
+  typedef struct {
+    bool enable;
+    ip4_addr_t start_ip;
+    ip4_addr_t end_ip;
+  } dhcps_lease_t;
+
   dhcps_lease_t dhcps_poll;
   dhcps_poll.enable = true;
   uint32_t len = sizeof(dhcps_poll);

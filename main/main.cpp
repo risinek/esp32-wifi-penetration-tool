@@ -117,7 +117,31 @@ void setSerialCommandsHandlers() {
       });
 }
 
+void set_log_levels() {
+  esp_log_level_set("BT", ESP_LOG_VERBOSE);
+  esp_log_level_set("BT_FWD", ESP_LOG_VERBOSE);
+  esp_log_level_set("frame_analyzer:parser", ESP_LOG_VERBOSE);
+  esp_log_level_set("frame_analyzer", ESP_LOG_VERBOSE);
+  esp_log_level_set("FreeRTOS", ESP_LOG_VERBOSE);
+  esp_log_level_set("Task", ESP_LOG_VERBOSE);
+  esp_log_level_set("hccapx_serializer", ESP_LOG_VERBOSE);
+  esp_log_level_set("ota", ESP_LOG_VERBOSE);
+  esp_log_level_set("pcap_serializer", ESP_LOG_VERBOSE);
+  esp_log_level_set("webserver", ESP_LOG_VERBOSE);
+  esp_log_level_set("wifi_controller/ap_scanner", ESP_LOG_VERBOSE);
+  esp_log_level_set("sniffer", ESP_LOG_VERBOSE);
+  esp_log_level_set("wifi_controller", ESP_LOG_VERBOSE);
+  esp_log_level_set("main:attack_dos", ESP_LOG_VERBOSE);
+  esp_log_level_set("main:attack_handshake", ESP_LOG_VERBOSE);
+  esp_log_level_set("main:attack_method", ESP_LOG_VERBOSE);
+  esp_log_level_set("main:attack_pmkid", ESP_LOG_VERBOSE);
+  esp_log_level_set("main", ESP_LOG_VERBOSE);
+  esp_log_level_set("SCH", ESP_LOG_VERBOSE);
+}
+
 void app_main(void) {
+  set_log_levels();
+
   BluetoothSerial::instance().init(&gBtLogsForwarder, [](std::string receivedData) {
     gSerialCommandDispatcher.onNewSymbols(std::move(receivedData));
   });

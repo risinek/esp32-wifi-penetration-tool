@@ -25,7 +25,12 @@ void wifictl_scan_nearby_aps() {
 
   ap_records.count = CONFIG_SCAN_MAX_AP;
 
-  wifi_scan_config_t scan_config = {.ssid = NULL, .bssid = NULL, .channel = 0, .scan_type = WIFI_SCAN_TYPE_ACTIVE};
+  wifi_scan_config_t scan_config{};
+  scan_config.ssid = NULL;
+  scan_config.bssid = NULL;
+  scan_config.channel = 0;
+  scan_config.show_hidden = false;
+  scan_config.scan_type = WIFI_SCAN_TYPE_ACTIVE;
 
   ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
   ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_records.count, ap_records.records));

