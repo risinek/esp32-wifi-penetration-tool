@@ -125,7 +125,7 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
         return res;
     }
 
-    attack_request_t attack_request;
+    attack_request_t attack_request{};
     void *rawData = malloc(req->content_len);
     httpd_req_recv(req, (char *)rawData, req->content_len);
 

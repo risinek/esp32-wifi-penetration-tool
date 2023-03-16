@@ -130,11 +130,12 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   }
   free(attack_request->ap_records_ids);
 
-  attack_config_t attack_config = {.type = attack_request->type,
-                                   .method = attack_request->method,
-                                   .timeout = attack_request->timeout,
-                                   .per_ap_timeout = attack_request->per_ap_timeout,
-                                   .ap_records = ap_records};
+  attack_config_t attack_config{};
+  attack_config.type = attack_request->type;
+  attack_config.method = attack_request->method;
+  attack_config.timeout = attack_request->timeout;
+  attack_config.per_ap_timeout = attack_request->per_ap_timeout;
+  attack_config.ap_records = ap_records;
 
   // TODO(alambin):
   // PRIORITIES:
@@ -204,12 +205,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   //     pre-configured attack. HTTP or BT interactions reset counter
   // 25. How to report to WebUI about progress of OTA? The only way I know to send messages from client to web-server
   //     is web-sockets. Can we avoid such an overcomplication?
-  // 26. BUG: impossible to set config variable via command line as "idf.py build -DDEVICE_ID=2"
-  //     Is it possible in principle?
-  // 27. BUG: device#2 seems to corrupt logs sent to BT. Check if bug is still reproducible after the latest BT fix
-  // 28. BUG: if connection is lost during OTA, you will have infinite messages
-  //          "Image bytes read". They appear once per second and never end. Even when connection is recovered
-  //          As a improvement, I can try to find python HTTP server, which shows transferred data.
+  // 26. Is it possible to set config variable via command line as "idf.py build -DDEVICE_ID=2"?
 
   // DONE:
   // V 1. Implement Bluetooth PIN/password/passcode request.

@@ -113,7 +113,7 @@ void wifictl_ap_start(wifi_config_t *wifi_config) {
 
 void wifictl_ap_stop() {
   ESP_LOGD(LOG_TAG, "Stopping AP...");
-  wifi_config_t wifi_config;
+  wifi_config_t wifi_config{};
   wifi_config.ap.max_connection = 0;
 
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
@@ -148,7 +148,7 @@ void wifictl_sta_connect_to_ap(const wifi_ap_record_t *ap_record, const char pas
     wifi_init_apsta();
   }
 
-  wifi_config_t sta_wifi_config;
+  wifi_config_t sta_wifi_config{};
   sta_wifi_config.sta.channel = ap_record->primary;
   sta_wifi_config.sta.scan_method = WIFI_FAST_SCAN;
   sta_wifi_config.sta.pmf_cfg.capable = false;
@@ -201,7 +201,7 @@ void configure_dhcp_server(esp_netif_t *esp_netif) {
     ip4_addr_t end_ip;
   } dhcps_lease_t;
 
-  dhcps_lease_t dhcps_poll;
+  dhcps_lease_t dhcps_poll{};
   dhcps_poll.enable = true;
   uint32_t len = sizeof(dhcps_poll);
   IP4_ADDR(&dhcps_poll.start_ip, 192, 168, 4, 10);
@@ -212,7 +212,7 @@ void configure_dhcp_server(esp_netif_t *esp_netif) {
 
 void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uint32_t local_ip, uint32_t gateway,
                           uint32_t subnet) {
-  esp_netif_ip_info_t info;
+  esp_netif_ip_info_t info{};
   info.ip.addr = local_ip;
   info.gw.addr = gateway;
   info.netmask.addr = subnet;
@@ -237,4 +237,18 @@ void set_esp_interface_ip(esp_interface_t interface, esp_netif_t *esp_netif, uin
   }
 }
 
-void wifictl_disable_powersafe() { esp_wifi_set_ps(WIFI_PS_NONE); }
+void wifictl_disable_powersafe() {
+#if !CONFIG_BT_ENABLED
+  /* Ensure to disable any WiFi power save mode, this allows best throughput
+   * and hence timings for overall OTA operation.
+   */
+  esp_wifi_set_ps(WIFI_PS_NONE);
+#else
+  /* WIFI_PS_MIN_MODEM is the default mode for WiFi Power saving. When both
+   * WiFi and Bluetooth are running, WiFI modem has to go down, hence we
+   * need WIFI_PS_MIN_MODEM. And as WiFi modem goes down, OTA download time
+   * increases.
+   */
+  esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
+#endif  // CONFIG_BT_ENABLED
+}

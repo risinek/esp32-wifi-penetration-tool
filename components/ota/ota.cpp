@@ -41,34 +41,79 @@ static esp_err_t validate_image_header(esp_app_desc_t *new_app_info) {
   return ESP_OK;
 }
 
+// esp_err_t http_event_handler(esp_http_client_event_t *evt) {
+//   switch (evt->event_id) {
+//     case HTTP_EVENT_ERROR:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_ERROR");
+//       break;
+//     case HTTP_EVENT_ON_CONNECTED:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_ON_CONNECTED");
+//       break;
+//     case HTTP_EVENT_HEADER_SENT:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_HEADER_SENT");
+//       break;
+//     case HTTP_EVENT_ON_HEADER:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+//       break;
+//     case HTTP_EVENT_ON_DATA:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+//       break;
+//     case HTTP_EVENT_ON_FINISH:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_ON_FINISH");
+//       break;
+//     case HTTP_EVENT_DISCONNECTED:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_DISCONNECTED");
+//       break;
+//     case HTTP_EVENT_REDIRECT:
+//       ESP_LOGE(LOG_TAG, "HTTP_EVENT_REDIRECT");
+//       break;
+//   }
+//   return ESP_OK;
+// }
+
+// static void ota_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+//   if (event_base == ESP_HTTPS_OTA_EVENT) {
+//     switch (event_id) {
+//       case ESP_HTTPS_OTA_START:
+//         ESP_LOGI(LOG_TAG, "OTA started");
+//         break;
+//       case ESP_HTTPS_OTA_CONNECTED:
+//         ESP_LOGI(LOG_TAG, "Connected to server");
+//         break;
+//       case ESP_HTTPS_OTA_GET_IMG_DESC:
+//         ESP_LOGI(LOG_TAG, "Reading Image Description");
+//         break;
+//       case ESP_HTTPS_OTA_VERIFY_CHIP_ID:
+//         ESP_LOGI(LOG_TAG, "Verifying chip id of new image: %d", *(esp_chip_id_t *)event_data);
+//         break;
+//       case ESP_HTTPS_OTA_DECRYPT_CB:
+//         ESP_LOGI(LOG_TAG, "Callback to decrypt function");
+//         break;
+//       case ESP_HTTPS_OTA_WRITE_FLASH:
+//         ESP_LOGD(LOG_TAG, "Writing to flash: %d written", *(int *)event_data);
+//         break;
+//       case ESP_HTTPS_OTA_UPDATE_BOOT_PARTITION:
+//         ESP_LOGI(LOG_TAG, "Boot partition updated. Next Partition: %d", *(esp_partition_subtype_t *)event_data);
+//         break;
+//       case ESP_HTTPS_OTA_FINISH:
+//         ESP_LOGI(LOG_TAG, "OTA finish");
+//         break;
+//       case ESP_HTTPS_OTA_ABORT:
+//         ESP_LOGI(LOG_TAG, "OTA abort");
+//         break;
+//     }
+//   }
+// }
+
 Ota::OTAConnectionTask::OTAConnectionTask() : Task("OTAConnectionTask") {}
 
 void Ota::OTAConnectionTask::run(void *data) {
-  esp_http_client_config_t config;
-  // Default values
-  config.host = NULL;
-  config.port = 0;
-  config.username = NULL;
-  config.password = NULL;
-  config.auth_type = HTTP_AUTH_TYPE_NONE;
-  config.path = NULL;
-  config.query = NULL;
+  // ESP_ERROR_CHECK(esp_event_handler_register(ESP_HTTPS_OTA_EVENT, ESP_EVENT_ANY_ID, &ota_event_handler, NULL));
+
+  esp_http_client_config_t config{};
   config.cert_pem = NULL;
-  // This line is needed in case HTTPS is used for OTA and we need to store server certificate
-  // Refer to "simple_ota_example"
-  // config.cert_pem = (char *)server_cert_pem_start,
-  config.client_cert_pem = NULL;
-  config.client_key_pem = NULL;
-  config.method = HTTP_METHOD_GET;
-  config.disable_auto_redirect = false;
-  config.max_redirection_count = 0;
-  config.event_handler = NULL;
-  config.transport_type = HTTP_TRANSPORT_UNKNOWN;
-  config.buffer_size = 0;
-  config.buffer_size_tx = 0;
-  config.user_data = NULL;
-  config.is_async = false;
-  config.use_global_ca_store = false;
+  // config.event_handler = http_event_handler;
+  config.keep_alive_enable = true;
 
   std::string *url = (std::string *)data;
   const char *otaURL = ((url == nullptr) || (url->empty())) ? gDefaultOtaUrl.c_str() : url->c_str();
@@ -77,7 +122,7 @@ void Ota::OTAConnectionTask::run(void *data) {
   config.url = otaURL;
   config.timeout_ms = 2000;
   config.skip_cert_common_name_check = true;
-  esp_https_ota_config_t ota_config;
+  esp_https_ota_config_t ota_config{};
   ota_config.http_config = &config;
 
   esp_https_ota_handle_t https_ota_handle = NULL;
@@ -92,21 +137,20 @@ void Ota::OTAConnectionTask::run(void *data) {
   err = esp_https_ota_get_img_desc(https_ota_handle, &app_desc);
   if (err != ESP_OK) {
     ESP_LOGE(LOG_TAG, "esp_https_ota_read_img_desc failed. err=%d", err);
-    esp_https_ota_finish(https_ota_handle);
+    esp_https_ota_abort(https_ota_handle);
     vTaskDelete(NULL);
     return;
   }
   err = validate_image_header(&app_desc);
   if (err != ESP_OK) {
     ESP_LOGE(LOG_TAG, "Image header verification failed. err=%d", err);
-    esp_https_ota_finish(https_ota_handle);
+    esp_https_ota_abort(https_ota_handle);
     vTaskDelete(NULL);
     return;
   }
 
-  // This causes error: "wifi:Error! Should enable WiFi modem sleep when both WiFi and Bluetooth are enabled!!!!!!"
-  // Disabling of powersafe more for WiFi is required to improve WiFi speed for OTA.
-  // wifictl_disable_powersafe();
+  // Disabling of powersafe more for WiFi is desirable to improve WiFi speed for OTA.
+  wifictl_disable_powersafe();
 
   while (1) {
     err = esp_https_ota_perform(https_ota_handle);
@@ -121,6 +165,9 @@ void Ota::OTAConnectionTask::run(void *data) {
   if (esp_https_ota_is_complete_data_received(https_ota_handle) != true) {
     // the OTA image was not completely received and user can customise the response to this situation.
     ESP_LOGE(LOG_TAG, "Complete data was not received.");
+    esp_https_ota_abort(https_ota_handle);
+    vTaskDelete(NULL);
+    return;
   }
 
   esp_err_t ota_finish_err = esp_https_ota_finish(https_ota_handle);
@@ -132,7 +179,7 @@ void Ota::OTAConnectionTask::run(void *data) {
     if (ota_finish_err == ESP_ERR_OTA_VALIDATE_FAILED) {
       ESP_LOGE(LOG_TAG, "Image validation failed, image is corrupted");
     }
-    ESP_LOGE(LOG_TAG, "ESP_HTTPS_OTA upgrade failed %d", ota_finish_err);
+    ESP_LOGE(LOG_TAG, "ESP_HTTPS_OTA upgrade failed 0x%x", ota_finish_err);
     vTaskDelete(NULL);
   }
 }
