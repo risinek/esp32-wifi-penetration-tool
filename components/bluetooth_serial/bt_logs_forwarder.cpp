@@ -18,7 +18,7 @@ std::vector<char> vformat(const char* format, va_list args) {
   if (len >= 0) {
     std::vector<char> data(std::size_t(len) + 1);
     std::vsnprintf(&data[0], data.size(), format, args);
-    data[len - 1] = '\0';
+    data[len] = '\0';
     return data;
   }
 

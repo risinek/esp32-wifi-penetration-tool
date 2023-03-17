@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "Timer.h"
 #include "attack.h"
 #include "bluetooth_serial.h"
 #include "bt_logs_forwarder.h"
@@ -33,6 +34,8 @@ const char* LOG_TAG = "main";
 SerialCommandDispatcher gSerialCommandDispatcher;
 BtLogsForwarder gBtLogsForwarder;
 Ota gOta;
+constexpr uint32_t kInactivityTimeoutS{10 * 60};
+Timer gInactivityTimer;
 }  // namespace
 
 #ifdef __cplusplus
@@ -106,8 +109,10 @@ void setSerialCommandsHandlers() {
     BluetoothSerial::instance().send(gSerialCommandDispatcher.getSupportedCommands());
   });
   gSerialCommandDispatcher.setCommandHandler(
-      SerialCommandDispatcher::CommandType::kBtTerminalConnected, [](const std::string& param) {
+      SerialCommandDispatcher::CommandType::kBtTerminalConnected, [&gInactivityTimer](const std::string& param) {
         if (param == "1") {
+          gInactivityTimer.stop();  // Stop inactivity timer in case of any BT activities
+
           // Hide it if you don't wan't people to know what is this Bluetooth device about
           std::string greeting{
               "\n\r\n\r\n\r\n\r\n\rWelcome to ESP32 WiFi penetration tool\n\r"
@@ -117,30 +122,10 @@ void setSerialCommandsHandlers() {
       });
 }
 
-void set_log_levels() {
-  esp_log_level_set("BT", ESP_LOG_VERBOSE);
-  esp_log_level_set("BT_FWD", ESP_LOG_VERBOSE);
-  esp_log_level_set("frame_analyzer:parser", ESP_LOG_VERBOSE);
-  esp_log_level_set("frame_analyzer", ESP_LOG_VERBOSE);
-  esp_log_level_set("FreeRTOS", ESP_LOG_VERBOSE);
-  esp_log_level_set("Task", ESP_LOG_VERBOSE);
-  esp_log_level_set("hccapx_serializer", ESP_LOG_VERBOSE);
-  esp_log_level_set("ota", ESP_LOG_VERBOSE);
-  esp_log_level_set("pcap_serializer", ESP_LOG_VERBOSE);
-  esp_log_level_set("webserver", ESP_LOG_VERBOSE);
-  esp_log_level_set("wifi_controller/ap_scanner", ESP_LOG_VERBOSE);
-  esp_log_level_set("sniffer", ESP_LOG_VERBOSE);
-  esp_log_level_set("wifi_controller", ESP_LOG_VERBOSE);
-  esp_log_level_set("main:attack_dos", ESP_LOG_VERBOSE);
-  esp_log_level_set("main:attack_handshake", ESP_LOG_VERBOSE);
-  esp_log_level_set("main:attack_method", ESP_LOG_VERBOSE);
-  esp_log_level_set("main:attack_pmkid", ESP_LOG_VERBOSE);
-  esp_log_level_set("main", ESP_LOG_VERBOSE);
-  esp_log_level_set("SCH", ESP_LOG_VERBOSE);
-}
-
 void app_main(void) {
-  set_log_levels();
+  // This line is required in ESP IDF v5.0.1, because regular way of increasing log level in particular files
+  // (by defining LOG_LOCAL_LEVEL) doesn't work anymore. It is considered as bug, but not fixed yet
+  esp_log_level_set("*", ESP_LOG_VERBOSE);
 
   BluetoothSerial::instance().init(&gBtLogsForwarder, [](std::string receivedData) {
     gSerialCommandDispatcher.onNewSymbols(std::move(receivedData));
@@ -154,9 +139,14 @@ void app_main(void) {
   setSerialCommandsHandlers();
 
   webserver_run();
-  setWebserverOnOtaRequestHandler([](const std::string& url) { gOta.connectToServer(url); });
+  setWebserverOtaRequestHandler([](const std::string& url) { gOta.connectToServer(url); });
 
   attack_limit_logs(true);
+
+  gInactivityTimer.start(kInactivityTimeoutS, []() { runDefaultAttack(); });
+  setHTTPActivityHandler([&gInactivityTimer]() {
+    gInactivityTimer.stop();  // Stop inactivity timer in case any request is arrived from HTTP
+  });
 
 #ifdef CONFIG_ENABLE_UNIT_TESTS
   // testBT();

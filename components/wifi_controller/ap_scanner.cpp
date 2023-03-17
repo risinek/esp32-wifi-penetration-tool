@@ -9,11 +9,19 @@
 #include "ap_scanner.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+
+#include <cstring>
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
 
-static const char *TAG = "wifi_controller/ap_scanner";
+namespace {
+const char *TAG = "wifi_controller/ap_scanner";
+}  // namespace
+
+bool are_macs_equal(const uint8_t *l, const uint8_t *r) { return (memcmp(l, r, 6) == 0); }
+
 /**
  * @brief Stores last scanned AP records into linked list.
  *
@@ -46,4 +54,13 @@ const wifi_ap_record_t *wifictl_get_ap_record(unsigned index) {
     return NULL;
   }
   return &ap_records.records[index];
+}
+
+const wifi_ap_record_t *wifictl_get_ap_record_by_mac(const uint8_t *mac) {
+  for (uint16_t i = 0; i < ap_records.count; ++i) {
+    if (are_macs_equal(ap_records.records[i].bssid, mac)) {
+      return &ap_records.records[i];
+    }
+  }
+  return nullptr;
 }

@@ -33,7 +33,7 @@ Task::Task(std::string taskName, uint16_t stackSize, uint8_t priority) {
   m_coreId = tskNO_AFFINITY;
 }  // Task
 
-Task::~Task() {}  // ~Task
+Task::~Task() { stop(); }  // ~Task
 
 /**
  * @brief Suspend the task for the specified milliseconds.

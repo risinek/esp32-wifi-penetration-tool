@@ -17,7 +17,7 @@ class Ota {
   class OTAConnectionTask : public Task {
    public:
     OTAConnectionTask();
-    void run(void* data);
+    void run(void* data) override;
   };
 
   OTAConnectionTask mOTAConnectionTask;

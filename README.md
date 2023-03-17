@@ -11,6 +11,7 @@ Main new features:
 - Support of multiple devices with the same firmware
 - Infinite DOS attacks
 - Multi-AP DOS attacks
+- Pre defined attacks per device
  
 <br>
 
@@ -102,6 +103,11 @@ For any DOS attack you can select multiple access points (APs) and attack durati
 
 <br>
 
+## Pre defined attacks per device
+
+You can configure (hardcode) pre defined attack for each ESP32 device. This feature is useful if you left ESP32 device with active attack anf after some time electricity was shut down. When electricity will appear again, after specified timeout (by default - 10 min) device, based on its DEVICE_ID will start pre-defined attack.
+
+<br>
 
 <br><br><br>
 

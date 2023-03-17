@@ -25,7 +25,7 @@
 namespace {
 const char *TAG = "main:attack_handshake";
 attack_handshake_methods_t method = attack_handshake_methods_t::ATTACK_HANDSHAKE_METHOD_PASSIVE;
-ap_records_t ap_records = {0, NULL};
+ap_records_t gApRecords = {0, NULL};
 }  // namespace
 
 /**
@@ -48,11 +48,11 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
   hccapx_serializer_add_frame((data_frame_t *)frame->payload);
 }
 
-void attack_handshake_start(attack_config_t *attack_config) {
+void attack_handshake_start(const attack_config_t *attack_config) {
   ESP_LOGI(TAG, "Starting handshake attack...");
   method = (attack_handshake_methods_t)attack_config->method;
-  ap_records = attack_config->ap_records;  // Take ownership
-  const wifi_ap_record_t *ap_record = ap_records.records[0];
+  gApRecords = attack_config->ap_records;  // Take ownership
+  const wifi_ap_record_t *ap_record = gApRecords.records[0];
   pcap_serializer_init();
   hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
   wifictl_sniffer_filter_frame_types(true, false, false);
@@ -63,11 +63,11 @@ void attack_handshake_start(attack_config_t *attack_config) {
   switch (method) {
     case ATTACK_HANDSHAKE_METHOD_BROADCAST:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
-      attack_method_broadcast(&ap_records, 5);
+      attack_method_broadcast(&gApRecords, 5);
       break;
     case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");
-      attack_method_rogueap(&ap_records, 0);
+      attack_method_rogueap(&gApRecords, 0);
       break;
     case ATTACK_HANDSHAKE_METHOD_PASSIVE:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_PASSIVE");
@@ -98,9 +98,9 @@ void attack_handshake_stop() {
   ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &eapolkey_frame_handler));
 
   method = attack_handshake_methods_t::ATTACK_HANDSHAKE_METHOD_PASSIVE;
-  ap_records.len = 0;
-  free(ap_records.records);
-  ap_records.records = NULL;
+  gApRecords.len = 0;
+  free(gApRecords.records);
+  gApRecords.records = NULL;
 
   ESP_LOGD(TAG, "Handshake attack stopped");
 }

@@ -28,6 +28,20 @@
 static const char* TAG = "webserver";
 ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
 
+// TODO(all): It is still C code by nature. So, we are using C approach (global variables)
+// Need to refactor it in C++ way
+static std::function<void()> gHTTPActivityHandler{nullptr};
+void setHTTPActivityHandler(std::function<void()> httpActivityHandler) {
+  gHTTPActivityHandler = std::move(httpActivityHandler);
+}
+
+// NOTE! This function should be called at the beginningof any HTTP request handler
+void notify_http_activity() {
+  if (gHTTPActivityHandler != nullptr) {
+    gHTTPActivityHandler();
+  }
+}
+
 /**
  * @brief Handlers for index/root \c / path endpoint
  *
@@ -37,9 +51,10 @@ ESP_EVENT_DEFINE_BASE(WEBSERVER_EVENTS);
  * @{
  */
 static esp_err_t uri_root_get_handler(httpd_req_t *req) {
-    httpd_resp_set_type(req, "text/html");
-    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    return httpd_resp_send(req, (const char *)page_index, page_index_len);
+  notify_http_activity();
+  httpd_resp_set_type(req, "text/html");
+  httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+  return httpd_resp_send(req, (const char *)page_index, page_index_len);
 }
 
 static httpd_uri_t uri_root_get = {
@@ -59,6 +74,7 @@ static httpd_uri_t uri_root_get = {
  * @{
  */
 static esp_err_t uri_reset_head_handler(httpd_req_t *req) {
+    notify_http_activity();
     ESP_ERROR_CHECK(esp_event_post(WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_RESET, NULL, 0, portMAX_DELAY));
     return httpd_resp_send(req, NULL, 0);
 }
@@ -83,6 +99,8 @@ static httpd_uri_t uri_reset_head = {
  * @{
  */
 static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
+    notify_http_activity();
+
     wifictl_scan_nearby_aps();
 
     const wifictl_ap_records_t *ap_records;
@@ -118,6 +136,8 @@ static httpd_uri_t uri_ap_list_get = {
  * @{
  */
 static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
+    notify_http_activity();
+
     if (req->content_len > 300) {
         esp_err_t res =
             httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
@@ -180,6 +200,8 @@ static httpd_uri_t uri_run_attack_post = {
  * @{
  */
 static esp_err_t uri_status_get_handler(httpd_req_t *req) {
+    notify_http_activity();
+
     ESP_LOGD(TAG, "Fetching attack status...");
     const attack_status_t *attack_status;
     attack_status = attack_get_status();
@@ -213,6 +235,7 @@ static httpd_uri_t uri_status_get = {
  * @{
  */
 static esp_err_t uri_capture_pcap_get_handler(httpd_req_t *req){
+    notify_http_activity();
     ESP_LOGD(TAG, "Providing PCAP file...");
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     return httpd_resp_send(req, (char *) pcap_serializer_get_buffer(), pcap_serializer_get_size());
@@ -237,6 +260,7 @@ static httpd_uri_t uri_capture_pcap_get = {
  * @{
  */
 static esp_err_t uri_capture_hccapx_get_handler(httpd_req_t *req){
+    notify_http_activity();
     ESP_LOGD(TAG, "Providing HCCAPX file...");
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     return httpd_resp_send(req, (char *) hccapx_serializer_get(), sizeof(hccapx_t));
@@ -252,12 +276,13 @@ static httpd_uri_t uri_capture_hccapx_get = {
 
 // TODO(all): It is still C code by nature. So, we are using C approach (global variables)
 // Need to refactor it in C++ way
-static std::function<void(const std::string &param)> gOnOtaRequestHandler = nullptr;
-void setWebserverOnOtaRequestHandler(std::function<void(const std::string &param)> onOtaRequestHandler) {
-    gOnOtaRequestHandler = std::move(onOtaRequestHandler);
+static std::function<void(const std::string &param)> gOtaRequestHandler{nullptr};
+void setWebserverOtaRequestHandler(std::function<void(const std::string &param)> otaRequestHandler) {
+    gOtaRequestHandler = std::move(otaRequestHandler);
 }
 
 static esp_err_t start_ota_handler(httpd_req_t *req) {
+    notify_http_activity();
     httpd_resp_set_type(req, "text/html");
 
     std::string otaURL;
@@ -270,13 +295,13 @@ static esp_err_t start_ota_handler(httpd_req_t *req) {
     }
 
     ESP_LOGD(TAG, "ESP32 received 'update' command with following parameters: otaURL = '%s'", otaURL.c_str());
-    if (gOnOtaRequestHandler == nullptr) {
+    if (gOtaRequestHandler == nullptr) {
         std::string message{"ERROR: no handler set for 'update' command"};
         ESP_LOGE(TAG, "%s", message.c_str());
         return httpd_resp_send(req, message.c_str(), message.length());
     }
 
-    gOnOtaRequestHandler(otaURL);
+    gOtaRequestHandler(otaURL);
     return httpd_resp_send(req, "Request accepted. Wait for some time till update is finished", HTTPD_RESP_USE_STRLEN);
 }
 

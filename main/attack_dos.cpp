@@ -17,26 +17,26 @@
 namespace {
 const char *TAG = "main:attack_dos";
 attack_dos_methods_t method = attack_dos_methods_t::ATTACK_DOS_METHOD_COMBINE_ALL;
-ap_records_t ap_records = {0, NULL};
+ap_records_t gAapRecords = {0, NULL};
 }  // namespace
 
-void attack_dos_start(attack_config_t *attack_config) {
+void attack_dos_start(const attack_config_t *attack_config) {
   ESP_LOGI(TAG, "Starting DoS attack...");
   method = (attack_dos_methods_t)attack_config->method;
-  ap_records = attack_config->ap_records;  // Take ownership
+  gAapRecords = attack_config->ap_records;  // Take ownership
   switch (method) {
     case ATTACK_DOS_METHOD_BROADCAST:
       ESP_LOGD(TAG, "ATTACK_DOS_METHOD_BROADCAST");
-      attack_method_broadcast(&ap_records, 1);
+      attack_method_broadcast(&gAapRecords, 1);
       break;
     case ATTACK_DOS_METHOD_ROGUE_AP:
       ESP_LOGD(TAG, "ATTACK_DOS_METHOD_ROGUE_AP");
-      attack_method_rogueap(&ap_records, attack_config->per_ap_timeout);
+      attack_method_rogueap(&gAapRecords, attack_config->per_ap_timeout);
       break;
     case ATTACK_DOS_METHOD_COMBINE_ALL:
       ESP_LOGD(TAG, "ATTACK_DOS_METHOD_COMBINE_ALL");
-      attack_method_rogueap(&ap_records, attack_config->per_ap_timeout);
-      attack_method_broadcast(&ap_records, 1);
+      attack_method_rogueap(&gAapRecords, attack_config->per_ap_timeout);
+      attack_method_broadcast(&gAapRecords, 1);
       break;
     default:
       ESP_LOGE(TAG, "Method unknown! DoS attack not started.");
@@ -60,9 +60,9 @@ void attack_dos_stop() {
   }
 
   method = attack_dos_methods_t::ATTACK_DOS_METHOD_COMBINE_ALL;
-  ap_records.len = 0;
-  free(ap_records.records);
-  ap_records.records = NULL;
+  gAapRecords.len = 0;
+  free(gAapRecords.records);
+  gAapRecords.records = NULL;
 
   ESP_LOGI(TAG, "DoS attack stopped");
 }

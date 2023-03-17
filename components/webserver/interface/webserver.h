@@ -38,6 +38,7 @@ typedef struct {
  */
 void webserver_run();
 
-void setWebserverOnOtaRequestHandler(std::function<void(const std::string& param)> onOtaRequestHandler);
+void setWebserverOtaRequestHandler(std::function<void(const std::string& param)> onOtaRequestHandler);
+void setHTTPActivityHandler(std::function<void()> httpActivityHandler);
 
 #endif  // WEBSERVER_H
