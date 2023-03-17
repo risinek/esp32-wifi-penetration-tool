@@ -136,7 +136,7 @@
           var attack_type = parseInt(new Uint8Array(arrayBuffer, 1, 1));
           var attack_content_size = parseInt(new Uint16Array(arrayBuffer, 2, 1));
           var attack_content = new Uint8Array(arrayBuffer, 4);
-          console.log("attack_state=" + attack_state + "; attack_type=" + attack_type + "; attack_count_size=" + attack_content_size);
+          console.log("attack_state=" + attack_state + "; attack_type=" + attack_type + "; attack_content_size=" + attack_content_size);
           hideAllSections();
           switch (attack_state) {
             case AttackStateEnum.READY:

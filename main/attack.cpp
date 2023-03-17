@@ -25,11 +25,25 @@
 
 namespace {
 const char *TAG = "attack";
-attack_status_t gAttackStatus = {.state = READY, .type = (uint8_t)-1, .content_size = 0, .content = NULL};
+attack_status_t gAttackStatus = {READY, (uint8_t)-1, 0, nullptr};
 esp_timer_handle_t attack_timeout_handle;
 }  // namespace
 
 bool gShouldLimitAttackLogs = false;
+
+std::string attack_get_status_json() {
+  // JSON format
+  // {
+  //   "state": X,
+  //   "type": Y
+  // }
+  std::string result{"{\n\r\t\"state\": "};
+  result += std::to_string((uint32_t)gAttackStatus.state);
+  result += ",\n\r\t\"type\": ";
+  result += std::to_string((uint32_t)gAttackStatus.type);
+  result += "\n\r}\n\r";
+  return result;
+}
 
 const attack_status_t *attack_get_status() { return &gAttackStatus; }
 

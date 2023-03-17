@@ -16,6 +16,7 @@ const std::map<std::string, SerialCommandDispatcher::CommandType> kCommandNames 
     {"ledon", SerialCommandDispatcher::CommandType::kLedOn},
     {"ledoff", SerialCommandDispatcher::CommandType::kLedOff},
     {"help", SerialCommandDispatcher::CommandType::kHelp},
+    {"getattackstatus", SerialCommandDispatcher::CommandType::kGetAttackStatus},
     {"btterminalconnected", SerialCommandDispatcher::CommandType::kBtTerminalConnected},
 };
 }  // namespace

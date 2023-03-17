@@ -109,6 +109,9 @@ void setSerialCommandsHandlers() {
     BluetoothSerial::instance().send(gSerialCommandDispatcher.getSupportedCommands());
   });
   gSerialCommandDispatcher.setCommandHandler(
+      SerialCommandDispatcher::CommandType::kGetAttackStatus,
+      [](const std::string& param) { BluetoothSerial::instance().send(attack_get_status_json()); });
+  gSerialCommandDispatcher.setCommandHandler(
       SerialCommandDispatcher::CommandType::kBtTerminalConnected, [&gInactivityTimer](const std::string& param) {
         if (param == "1") {
           gInactivityTimer.stop();  // Stop inactivity timer in case of any BT activities

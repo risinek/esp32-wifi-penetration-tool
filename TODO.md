@@ -1,6 +1,6 @@
 # TODO
 
-PRIORITIES: 17, 16, 1, 2, 3
+PRIORITIES: 16, 1, 2, 3
 
 1. Check if we can have a callback, notifying about hew WiFi client connected. Currently looks like there are 2 layers of such callbacks - system and user-defined. And in some cases (ex. user didn't authentificated yet) user-level handler is not called. Need to check it. If this is true, we are not able to check which WiFi stations are trying to connect to our AP
 
@@ -38,10 +38,6 @@ Not wlways reproducible.
 13. Blink red LED few times at startup (FREERTOS task?) and then turn it off
 
 14. New commands for Bluetooth - blink LED, start LED, stop LED. To make device easier to be found (if forgot where is it)
-
-15. Return attack status in JSON
-    1. Adapt WebUI
-    2. New BT command "getattackstatus"
 
 16. How to improve WiFi antenna?<br>
     Can try this:

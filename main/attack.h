@@ -13,6 +13,8 @@
 #ifndef ATTACK_H
 #define ATTACK_H
 
+#include <string>
+
 #include "esp_wifi_types.h"
 
 /**
@@ -70,6 +72,8 @@ typedef struct {
  * @return const attack_status_t*  pointer to the status strucutre
  */
 const attack_status_t *attack_get_status();
+
+std::string attack_get_status_json();
 
 /**
  * @brief Function to update current status of attack.
