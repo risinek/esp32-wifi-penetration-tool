@@ -24,7 +24,7 @@
 #include "wifi_controller.h"
 
 namespace {
-const char *TAG = "attack";
+const char* TAG = "attack";
 attack_status_t gAttackStatus = {READY, (uint8_t)-1, 0, nullptr};
 esp_timer_handle_t attack_timeout_handle;
 }  // namespace
@@ -45,7 +45,7 @@ std::string attack_get_status_json() {
   return result;
 }
 
-const attack_status_t *attack_get_status() { return &gAttackStatus; }
+const attack_status_t* attack_get_status() { return &gAttackStatus; }
 
 void attack_update_status(attack_state_t state) {
   gAttackStatus.state = state;
@@ -55,13 +55,13 @@ void attack_update_status(attack_state_t state) {
   }
 }
 
-void attack_append_status_content(uint8_t *buffer, unsigned size) {
+void attack_append_status_content(uint8_t* buffer, unsigned size) {
   if (size == 0) {
     ESP_LOGE(TAG, "Size can't be 0 if you want to reallocate");
     return;
   }
   // temporarily save new location in case of realloc failure to preserve current content
-  char *reallocated_content = (char *)realloc(gAttackStatus.content, gAttackStatus.content_size + size);
+  char* reallocated_content = (char*)realloc(gAttackStatus.content, gAttackStatus.content_size + size);
   if (reallocated_content == NULL) {
     ESP_LOGE(TAG, "Error reallocating status content! Status content may not be complete.");
     return;
@@ -72,9 +72,9 @@ void attack_append_status_content(uint8_t *buffer, unsigned size) {
   gAttackStatus.content_size += size;
 }
 
-char *attack_alloc_result_content(unsigned size) {
+char* attack_alloc_result_content(unsigned size) {
   gAttackStatus.content_size = size;
-  gAttackStatus.content = (char *)malloc(size);
+  gAttackStatus.content = (char*)malloc(size);
   return gAttackStatus.content;
 }
 
@@ -105,7 +105,7 @@ void notifyAttackStopped() {
  * It calls appropriate abort functions based on current attack type.
  * @param arg not used.
  */
-static void attack_timeout(void *arg) {
+static void attack_timeout(void* arg) {
   ESP_LOGD(TAG, "Attack timed out");
 
   attack_update_status(TIMEOUT);
@@ -132,7 +132,7 @@ static void attack_timeout(void *arg) {
   notifyAttackStopped();
 }
 
-void executeAttack(attack_config_t const &attack_config) {
+void executeAttack(attack_config_t attack_config) {
   // Set timeout to stop attack.
   // In case it is DOS broadcast and timeout is 0, do not set timer and let attack to run forever
   // NOTE! In case of RougeAP attack, new AP will be established forever. The only way to stop it is reset: either
@@ -165,20 +165,19 @@ void executeAttack(attack_config_t const &attack_config) {
   // start attack based on it's type
   switch (attack_config.type) {
     case ATTACK_TYPE_PMKID:
-      attack_pmkid_start(&attack_config);
+      attack_pmkid_start(std::move(attack_config));
       break;
     case ATTACK_TYPE_HANDSHAKE:
-      attack_handshake_start(&attack_config);
+      attack_handshake_start(std::move(attack_config));
       break;
     case ATTACK_TYPE_PASSIVE:
       ESP_LOGW(TAG, "ATTACK_TYPE_PASSIVE not implemented yet!");
       break;
     case ATTACK_TYPE_DOS:
-      attack_dos_start(&attack_config);
+      attack_dos_start(std::move(attack_config));
       break;
     default:
       ESP_LOGE(TAG, "Unknown attack type!");
-      free(attack_config.ap_records.records);
       return;
   }
 }
@@ -197,21 +196,20 @@ void executeAttack(attack_config_t const &attack_config) {
  * @param event_id expects WEBSERVER_EVENT_ATTACK_REQUEST
  * @param event_data expects attack_request_t
  */
-static void attack_request_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+static void attack_request_handler(void* args, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   ESP_LOGI(TAG, "Starting attack...");
 
-  attack_request_t *attack_request = (attack_request_t *)event_data;
+  attack_request_t* attack_request = (attack_request_t*)event_data;
   ap_records_t ap_records;
-  ap_records.len = attack_request->ap_records_len;
-  ap_records.records = (const wifi_ap_record_t **)malloc(ap_records.len * sizeof(wifi_ap_record_t *));
-  for (int i = 0; i < ap_records.len; ++i) {
-    ap_records.records[i] = wifictl_get_ap_record(attack_request->ap_records_ids[i]);
-    if (ap_records.records[i] == NULL) {
-      ESP_LOGE(TAG, "NPE: No ap_record for id '%d'!", attack_request->ap_records_ids[i]);
-      free(ap_records.records);
+  for (int i = 0; i < attack_request->ap_records_len; ++i) {
+    auto id = attack_request->ap_records_ids[i];
+    auto wifi_ap_record_ptr = wifictl_get_ap_record(id);
+    if (wifi_ap_record_ptr == NULL) {
+      ESP_LOGE(TAG, "ERROR: No ap_record for id '%d'!", id);
       free(attack_request->ap_records_ids);
       return;
     }
+    ap_records.push_back(wifi_ap_record_ptr);
   }
   free(attack_request->ap_records_ids);
 
@@ -220,9 +218,9 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
   attack_config.method = attack_request->method;
   attack_config.timeout = attack_request->timeout;
   attack_config.per_ap_timeout = attack_request->per_ap_timeout;
-  attack_config.ap_records = ap_records;
+  attack_config.ap_records = std::move(ap_records);
 
-  executeAttack(attack_config);
+  executeAttack(std::move(attack_config));
 }
 
 /**
@@ -235,7 +233,7 @@ static void attack_request_handler(void *args, esp_event_base_t event_base, int3
  * @param event_id expects WEBSERVER_EVENT_ATTACK_RESET
  * @param event_data not used
  */
-static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+static void attack_reset_handler(void* args, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   ESP_LOGD(TAG, "Resetting attack...");
 
   // Stop timer if it was initiated by previous attack.
@@ -280,9 +278,9 @@ void runDefaultAttack() {
   constexpr uint16_t perApTimeout{60};  // It is not used in case of infinite attacks
   // Default attacks type is DOS, method COMBINE_ALL (RogueAP + Deauth)
   static const attack_config_t default_attacks[] = {
-      {ATTACK_TYPE_DOS, ATTACK_DOS_METHOD_COMBINE_ALL, 0, perApTimeout, {1, nullptr}},  // Attack config for device #1
-      {ATTACK_TYPE_DOS, ATTACK_DOS_METHOD_COMBINE_ALL, 0, perApTimeout, {1, nullptr}},  // Attack config for device #2
-      {ATTACK_TYPE_DOS, ATTACK_DOS_METHOD_COMBINE_ALL, 0, perApTimeout, {1, nullptr}},  // Attack config for device #3
+      {ATTACK_TYPE_DOS, ATTACK_DOS_METHOD_COMBINE_ALL, 0, perApTimeout, {}},  // Attack config for device #1
+      {ATTACK_TYPE_DOS, ATTACK_DOS_METHOD_COMBINE_ALL, 0, perApTimeout, {}},  // Attack config for device #2
+      {ATTACK_TYPE_DOS, ATTACK_DOS_METHOD_COMBINE_ALL, 0, perApTimeout, {}},  // Attack config for device #3
   };
 
   if (CONFIG_DEVICE_ID > (sizeof(default_attacks) / sizeof(default_attacks[0]))) {
@@ -315,8 +313,7 @@ void runDefaultAttack() {
 
   // Write wifi_ap_record into attack config
   auto attackConfig = default_attacks[CONFIG_DEVICE_ID - 1];
-  attackConfig.ap_records.records = (const wifi_ap_record_t **)malloc(1 * sizeof(wifi_ap_record_t *));
-  attackConfig.ap_records.records[0] = wifi_ap_record;
+  attackConfig.ap_records.push_back(wifi_ap_record);
 
-  executeAttack(attackConfig);
+  executeAttack(std::move(attackConfig));
 }

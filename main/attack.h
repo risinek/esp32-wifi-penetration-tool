@@ -15,6 +15,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 #include "esp_wifi_types.h"
 
@@ -37,10 +38,7 @@ typedef enum {
   TIMEOUT              ///< last attack timed out. This option will be moved as sub category of FINISHED state.
 } attack_state_t;
 
-typedef struct {
-  uint8_t len;
-  const wifi_ap_record_t **records;
-} ap_records_t;
+using ap_records_t = std::vector<const wifi_ap_record_t*>;
 
 /**
  * @brief Attack config parsed from webserver request
@@ -64,7 +62,7 @@ typedef struct {
   uint8_t state;  ///< attack_state_t
   uint8_t type;   ///< attack_type_t
   uint16_t content_size;
-  char *content;
+  char* content;
 } attack_status_t;
 
 /**
@@ -72,7 +70,7 @@ typedef struct {
  *
  * @return const attack_status_t*  pointer to the status strucutre
  */
-const attack_status_t *attack_get_status();
+const attack_status_t* attack_get_status();
 
 std::string attack_get_status_json();
 
@@ -97,7 +95,7 @@ void attack_init();
  * @param size size to be allocated
  * @return char* pointer to newly allocated status content
  */
-char *attack_alloc_result_content(unsigned size);
+char* attack_alloc_result_content(unsigned size);
 
 /**
  * @brief Reallocates current status content and appends new data.
@@ -105,7 +103,7 @@ char *attack_alloc_result_content(unsigned size);
  * @param buffer new data to be appended to status content
  * @param size size of the new data to be appended
  */
-void attack_append_status_content(uint8_t *buffer, unsigned size);
+void attack_append_status_content(uint8_t* buffer, unsigned size);
 
 void attack_limit_logs(bool isLimited);
 

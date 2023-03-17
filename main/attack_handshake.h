@@ -31,7 +31,7 @@ typedef enum {
  *
  * @param attack_config attack config with valid ap_record and attack method chosen
  */
-void attack_handshake_start(const attack_config_t *attack_config);
+void attack_handshake_start(attack_config_t attack_config);
 
 /**
  * @brief Stops handshake attack.

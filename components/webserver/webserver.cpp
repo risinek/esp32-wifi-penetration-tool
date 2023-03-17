@@ -155,7 +155,16 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
     attack_request.timeout = raw_attack_request->timeout;
     attack_request.per_ap_timeout = raw_attack_request->per_ap_timeout;
     attack_request.ap_records_len = raw_attack_request->ap_records_len;
-    attack_request.ap_records_ids = (uint8_t*)malloc(attack_request.ap_records_len);
+    attack_request.ap_records_ids = (uint8_t*)malloc(raw_attack_request->ap_records_len);
+
+    // In HTTP request we have length of IDs, followed by array of these IDs. So, there is no pointer, as declared by
+    // raw_attack_request->ap_records_ids. So, you should treat byte at offset of ap_records_ids as 1st ID of array.
+    void *field_ptr = &(raw_attack_request->ap_records_ids);
+    uint8_t *currentId = (uint8_t*)field_ptr;
+    for (int i = 0; i < raw_attack_request->ap_records_len; ++i, ++currentId) {
+        attack_request.ap_records_ids[i] = *currentId;
+    }
+    free(rawData);
 
     ESP_LOGD(TAG, "ESP32 received 'run-attack' command with following parameters:");
     ESP_LOGD(TAG, ">> type = %d", attack_request.type);
@@ -168,14 +177,6 @@ static esp_err_t uri_run_attack_post_handler(httpd_req_t *req) {
       ESP_LOGD(TAG, ">>>> id = %d", attack_request.ap_records_ids[i]);
     }
 
-    void *field_ptr = &(raw_attack_request->ap_records_ids);
-    uint8_t *currentId = (uint8_t*)field_ptr;
-    for (int i = 0; i < attack_request.ap_records_len; ++i) {
-        attack_request.ap_records_ids[i] = *currentId;
-        currentId++;
-    }
-
-    free(rawData);
     esp_err_t res = httpd_resp_send(req, NULL, 0);
     ESP_ERROR_CHECK(esp_event_post(
         WEBSERVER_EVENTS, WEBSERVER_EVENT_ATTACK_REQUEST, &attack_request,
