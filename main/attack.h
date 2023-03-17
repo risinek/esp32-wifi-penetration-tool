@@ -13,6 +13,7 @@
 #ifndef ATTACK_H
 #define ATTACK_H
 
+#include <functional>
 #include <string>
 
 #include "esp_wifi_types.h"
@@ -109,5 +110,7 @@ void attack_append_status_content(uint8_t *buffer, unsigned size);
 void attack_limit_logs(bool isLimited);
 
 void runDefaultAttack();
+
+void setAttackProgressHandler(std::function<void(bool isStarted)> attackStartedHandler);
 
 #endif

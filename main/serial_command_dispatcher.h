@@ -25,7 +25,7 @@ class SerialCommandDispatcher {
   SerialCommandDispatcher();
   void setCommandHandler(CommandType command, CommandHandlerType handler);
   void onNewSymbols(std::string symbols);
-  std::string getSupportedCommands();
+  std::string getSupportedCommands() const;
 
  private:
   void process(const std::string& command);

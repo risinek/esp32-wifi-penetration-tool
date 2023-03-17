@@ -42,7 +42,7 @@ void SerialCommandDispatcher::onNewSymbols(std::string symbols) {
   }
 }
 
-std::string SerialCommandDispatcher::getSupportedCommands() {
+std::string SerialCommandDispatcher::getSupportedCommands() const {
   std::string result{"["};
   for (const auto& commandPair : kCommandNames) {
     if (commandPair.first == "btterminalconnected") {

@@ -78,6 +78,25 @@ char *attack_alloc_result_content(unsigned size) {
   return gAttackStatus.content;
 }
 
+// TODO(all): It is still C code by nature. So, we are using C approach (global variables)
+// Need to refactor it in C++ way
+static std::function<void(bool)> gAttackProgressHandler{nullptr};
+void setAttackProgressHandler(std::function<void(bool isStarted)> attackProgressHandler) {
+  gAttackProgressHandler = std::move(attackProgressHandler);
+}
+
+void notifyAttackStarted() {
+  if (gAttackProgressHandler) {
+    gAttackProgressHandler(true);
+  }
+}
+
+void notifyAttackStopped() {
+  if (gAttackProgressHandler) {
+    gAttackProgressHandler(false);
+  }
+}
+
 /**
  * @brief Callback function for attack timeout timer.
  *
@@ -110,6 +129,7 @@ static void attack_timeout(void *arg) {
     default:
       ESP_LOGE(TAG, "Unknown attack type. Not aborting anything");
   }
+  notifyAttackStopped();
 }
 
 void executeAttack(attack_config_t const &attack_config) {
@@ -135,6 +155,8 @@ void executeAttack(attack_config_t const &attack_config) {
       }
     }
   }
+
+  notifyAttackStarted();
 
   gAttackStatus.state =
       (((attack_config.timeout == 0) && (attack_config.type == ATTACK_TYPE_DOS))) ? RUNNING_INFINITELY : RUNNING;

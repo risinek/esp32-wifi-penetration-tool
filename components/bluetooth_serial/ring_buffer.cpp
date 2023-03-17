@@ -57,7 +57,7 @@ void RingBuffer::resize(uint32_t size) {
   mItFirst = mItLast = mData.begin();
 }
 
-uint32_t RingBuffer::capacity() {
+uint32_t RingBuffer::capacity() const {
   uint32_t result{mData.size()};
   if ((mItFirst != mItLast) && (mItFirst != mData.begin())) {
     // Reserve space for empty element
@@ -66,16 +66,18 @@ uint32_t RingBuffer::capacity() {
   return result;
 }
 
-uint32_t RingBuffer::size() {
+uint32_t RingBuffer::size() const {
   if (mItFirst == mItLast) {
     return 0;
   } else if (mItFirst < mItLast) {
     return (uint32_t)std::distance(mItFirst, mItLast);
   } else {
-    return (uint32_t)(std::distance(mItFirst, mData.end()) + std::distance(mData.begin(), mItLast));
+    decltype(mData)::const_iterator constItFirst{mItFirst};
+    decltype(mData)::const_iterator constItLast{mItLast};
+    return (uint32_t)(std::distance(constItFirst, mData.cend()) + std::distance(mData.cbegin(), constItLast));
   }
 }
 
-uint32_t RingBuffer::getFreeElements() { return (capacity() - size()); }
+uint32_t RingBuffer::getFreeElements() const { return (capacity() - size()); }
 
-bool RingBuffer::empty() { return mItFirst == mItLast; }
+bool RingBuffer::empty() const { return mItFirst == mItLast; }

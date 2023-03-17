@@ -20,6 +20,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "led.h"
 #include "ota.h"
 #include "serial_command_dispatcher.h"
 #include "webserver.h"
@@ -36,6 +37,7 @@ BtLogsForwarder gBtLogsForwarder;
 Ota gOta;
 constexpr uint32_t kInactivityTimeoutS{10 * 60};
 Timer gInactivityTimer;
+Led gLed;
 }  // namespace
 
 #ifdef __cplusplus
@@ -149,6 +151,18 @@ void app_main(void) {
   gInactivityTimer.start(kInactivityTimeoutS, []() { runDefaultAttack(); });
   setHTTPActivityHandler([&gInactivityTimer]() {
     gInactivityTimer.stop();  // Stop inactivity timer in case any request is arrived from HTTP
+  });
+
+  // Configure LED to blink in case no active attack
+  gLed.init();
+  gLed.startBlinking();
+  setAttackProgressHandler([&gLed](bool isStarted) {
+    if (isStarted) {
+      gLed.stopBlinking();
+      gLed.off();
+    } else {
+      gLed.startBlinking();
+    }
   });
 
 #ifdef CONFIG_ENABLE_UNIT_TESTS

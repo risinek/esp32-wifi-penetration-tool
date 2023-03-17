@@ -23,11 +23,11 @@ class RingBuffer {
 
   // Return total number of elements, which this buffer can store
   // NOTE! Because of one empty element, real capacity sometimes can be 1 element less
-  uint32_t capacity();
+  uint32_t capacity() const;
   // Return number of elements inside buffer
-  uint32_t size();
-  uint32_t getFreeElements();
-  bool empty();
+  uint32_t size() const;
+  uint32_t getFreeElements() const;
+  bool empty() const;
 
  private:
   template <class ItType>
