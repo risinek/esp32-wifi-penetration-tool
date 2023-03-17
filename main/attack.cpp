@@ -136,7 +136,7 @@ void executeAttack(attack_config_t attack_config) {
   // Set timeout to stop attack.
   // In case it is DOS broadcast and timeout is 0, do not set timer and let attack to run forever
   // NOTE! In case of RougeAP attack, new AP will be established forever. The only way to stop it is reset: either
-  // hard (button on board), either soft. Currently to trigger soft reset you need to connect to ESP-32 by Bluetooth
+  // hard (button on board), either soft. Currently to trigger soft reset you need to connect to ESP32 by Bluetooth
   if (((attack_config.timeout == 0) && (attack_config.type == ATTACK_TYPE_DOS))) {
     ESP_LOGI(TAG, "Timeout is set to 0. Atack will not finish until reboot (via Bluetooth) or 'reset' command");
   } else {
@@ -158,8 +158,7 @@ void executeAttack(attack_config_t attack_config) {
 
   notifyAttackStarted();
 
-  gAttackStatus.state =
-      (((attack_config.timeout == 0) && (attack_config.type == ATTACK_TYPE_DOS))) ? RUNNING_INFINITELY : RUNNING;
+  gAttackStatus.state = isInfiniteAttack(attack_config) ? RUNNING_INFINITELY : RUNNING;
   gAttackStatus.type = attack_config.type;
 
   // start attack based on it's type
@@ -316,4 +315,8 @@ void runDefaultAttack() {
   attackConfig.ap_records.push_back(wifi_ap_record);
 
   executeAttack(std::move(attackConfig));
+}
+
+bool isInfiniteAttack(const attack_config_t& attackConfig) {
+  return (((attackConfig.timeout == 0) && (attackConfig.type == ATTACK_TYPE_DOS)));
 }

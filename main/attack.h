@@ -111,4 +111,6 @@ void runDefaultAttack();
 
 void setAttackProgressHandler(std::function<void(bool isStarted)> attackStartedHandler);
 
+bool isInfiniteAttack(const attack_config_t& attackConfig);
+
 #endif

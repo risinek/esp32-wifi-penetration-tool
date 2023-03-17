@@ -103,17 +103,16 @@ static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
 
     wifictl_scan_nearby_aps();
 
-    const wifictl_ap_records_t *ap_records;
-    ap_records = wifictl_get_ap_records();
+    const auto& ap_records = wifictl_get_ap_records();
 
     // 33 SSID + 6 BSSID + 1 RSSI
     char resp_chunk[40];
 
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
-    for(unsigned i = 0; i < ap_records->count; i++){
-        memcpy(resp_chunk, ap_records->records[i].ssid, 33);
-        memcpy(&resp_chunk[33], ap_records->records[i].bssid, 6);
-        memcpy(&resp_chunk[39], &ap_records->records[i].rssi, 1);
+    for(unsigned i = 0; i < ap_records.size(); i++){
+        memcpy(resp_chunk, ap_records[i].ssid, 33);
+        memcpy(&resp_chunk[33], ap_records[i].bssid, 6);
+        memcpy(&resp_chunk[39], &ap_records[i].rssi, 1);
         ESP_ERROR_CHECK(httpd_resp_send_chunk(req, resp_chunk, 40));
     }
     return httpd_resp_send_chunk(req, resp_chunk, 0);
