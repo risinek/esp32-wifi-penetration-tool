@@ -14,6 +14,7 @@
 #define ATTACK_H
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -38,7 +39,7 @@ typedef enum {
   TIMEOUT              ///< last attack timed out. This option will be moved as sub category of FINISHED state.
 } attack_state_t;
 
-using ap_records_t = std::vector<const wifi_ap_record_t*>;
+using ap_records_t = std::vector<std::shared_ptr<const wifi_ap_record_t>>;
 
 /**
  * @brief Attack config parsed from webserver request
@@ -107,10 +108,14 @@ void attack_append_status_content(uint8_t* buffer, unsigned size);
 
 void attack_limit_logs(bool isLimited);
 
-void runDefaultAttack();
+// Returns true in case default attack either succeeded, either failed in the way that it is impossible to restart
+// Returns false in case we should try to restart it later
+bool runDefaultAttack();
 
 void setAttackProgressHandler(std::function<void(bool isStarted)> attackStartedHandler);
 
 bool isInfiniteAttack(const attack_config_t& attackConfig);
+
+void stopAttack();
 
 #endif

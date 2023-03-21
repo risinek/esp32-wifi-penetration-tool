@@ -20,7 +20,7 @@ class Timer {
   Timer() = default;
   ~Timer();
 
-  void start(uint32_t timeoutS, TimeoutCallback timeoutCallback);
+  void start(uint32_t timeoutS, TimeoutCallback timeoutCallback, bool isPeriodic = false);
   void stop();
   void reset();
 
@@ -30,6 +30,7 @@ class Timer {
   uint32_t mTimeoutS;
   esp_timer_handle_t mHandle{nullptr};
   TimeoutCallback mTimeoutCallback{nullptr};
+  bool mIsPeriodic{false};
   std::unique_ptr<TimerTask> mTimerTask;
 };
 

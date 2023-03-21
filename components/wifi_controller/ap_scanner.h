@@ -9,11 +9,12 @@
 #ifndef AP_SCANNER_H
 #define AP_SCANNER_H
 
+#include <memory>
 #include <vector>
 
 #include "esp_wifi_types.h"
 
-using wifictl_ap_records_t = std::vector<wifi_ap_record_t>;
+using wifictl_ap_records_t = std::vector<std::shared_ptr<const wifi_ap_record_t>>;
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,9 +39,9 @@ const wifictl_ap_records_t& wifictl_get_ap_records();
  * @param index
  * @return const wifi_ap_record_t*
  */
-const wifi_ap_record_t* wifictl_get_ap_record(unsigned index);
+std::shared_ptr<const wifi_ap_record_t> wifictl_get_ap_record(unsigned index);
 
-const wifi_ap_record_t* wifictl_get_ap_record_by_mac(const uint8_t* mac);
+std::shared_ptr<const wifi_ap_record_t> wifictl_get_ap_record_by_mac(const uint8_t* mac);
 
 #ifdef __cplusplus
 }

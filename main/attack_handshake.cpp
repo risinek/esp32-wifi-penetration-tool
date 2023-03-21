@@ -50,7 +50,7 @@ static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int3
 void attack_handshake_start(attack_config_t attack_config) {
   ESP_LOGI(TAG, "Starting handshake attack...");
   gMethod = (attack_handshake_methods_t)attack_config.method;
-  const wifi_ap_record_t *ap_record = attack_config.ap_records[0];
+  const auto &ap_record = attack_config.ap_records[0];
   pcap_serializer_init();
   hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
   wifictl_sniffer_filter_frame_types(true, false, false);

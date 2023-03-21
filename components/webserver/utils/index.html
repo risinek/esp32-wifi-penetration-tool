@@ -457,7 +457,7 @@
           break;
         case AttackTypeEnum.ATTACK_TYPE_DOS:
           console.log("DOS configuration");
-          document.getElementById("attack_timeout").value = 120;
+          document.getElementById("attack_timeout").value = 0;
           setAttackMethods(["DEAUTH_ROGUE_AP (PASSIVE)", "DEAUTH_BROADCAST (ACTIVE)", "DEAUTH_COMBINE_ALL"]);
           break;
         default:

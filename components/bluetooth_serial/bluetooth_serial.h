@@ -2,13 +2,13 @@
 #define BT_SERIAL_H_
 
 #include <functional>
-#include <shared_mutex>
+#include <mutex>
 #include <string>
 #include <vector>
 
+#include "bt_logs_forwarder.h"
 #include "esp_spp_api.h"
 #include "ring_buffer.h"
-#include "bt_logs_forwarder.h"
 
 // Currently no PIN is required to pair ESP32. All you need is to confirm on your PC that displayed code is the same as
 // printed by ESP32 in logs. Authentyification by PIN is enabled in case SSP is disabled in menu config. In that case
@@ -43,7 +43,7 @@ class BluetoothSerial {
   OnBtDataReceviedCallbackType mDataReceviedCallback{nullptr};
 
   // This data can be accessed from multiple threads, so it is protected by mutex
-  std::shared_timed_mutex mMutex;
+  std::mutex mMutex;
   uint32_t mTerminalConnectionHandle{0};
   RingBuffer mTxData;
   uint32_t mMaxTxBufSize{16 * 1024};

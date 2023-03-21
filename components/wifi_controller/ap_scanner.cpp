@@ -31,6 +31,7 @@ static wifictl_ap_records_t ap_records;
 void wifictl_scan_nearby_aps() {
   ESP_LOGD(TAG, "Scanning nearby APs...");
 
+  ap_records.clear();
   wifi_scan_config_t scan_config{};
   scan_config.ssid = NULL;
   scan_config.bssid = NULL;
@@ -40,10 +41,12 @@ void wifictl_scan_nearby_aps() {
   ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
 
   uint16_t numOfApFound{CONFIG_SCAN_MAX_AP};
-  wifictl_ap_records_t tmpApRecords;
+  std::vector<wifi_ap_record_t> tmpApRecords;
   tmpApRecords.resize(CONFIG_SCAN_MAX_AP);
   ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&numOfApFound, tmpApRecords.data()));
-  ap_records.assign(tmpApRecords.begin(), tmpApRecords.begin() + numOfApFound);
+  for (int i = 0; i < numOfApFound; ++i) {
+    ap_records.push_back(std::make_shared<const wifi_ap_record_t>(tmpApRecords[i]));  // Create shared_ptr with copy
+  }
   tmpApRecords.clear();
 
   ESP_LOGI(TAG, "Found %u APs.", ap_records.size());
@@ -52,18 +55,18 @@ void wifictl_scan_nearby_aps() {
 
 const wifictl_ap_records_t& wifictl_get_ap_records() { return ap_records; }
 
-const wifi_ap_record_t* wifictl_get_ap_record(unsigned index) {
+std::shared_ptr<const wifi_ap_record_t> wifictl_get_ap_record(unsigned index) {
   if (index > ap_records.size()) {
     ESP_LOGE(TAG, "Index out of bounds! %u records available, but %u requested", ap_records.size(), index);
     return NULL;
   }
-  return &ap_records[index];
+  return ap_records[index];
 }
 
-const wifi_ap_record_t* wifictl_get_ap_record_by_mac(const uint8_t* mac) {
+std::shared_ptr<const wifi_ap_record_t> wifictl_get_ap_record_by_mac(const uint8_t* mac) {
   for (uint16_t i = 0; i < ap_records.size(); ++i) {
-    if (are_macs_equal(ap_records[i].bssid, mac)) {
-      return &ap_records[i];
+    if (are_macs_equal(ap_records[i]->bssid, mac)) {
+      return ap_records[i];
     }
   }
   return nullptr;

@@ -15,8 +15,10 @@ const std::map<std::string, SerialCommandDispatcher::CommandType> kCommandNames 
     {"setloglevel", SerialCommandDispatcher::CommandType::kSetLogLevel},
     {"ledon", SerialCommandDispatcher::CommandType::kLedOn},
     {"ledoff", SerialCommandDispatcher::CommandType::kLedOff},
+    {"ledblink", SerialCommandDispatcher::CommandType::kLedBlink},
     {"help", SerialCommandDispatcher::CommandType::kHelp},
     {"getattackstatus", SerialCommandDispatcher::CommandType::kGetAttackStatus},
+    {"stopattack", SerialCommandDispatcher::CommandType::kStopAttack},
     {"btterminalconnected", SerialCommandDispatcher::CommandType::kBtTerminalConnected},
 };
 }  // namespace

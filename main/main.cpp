@@ -107,12 +107,20 @@ void setSerialCommandsHandlers() {
                                              });
   gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kSetLogLevel,
                                              [](const std::string& param) { setLogLevel(param); });
+  gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kLedOn,
+                                             [&gLed](const std::string& param) { gLed.on(); });
+  gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kLedOff,
+                                             [&gLed](const std::string& param) { gLed.off(); });
+  gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kLedBlink,
+                                             [&gLed](const std::string& param) { gLed.startBlinking(); });
   gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kHelp, [](const std::string& param) {
     BluetoothSerial::instance().send(gSerialCommandDispatcher.getSupportedCommands());
   });
   gSerialCommandDispatcher.setCommandHandler(
       SerialCommandDispatcher::CommandType::kGetAttackStatus,
       [](const std::string& param) { BluetoothSerial::instance().send(attack_get_status_json()); });
+  gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kStopAttack,
+                                             [](const std::string& param) { stopAttack(); });
   gSerialCommandDispatcher.setCommandHandler(
       SerialCommandDispatcher::CommandType::kBtTerminalConnected, [&gInactivityTimer](const std::string& param) {
         if (param == "1") {
@@ -148,7 +156,16 @@ void app_main(void) {
 
   attack_limit_logs(true);
 
-  gInactivityTimer.start(kInactivityTimeoutS, []() { runDefaultAttack(); });
+  gInactivityTimer.start(kInactivityTimeoutS, [&gInactivityTimer]() {
+    if (runDefaultAttack()) {
+      // This is one shot timer, so clean up its resourses when it is not needed.
+      // NOTE! Calling of stop() will lead to destroy of task (current lambda)
+      gInactivityTimer.stop();
+    } else {
+      // Need to retry again later
+      gInactivityTimer.reset();
+    }
+  });
   setHTTPActivityHandler([&gInactivityTimer]() {
     gInactivityTimer.stop();  // Stop inactivity timer in case any request is arrived from HTTP
   });
@@ -158,7 +175,6 @@ void app_main(void) {
   gLed.startBlinking();
   setAttackProgressHandler([&gLed](bool isStarted) {
     if (isStarted) {
-      gLed.stopBlinking();
       gLed.off();
     } else {
       gLed.startBlinking();

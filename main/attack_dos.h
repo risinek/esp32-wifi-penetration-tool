@@ -16,11 +16,12 @@
  *
  */
 typedef enum {
-  ATTACK_DOS_METHOD_ROGUE_AP,    ///< Method using rogue/duplicated AP utilising native ESP-IDF behaviour only
-  ATTACK_DOS_METHOD_BROADCAST,   ///< Method that takes advantage of WSL Bypasser component that bypass blocking
-                                 ///< mechanism in Wi-Fi Stack Libraries
-                                 /// to send raw 802.11 frames
-  ATTACK_DOS_METHOD_COMBINE_ALL  ///< Method combines all approches above
+  ATTACK_DOS_METHOD_ROGUE_AP,     ///< Method using rogue/duplicated AP utilising native ESP-IDF behaviour only
+  ATTACK_DOS_METHOD_BROADCAST,    ///< Method that takes advantage of WSL Bypasser component that bypass blocking
+                                  ///< mechanism in Wi-Fi Stack Libraries
+                                  /// to send raw 802.11 frames
+  ATTACK_DOS_METHOD_COMBINE_ALL,  ///< Method combines all approches above
+  ATTACK_DOS_METHOD_INVALID
 } attack_dos_methods_t;
 
 /**

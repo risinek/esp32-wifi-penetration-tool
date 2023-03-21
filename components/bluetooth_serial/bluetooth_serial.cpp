@@ -136,7 +136,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
       // Called when terminal cvonnection closed
       btSerial.limitedPrint(ESP_LOG_DEBUG, LOG_TAG, "ESP_SPP_CLOSE_EVT");
       {
-        std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
+        std::lock_guard<std::mutex> lock(btSerial.mMutex);
         btSerial.mTerminalConnectionHandle = 0;
         btSerial.mIsTransmissionRequestInProgress = false;
       }
@@ -162,7 +162,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
       // Called when terminal connection opened
       ESP_LOGD(LOG_TAG, "ESP_SPP_SRV_OPEN_EVT");
       {
-        std::lock_guard<std::shared_timed_mutex> lock(btSerial.mMutex);
+        std::lock_guard<std::mutex> lock(btSerial.mMutex);
         btSerial.mTerminalConnectionHandle = param->srv_open.handle;
       }
       btSerial.limitBTLogs(true);
@@ -190,7 +190,7 @@ void esp_spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
                             param->write.cong, param->write.status);
 
       {
-        std::unique_lock<std::shared_timed_mutex> lock(btSerial.mMutex);
+        std::unique_lock<std::mutex> lock(btSerial.mMutex);
         btSerial.mIsTransmissionRequestInProgress = false;
         if (param->write.status == ESP_SPP_SUCCESS) {
           btSerial.mCurrentTransmittedChunk.clear();
@@ -296,7 +296,7 @@ bool BluetoothSerial::send(std::string message) {
 }
 
 bool BluetoothSerial::send(std::vector<char> message) {
-  std::unique_lock<std::shared_timed_mutex> lock(mMutex);
+  std::unique_lock<std::mutex> lock(mMutex);
   auto doesMessageFitBuffer = mTxData.insert(message.begin(), message.end());
 
   if (mTerminalConnectionHandle == 0) {
@@ -325,7 +325,7 @@ void BluetoothSerial::onBtDataRecevied(std::string receivedData) {
 }
 
 void BluetoothSerial::transmitChunkOfData() {
-  std::unique_lock<std::shared_timed_mutex> lock(mMutex);
+  std::unique_lock<std::mutex> lock(mMutex);
   if (mTerminalConnectionHandle == 0) {
     return;
   }

@@ -22,11 +22,13 @@ void Led::init() {
 Led::~Led() { ESP_ERROR_CHECK(esp_timer_delete(mHandle)); }
 
 void Led::on() {
+  stopBlinking();
   mState = 1;
   ESP_ERROR_CHECK(gpio_set_level(gLedPin, mState));
 }
 
 void Led::off() {
+  stopBlinking();
   mState = 0;
   ESP_ERROR_CHECK(gpio_set_level(gLedPin, mState));
 }

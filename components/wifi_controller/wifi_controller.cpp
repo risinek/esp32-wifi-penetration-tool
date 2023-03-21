@@ -25,17 +25,17 @@ static uint8_t original_mac_ap[6];
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id,
                                void *event_data) {
-  if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-    wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
-    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " join, AID=%d", MAC2STR(event->mac), (int)event->aid);
-  } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-    wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
-    ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " leave, AID=%d", MAC2STR(event->mac), (int)event->aid);
-  } else if (event_id == WIFI_EVENT_STA_CONNECTED) {
-    ESP_LOGI(LOG_TAG, "LAMBIN station event WIFI_EVENT_STA_CONNECTED");
-  } else {
-    ESP_LOGI(LOG_TAG, "LAMBIN station unhandled event with event_base=%s, ID=%d", event_base, (int)event_id);
-  }
+  // if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+  //   wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+  //   ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " join, AID=%d", MAC2STR(event->mac), (int)event->aid);
+  // } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+  //   wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+  //   ESP_LOGI(LOG_TAG, "LAMBIN station " MACSTR " leave, AID=%d", MAC2STR(event->mac), (int)event->aid);
+  // } else if (event_id == WIFI_EVENT_STA_CONNECTED) {
+  //   ESP_LOGI(LOG_TAG, "LAMBIN station event WIFI_EVENT_STA_CONNECTED");
+  // } else {
+  //   ESP_LOGI(LOG_TAG, "LAMBIN station unhandled event with event_base=%s, ID=%d", event_base, (int)event_id);
+  // }
 }
 
 static void wifi_event_handler2(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id,
@@ -77,6 +77,7 @@ static void wifi_init_apsta() {
   ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_AP, original_mac_ap));
 
   ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_set_country_code("CH", false));
   wifi_init = true;
 
   ESP_LOGD(LOG_TAG, "THIS_DEVICE_AP_IP = '%s'", gThisDeviceApIP.c_str());

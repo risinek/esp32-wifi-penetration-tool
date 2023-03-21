@@ -12,6 +12,9 @@ Main new features:
 - Infinite DOS attacks
 - Multi-AP DOS attacks
 - Pre defined attacks per device
+- Handle case when attacked AP changes its name
+- "Ninja-feature"
+- Control LED over Bluetooth terminal
  
 <br>
 
@@ -106,6 +109,25 @@ For any DOS attack you can select multiple access points (APs) and attack durati
 ## Pre defined attacks per device
 
 You can configure (hardcode) pre defined attack for each ESP32 device. This feature is useful if you left ESP32 device with active attack anf after some time electricity was shut down. When electricity will appear again, after specified timeout (by default - 10 min) device, based on its DEVICE_ID will start pre-defined attack.
+
+<br>
+
+## Handle case when attacked AP changes its name
+During infinite DOS attack user of attacked AP can start suspectign something and change name of his WiFi. If ESP32 will not adapt, it will keep infinitely attacking AP with old name.<br>
+To prevent it, once per some time (5 min by default) ESP32 will conduct revision scan of APs around and if AP's name is changed, its new name will be used to continue attack.
+
+<br>
+
+## "Ninja-feature"
+During infinite DOS attack user of attacked AP can start suspectign something and turn off his WiFi. It will be very suspicious if he can keep seeing his WiFi online.<br>
+To prevent it, once per some time (5 min by default) ESP32 will conduct revision scan of APs around and if one of selected AP went offline, it will be excluded from attack till the next revision scan.
+
+If we scan all networks (as in feature #6) and see that some of networks, selected by user, are missing, we stop creating Rogue Ap for that network. It can be useful if user of AP under attack starts suspectign something and decides to turns off his router. In that case he still can see that his WiFi network is still available. Thus he will start suspecting he is under attack. By hiding Rogue AP in such cases we prolong the time before he starts realizing he is under attack.
+
+<br>
+
+## Control LED over Bluetooth terminal
+If you placed your ESP32 device and configured for infinite attack, and especially if you did it for multiple ESP32 devices, you may forget exact place, where did you place them. Using Bluetooth terminal you can controll (turn on/off, blink) onboard LED to make search of device easier.
 
 <br>
 
