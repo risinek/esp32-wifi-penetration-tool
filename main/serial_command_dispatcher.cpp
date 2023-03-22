@@ -18,6 +18,7 @@ const std::map<std::string, SerialCommandDispatcher::CommandType> kCommandNames 
     {"ledblink", SerialCommandDispatcher::CommandType::kLedBlink},
     {"help", SerialCommandDispatcher::CommandType::kHelp},
     {"getattackstatus", SerialCommandDispatcher::CommandType::kGetAttackStatus},
+    {"getdosattackstatus", SerialCommandDispatcher::CommandType::kGetDosAttackStatus},
     {"stopattack", SerialCommandDispatcher::CommandType::kStopAttack},
     {"btterminalconnected", SerialCommandDispatcher::CommandType::kBtTerminalConnected},
 };

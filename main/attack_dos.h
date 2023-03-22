@@ -40,4 +40,6 @@ void attack_dos_start(attack_config_t attack_config);
  */
 void attack_dos_stop();
 
+std::string attack_dos_get_status_json();
+
 #endif

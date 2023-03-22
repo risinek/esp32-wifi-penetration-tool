@@ -14,6 +14,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "Timer.h"
 #include "attack.h"
+#include "attack_dos.h"
 #include "bluetooth_serial.h"
 #include "bt_logs_forwarder.h"
 #include "device_id.h"
@@ -119,6 +120,9 @@ void setSerialCommandsHandlers() {
   gSerialCommandDispatcher.setCommandHandler(
       SerialCommandDispatcher::CommandType::kGetAttackStatus,
       [](const std::string& param) { BluetoothSerial::instance().send(attack_get_status_json()); });
+  gSerialCommandDispatcher.setCommandHandler(
+      SerialCommandDispatcher::CommandType::kGetDosAttackStatus,
+      [](const std::string& param) { BluetoothSerial::instance().send(attack_dos_get_status_json()); });
   gSerialCommandDispatcher.setCommandHandler(SerialCommandDispatcher::CommandType::kStopAttack,
                                              [](const std::string& param) { stopAttack(); });
   gSerialCommandDispatcher.setCommandHandler(

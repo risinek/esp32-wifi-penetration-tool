@@ -9,7 +9,10 @@
 #include "attack_dos.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include <stdio.h>
+
 #include <array>
+#include <shared_mutex>
 #include <vector>
 
 #include "Timer.h"
@@ -21,9 +24,17 @@
 
 namespace {
 const char* TAG = "main:attack_dos";
-attack_dos_methods_t gMethod = attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID;
 Timer gApRevisionTimer;
 constexpr uint32_t kApRevisionTimerTimeoutS{5 * 60};
+
+struct CurrentAttackData {
+  attack_dos_methods_t method{attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID};
+  uint16_t timeout{0};
+  uint16_t perApTimeout{0};
+  std::vector<std::array<uint8_t, 6>> macs;
+};
+CurrentAttackData gCurrentAttackData;
+std::shared_timed_mutex gCurrentAttackDataMutex;
 }  // namespace
 
 void attack_dos_start_impl(attack_config_t attack_config);
@@ -36,15 +47,27 @@ void startApRevisionTimer(attack_config_t attack_config) {
   }
   gApRevisionTimer.start(
       kApRevisionTimerTimeoutS,
-      [originalAttackConfig = std::move(attack_config), originalApMacs = std::move(originalApMacs)]() {
-        if (gMethod != attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID) {
-          attack_dos_stop_impl();
+      [&originalAttackData = gCurrentAttackData]() {
+        attack_config_t updatedAttackConfig{};
+        std::vector<std::array<uint8_t, 6>> macs;
+        {
+          std::shared_lock<std::shared_timed_mutex> lock(gCurrentAttackDataMutex);
+          updatedAttackConfig.type = ATTACK_TYPE_DOS;
+          updatedAttackConfig.method = originalAttackData.method;
+          updatedAttackConfig.timeout = originalAttackData.timeout;
+          updatedAttackConfig.per_ap_timeout = originalAttackData.perApTimeout;
+          macs = originalAttackData.macs;
         }
 
-        attack_config_t updatedAttackConfig{originalAttackConfig};
-        updatedAttackConfig.ap_records.clear();
+        if (updatedAttackConfig.method == attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID) {
+          // Timer triggered in one thread, but attack was stopped in another
+          return;
+        }
+
+        attack_dos_stop_impl();
         wifictl_scan_nearby_aps();
-        for (const auto& mac : originalApMacs) {
+
+        for (const auto& mac : macs) {
           auto wifi_ap_record_ptr = wifictl_get_ap_record_by_mac(mac.data());
           if (wifi_ap_record_ptr == nullptr) {
             // Ninja-feature :) Victim could suspect that he is under attack and turned AP off. So, we should also stop
@@ -78,8 +101,17 @@ void attack_dos_start(attack_config_t attack_config) {
 
 void attack_dos_start_impl(attack_config_t attack_config) {
   ESP_LOGI(TAG, "Starting DoS attack...");
-  gMethod = (attack_dos_methods_t)attack_config.method;
-  switch (gMethod) {
+  {
+    std::lock_guard<std::shared_timed_mutex> lock(gCurrentAttackDataMutex);
+    gCurrentAttackData.method = (attack_dos_methods_t)attack_config.method;
+    gCurrentAttackData.timeout = attack_config.timeout;
+    gCurrentAttackData.perApTimeout = attack_config.per_ap_timeout;
+    for (const auto& ap_record : attack_config.ap_records) {
+      gCurrentAttackData.macs.push_back(std::to_array(ap_record->bssid));
+    }
+  }
+
+  switch (attack_config.method) {
     case ATTACK_DOS_METHOD_BROADCAST:
       ESP_LOGD(TAG, "ATTACK_DOS_METHOD_BROADCAST");
       attack_method_broadcast(attack_config.ap_records, 1);
@@ -104,7 +136,12 @@ void attack_dos_stop() {
 }
 
 void attack_dos_stop_impl() {
-  switch (gMethod) {
+  attack_dos_methods_t method;
+  {
+    std::shared_lock<std::shared_timed_mutex> lock(gCurrentAttackDataMutex);
+    method = gCurrentAttackData.method;
+  }
+  switch (method) {
     case ATTACK_DOS_METHOD_BROADCAST:
       attack_method_broadcast_stop();
       break;
@@ -119,7 +156,61 @@ void attack_dos_stop_impl() {
       ESP_LOGE(TAG, "Unknown attack method! Attack may not be stopped properly.");
   }
 
-  gMethod = attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID;
+  {
+    std::lock_guard<std::shared_timed_mutex> lock(gCurrentAttackDataMutex);
+    gCurrentAttackData = {};
+    gCurrentAttackData.method = attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID;
+  }
 
   ESP_LOGI(TAG, "DoS attack stopped");
+}
+
+std::string attack_dos_get_status_json() {
+  // JSON format
+  // {
+  //   "method": X,
+  //   "timeout": Y,
+  //   "per_ap_timeout": Z,
+  //   "ap_macs": ["mac1", "mac2"]
+  // }
+
+  std::string result{"{\n\r\t\"method\": "};
+
+  std::shared_lock<std::shared_timed_mutex> lock(gCurrentAttackDataMutex);
+  switch (gCurrentAttackData.method) {
+    case ATTACK_DOS_METHOD_ROGUE_AP:
+      result += "\"RogueAP\"";
+      break;
+    case ATTACK_DOS_METHOD_BROADCAST:
+      result += "\"Broadcast\"";
+      break;
+    case ATTACK_DOS_METHOD_COMBINE_ALL:
+      result += "\"CombineAll\"";
+      break;
+    default:
+      result += "\"INVALID\"";
+      break;
+  }
+
+  if (gCurrentAttackData.method == attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID) {
+    result += "\n\r}\n\r";
+    return result;
+  }
+
+  result += ",\n\r\t\"timeout\": ";
+  result += std::to_string(gCurrentAttackData.timeout);
+  result += ",\n\r\t\"per_ap_timeout\": ";
+  result += std::to_string(gCurrentAttackData.perApTimeout);
+  result += ",\n\r\t\"ap_macs\": [";
+  for (const auto& mac : gCurrentAttackData.macs) {
+    char macStr[18];
+    snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    macStr[17] = '\0';
+    result += "\"" + std::string{macStr} + "\", ";
+  }
+  result.pop_back();
+  result.pop_back();
+  result += "]\n\r}\n\r";
+
+  return result;
 }

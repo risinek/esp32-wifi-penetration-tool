@@ -2,9 +2,6 @@
 
 PRIORITIES: 16, 1, 2, 3
 
-0. Add BT command "getdosattackstatus" to get more detailed info about current dos attack?
-Ex. return current MAC and SSID for RogueAP, list of MAC addresses in black list under attack (future feature)
-
 1. Check if we can have a callback, notifying about hew WiFi client connected. Currently looks like there are 2 layers of such callbacks - system and user-defined. And in some cases (ex. user didn't authentificated yet) user-level handler is not called. Need to check it. If this is true, we are not able to check which WiFi stations are trying to connect to our AP
 
 2. Test if we can send deauth frame to specific MAC. Make sure that device with that MAC will disconnect. Currently broadcast attack doesn't affect many devices (including my phone).
