@@ -21,10 +21,29 @@
 #include "esp_wifi_types.h"
 
 /**
+ * @brief Available methods that can be chosen for the DoS attack.
+ *
+ */
+typedef enum {
+  ATTACK_DOS_METHOD_ROGUE_AP,     ///< Method using rogue/duplicated AP utilising native ESP-IDF behaviour only
+  ATTACK_DOS_METHOD_BROADCAST,    ///< Method that takes advantage of WSL Bypasser component that bypass blocking
+                                  ///< mechanism in Wi-Fi Stack Libraries
+                                  /// to send raw 802.11 frames
+  ATTACK_DOS_METHOD_COMBINE_ALL,  ///< Method combines all approches above
+  ATTACK_DOS_METHOD_INVALID
+} attack_dos_methods_t;
+
+/**
  * @brief Implemented attack types that can be chosen.
  *
  */
-typedef enum { ATTACK_TYPE_PASSIVE, ATTACK_TYPE_HANDSHAKE, ATTACK_TYPE_PMKID, ATTACK_TYPE_DOS } attack_type_t;
+typedef enum {
+  ATTACK_TYPE_PASSIVE,
+  ATTACK_TYPE_HANDSHAKE,
+  ATTACK_TYPE_PMKID,
+  ATTACK_TYPE_DOS,
+  ATTACK_TYPE_INVALID
+} attack_type_t;
 
 /**
  * @brief States of single attack run.
@@ -36,7 +55,8 @@ typedef enum {
   RUNNING,             ///< attack is in progress, attack_status_t.content may not be consistent.
   RUNNING_INFINITELY,  // < attack is runninginfinitely long
   FINISHED,            ///< last attack finsihed and results are available.
-  TIMEOUT              ///< last attack timed out. This option will be moved as sub category of FINISHED state.
+  TIMEOUT,             ///< last attack timed out. This option will be moved as sub category of FINISHED state.
+  INVALID
 } attack_state_t;
 
 using ap_records_t = std::vector<std::shared_ptr<const wifi_ap_record_t>>;
@@ -47,8 +67,8 @@ using ap_records_t = std::vector<std::shared_ptr<const wifi_ap_record_t>>;
  * @deprecated will be removed in #45
  */
 typedef struct {
-  uint8_t type;
-  uint8_t method;
+  attack_type_t type{attack_type_t::ATTACK_TYPE_INVALID};
+  attack_dos_methods_t method{attack_dos_methods_t::ATTACK_DOS_METHOD_INVALID};
   uint16_t timeout;
   uint16_t per_ap_timeout;
   ap_records_t ap_records;

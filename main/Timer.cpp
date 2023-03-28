@@ -3,9 +3,24 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 
-void Timer::TimerTask::run(void* data) {
+void Timer::GentlyStoppableTimerTask::run(void* data) {
   auto callback = reinterpret_cast<Timer::TimeoutCallback*>(data);
-  (*callback)();
+  mFinishedPromise = std::promise<void>{};
+  mIsTaskFinished.store(false);
+  (*callback)(mIsStopRequested);
+  mIsTaskFinished.store(true);
+  mFinishedPromise.set_value();
+}
+
+void Timer::GentlyStoppableTimerTask::stop() {
+  if (mIsTaskFinished.load()) {
+    Task::stop();  // Call method from parent class. Destroys task
+    return;
+  }
+
+  mIsStopRequested = true;
+  mFinishedPromise.get_future().wait();
+  Task::stop();  // Call method from parent class. Destroys task
 }
 
 Timer::~Timer() { stop(); }
@@ -50,6 +65,7 @@ void Timer::stop() {
   ESP_ERROR_CHECK(esp_timer_delete(mHandle));
   mHandle = nullptr;
   if (mTimerTask) {
+    mTimerTask->stop();
     mTimerTask.reset();
   }
 }
@@ -59,6 +75,6 @@ void Timer::espTimerCallback(void* arg) {
   if (thisTimer->mTimeoutCallback == nullptr) {
     return;
   }
-  thisTimer->mTimerTask = std::make_unique<TimerTask>();
+  thisTimer->mTimerTask = std::make_unique<GentlyStoppableTimerTask>();
   thisTimer->mTimerTask->start(&thisTimer->mTimeoutCallback);
 }

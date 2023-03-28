@@ -2,6 +2,10 @@
 # This ID is used to generate unique IP addresses, WiFi access poin names, Bluetooth device names, etc.
 CONFIG_DEVICE_ID=1
 
+# This parameter is changed from default value 32 to let you have 20 items in MAC black list.
+# Pay attention, that the more items in that list, the more you may need to set this value. Max is 128.
+CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM=64
+
 CONFIG_ESP32_WIFI_NVS_ENABLED=n
 CONFIG_OTA_ALLOW_HTTP=y
 

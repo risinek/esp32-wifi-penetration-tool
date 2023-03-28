@@ -12,7 +12,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <future>
+
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "Task.h"
 #include "attack_dos.h"
 #include "attack_handshake.h"
 #include "attack_pmkid.h"
@@ -181,6 +185,24 @@ void executeAttack(attack_config_t attack_config) {
   }
 }
 
+struct AttackRequestHandlerTaskData {
+  attack_config_t attack_config;
+  std::promise<void> done;
+};
+
+class AttackRequestHandlerTask : public Task {
+ public:
+  AttackRequestHandlerTask() : Task("AttackRequestHandlerTask") {}
+  void run(void* data) override;
+};
+AttackRequestHandlerTask gAttackRequestHandlerTask;
+
+void AttackRequestHandlerTask::run(void* data) {
+  AttackRequestHandlerTaskData* attackRequestHandlerTaskData = (AttackRequestHandlerTaskData*)data;
+  executeAttack(std::move(attackRequestHandlerTaskData->attack_config));
+  attackRequestHandlerTaskData->done.set_value();
+}
+
 /**
  * @brief Callback for WEBSERVER_EVENT_ATTACK_REQUEST event.
  *
@@ -212,14 +234,20 @@ static void attack_request_handler(void* args, esp_event_base_t event_base, int3
   }
   free(attack_request->ap_records_ids);
 
-  attack_config_t attack_config{};
-  attack_config.type = attack_request->type;
-  attack_config.method = attack_request->method;
-  attack_config.timeout = attack_request->timeout;
-  attack_config.per_ap_timeout = attack_request->per_ap_timeout;
-  attack_config.ap_records = std::move(ap_records);
+  AttackRequestHandlerTaskData attackRequestHandlerTaskData{};
+  attackRequestHandlerTaskData.attack_config.type = (attack_type_t)attack_request->type;
+  attackRequestHandlerTaskData.attack_config.method = (attack_dos_methods_t)attack_request->method;
+  attackRequestHandlerTaskData.attack_config.timeout = attack_request->timeout;
+  attackRequestHandlerTaskData.attack_config.per_ap_timeout = attack_request->per_ap_timeout;
+  attackRequestHandlerTaskData.attack_config.ap_records = std::move(ap_records);
 
-  executeAttack(std::move(attack_config));
+  // NOTE! This handler is run with stack size about 2 KB, which leads to stack overflow.
+  // To prevent it, create task, which has much bigger (and configurable) stack size.
+  gAttackRequestHandlerTask.start(&attackRequestHandlerTaskData);
+
+  // Wait for task to complete
+  attackRequestHandlerTaskData.done.get_future().wait();
+  gAttackRequestHandlerTask.stop();
 }
 
 /**

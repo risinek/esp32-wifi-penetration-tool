@@ -1,19 +1,18 @@
 # TODO
 
-PRIORITIES: 16, 1, 2, 3
+PRIORITIES: 16, 1, 3
 
 1. Check if we can have a callback, notifying about hew WiFi client connected. Currently looks like there are 2 layers of such callbacks - system and user-defined. And in some cases (ex. user didn't authentificated yet) user-level handler is not called. Need to check it. If this is true, we are not able to check which WiFi stations are trying to connect to our AP
 
-2. Test if we can send deauth frame to specific MAC. Make sure that device with that MAC will disconnect. Currently broadcast attack doesn't affect many devices (including my phone).
-
-3. DEPENDS ON 1 + 2. If we can get callbacks about WiFi stations, which are trying to connect to our AP, then need to dynamically store their MAC-addresses and when sending deauf, send deauth to them explicitely (not via broadcast). Such a targetted frames will not be ignored by some devices. Not to blow up this list, we can clean it, let's say, once per day if it exceeds specified size.<br>
+3. DEPENDS ON 1. If we can get callbacks about WiFi stations, which are trying to connect to our AP, then need to dynamically store their MAC-addresses and when sending deauf, send deauth to them explicitely (not via broadcast). Such a targetted frames will not be ignored by some devices. Not to blow up this list, we can clean it, let's say, once per day if it exceeds specified size.<br>
 I REALLY need MAC addresses from 5G network to add them to black list on UI later
     * Make new end-point to read this list
 
-4. "Black list of WiFi client MACs" feature. Add WiFi client MAC addresses list in WebUI. For those addresses need to send personal deauth frame for every Rogue AP during DOS attack. So, specified WiFi clients will not be able to connect to any attacked AP
+4. ~~"Black list of WiFi client MACs" feature. Add WiFi client MAC addresses list in WebUI. For those addresses need to send personal deauth frame for every Rogue AP during DOS attack. So, specified WiFi clients will not be able to connect to any attacked AP~~
+Currently clack list is hardcoded and it seems enough.
 
-5. ~~Also need to have black list of router's MACs. If one of them is detected, its SSID should be printed on WebUI. So, if user will change SSID, they will be anyway dosplayed.<br>
-Ex. use pre-defined list of such MACs in WebUI. After scanning is done, WebUI can check list of returned SSIDs to find those ones from the black list~~<br>
+5. ~~Also need to have black list of router's MACs. If one of them is detected, its SSID should be printed on WebUI. So, if user will change SSID, they will be anyway dosplayed.~~<br>
+~~Ex. use pre-defined list of such MACs in WebUI. After scanning is done, WebUI can check list of returned SSIDs to find those ones from the black list~~<br>
 Looks like this feature doesn't have much sense. Imagine user comes after some time to ESP and wants to reset it and initiate attack again, but he can not see target WiFi. If he remembers its MAC, then fine, he will find in WiFi list network with that MAC and start attack again. This feature is about having special control on UI for storing such MACs. User will not want to spend his time on entering MAC if he can simply pick up that network from list.
 
 8. Need to make sure that none of my changes are breaking existing code. Ex. that proper status of attack will be returned by attack_get_status(), that each attack really has proper status (remember, that now we have infinite attacks and ability to interrupt attacks)
@@ -43,3 +42,4 @@ Not wlways reproducible.
 19. Is it possible to set config variable via command line as "idf.py build -DDEVICE_ID=2"?
 
 20. BUG: by some reason if AP is created by mobile phone, then DOS attack nearly doesn't affect it. Only for the 1st time after attack is started, you will be disconnected. But if you reconnect, then no "leave" messages are printed in  logs. It looks like "max_connection" parameter is not set up for this attack, but it is.
+NOTE: Test updated deauth attack (targetted, not broadcast) in the same scenario

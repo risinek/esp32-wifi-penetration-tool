@@ -13,6 +13,7 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "Timer.h"
+#include "WiFiFramesSender.h"
 #include "attack.h"
 #include "attack_dos.h"
 #include "bluetooth_serial.h"
@@ -152,6 +153,7 @@ void app_main(void) {
   ESP_LOGD(LOG_TAG, "app_main() started. Device ID='%d'", CONFIG_DEVICE_ID);
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   wifictl_mgmt_ap_start();
+  init_wifi_frame_sender();
   attack_init();
   setSerialCommandsHandlers();
 
@@ -160,7 +162,7 @@ void app_main(void) {
 
   attack_limit_logs(true);
 
-  gInactivityTimer.start(kInactivityTimeoutS, [&gInactivityTimer]() {
+  gInactivityTimer.start(kInactivityTimeoutS, [&gInactivityTimer](const bool& isStopRequested) {
     if (runDefaultAttack()) {
       // This is one shot timer, so clean up its resourses when it is not needed.
       // NOTE! Calling of stop() will lead to destroy of task (current lambda)

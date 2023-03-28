@@ -61,7 +61,7 @@ void attack_handshake_start(attack_config_t attack_config) {
   switch (gMethod) {
     case ATTACK_HANDSHAKE_METHOD_BROADCAST:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_BROADCAST");
-      attack_method_broadcast(attack_config.ap_records, 5);
+      attack_method_broadcast(attack_config.ap_records, 5, {});
       break;
     case ATTACK_HANDSHAKE_METHOD_ROGUE_AP:
       ESP_LOGD(TAG, "ATTACK_HANDSHAKE_METHOD_ROGUE_AP");

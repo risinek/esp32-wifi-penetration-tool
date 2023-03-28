@@ -9,6 +9,7 @@
 #ifndef ATTACK_METHOD_H
 #define ATTACK_METHOD_H
 
+#include "MacContainer.h"
 #include "attack.h"
 #include "esp_wifi_types.h"
 
@@ -18,7 +19,8 @@
  * @param ap_record array with target AP records which BSSID will be used in deauthentication frame
  * @param period_sec period of broadcast in seconds
  */
-void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec);
+void attack_method_broadcast(const ap_records_t& ap_records, unsigned period_sec,
+                             const MacContainer& staionMacsBlackList);
 
 /**
  * @brief Stop periodic deauthentication frame broadcast

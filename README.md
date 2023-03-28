@@ -14,6 +14,7 @@ Main new features:
 - Pre defined attacks per device
 - Handle case when attacked AP changes its name
 - "Ninja-feature"
+- Black list of station MAC addresses
 - Control LED over Bluetooth terminal
  
 <br>
@@ -123,6 +124,13 @@ During infinite DOS attack user of attacked AP can start suspectign something an
 To prevent it, once per some time (5 min by default) ESP32 will conduct revision scan of APs around and if one of selected AP went offline, it will be excluded from attack till the next revision scan.
 
 If we scan all networks (as in feature #6) and see that some of networks, selected by user, are missing, we stop creating Rogue Ap for that network. It can be useful if user of AP under attack starts suspectign something and decides to turns off his router. In that case he still can see that his WiFi network is still available. Thus he will start suspecting he is under attack. By hiding Rogue AP in such cases we prolong the time before he starts realizing he is under attack.
+
+<br>
+
+## Black list of station MAC addresses
+If you know one or many MAC addresses of user's devices, you can add them to black list. So, every time ESP32 sends broadcast deauth frame, it will also send personalized deauth frame to each station from the list. In addition it will also send deauth frame from the name of station to AP. Sending of personalized deauth frames will be done for each attacked AP (in case of DOS attack you can select multiple target APs). As practice shows, personalized deauth frames are more efficient as there are some devices, which ignore broadcast deauth frames, but don't ignore personalized.<br>
+**NOTE!** Transmission speed of raw frames from ESP32 is extrewmely slow by some reason. So, currently with esp_wifi_config_80211_tx_rate() configured to use speed 54M and with configuration variable "CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM=64" it is not recommended to use more than 20 MACs in black list. If you use more, then WiFiFrameSenderTask will be running forever, trying to send raw WiFi frames and queue of that frames will soon or later occupy all available RAM.<br>
+To prevent this issue, every time we send targetted deauth frames, we handle only kMaxBLMacsPerIteration MACs (20 by default) at one time. The rest MACs will be processed when we will send deauth frames next time (after 1 sec by default).
 
 <br>
 

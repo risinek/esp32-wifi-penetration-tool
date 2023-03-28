@@ -76,6 +76,7 @@ static void wifi_init_apsta() {
   // save original AP MAC address
   ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_AP, original_mac_ap));
 
+  ESP_ERROR_CHECK(esp_wifi_config_80211_tx_rate(WIFI_IF_AP, WIFI_PHY_RATE_54M));
   ESP_ERROR_CHECK(esp_wifi_start());
   ESP_ERROR_CHECK(esp_wifi_set_country_code("CH", false));
   wifi_init = true;
