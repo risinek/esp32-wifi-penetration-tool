@@ -5,6 +5,10 @@
  * @copyright Copyright (c) 2021
  * 
  * @brief Implements AP scanning functionality.
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  */
 #include "ap_scanner.h"
 

@@ -1,3 +1,15 @@
+**Note:** If you are using other chips like `ESP32S2`, `ESP32C2` any others chips:
+ * Just `idf.py build` the project using `idf.py set-target <chip-type>` and then build it to be flashed.
+ * Flash any wrong chip type .bin image may cause error before and after flashing.
+ * Some chip types are prebuilded in this project to be more easily flashed without any enviroment build error
+
+
+> We have avaliable all the *.bin builded for:
+> * ESP32 [master] branch
+> * ESP32S2 [esp32s2] branch
+> * ... (We will update more builded distribution soon)
+
+
 # ESP32 Wi-Fi Penetration Tool
 
 This project introduces an universal tool for ESP32 platform for implementing various Wi-Fi attacks. It provides some common functionality that is commonly used in Wi-Fi attacks and makes implementing new attacks a bit simpler. It also includes Wi-Fi attacks itself like capturing PMKIDs from handshakes, or handshakes themselves by different methods like starting rogue duplicated AP or sending deauthentication frames directly, etc...

@@ -1,3 +1,3 @@
 idf_component_register(SRCS "hccapx_serializer.c"
-                    INCLUDE_DIRS "interface"
-                    PRIV_REQUIRES frame_analyzer)
+                    INCLUDE_DIRS "include"
+                    REQUIRES frame_analyzer)

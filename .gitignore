@@ -11,3 +11,4 @@ build/partition_table/*
 sdkconfig
 sdkconfig.old
 doc/api
+.DS_Store

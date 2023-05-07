@@ -6,6 +6,10 @@
  *
  * @brief Implements Webserver component and all available enpoints.
  *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
+ *
  * Webserver is built on esp_http_server subcomponent from ESP-IDF
  * @see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_server.html
  */

@@ -5,6 +5,10 @@
  * @copyright Copyright (c) 2021
  * 
  * @brief Implementation of Wi-Fi Stack Libaries bypasser.
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  */
 #include "wsl_bypasser.h"
 

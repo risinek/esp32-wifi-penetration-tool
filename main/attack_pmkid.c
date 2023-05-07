@@ -5,6 +5,10 @@
  * @copyright Copyright (c) 2021
  * 
  * @brief Implements PMKID attack.
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  * 
  * @see PMKID attack reference - https://hashcat.net/forum/thread-7717.html
  */

@@ -5,6 +5,10 @@
  * @copyright Copyright (c) 2021
  * 
  * @brief Main file used to setup ESP32 into initial state
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  * 
  * Starts management AP and webserver  
  */
@@ -29,3 +33,5 @@ void app_main(void)
     attack_init();
     webserver_run();
 }
+
+
