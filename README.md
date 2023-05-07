@@ -1,9 +1,10 @@
-**Note:** If you are using other chips like `ESP32S2`, `ESP32C2` ... Just `idf.py build` the project using `idf.py set-target <chip-type>` and then build it to be flashed.
+**Note:** If you are using other chips like `ESP32S2`, `ESP32C2` ... 
+Just `idf.py build` the project using `idf.py set-target <chip-type>` and then build it to be flashed.
 
 > We have avaliable all the *.bin builded for:
 > * ESP32 [master] branch
 > * ESP32S2 [esp32s2] branch
-> ... (We will update more builded distribution soon)
+> * ... (We will update more builded distribution soon)
 
 
 # ESP32 Wi-Fi Penetration Tool
