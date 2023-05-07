@@ -5,6 +5,10 @@
  * @copyright Copyright (c) 2021
  * 
  * @brief Implements DoS attacks using deauthentication methods
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  */
 #include "attack_dos.h"
 
