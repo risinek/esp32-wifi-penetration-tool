@@ -3,4 +3,8 @@
 cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# idf_component_register(
+#     SRCS "main.c"
+#     REQUIRES esp_wifi esp_event
+# )
 project(esp32-wifi-penetration-tool)
