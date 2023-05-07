@@ -1,5 +1,8 @@
-**Note:** If you are using other chips like `ESP32S2`, `ESP32C2` ... 
-Just `idf.py build` the project using `idf.py set-target <chip-type>` and then build it to be flashed.
+**Note:** If you are using other chips like `ESP32S2`, `ESP32C2` any others chips:
+ * Just `idf.py build` the project using `idf.py set-target <chip-type>` and then build it to be flashed.
+ * Flash any wrong chip type .bin image may cause error before and after flashing.
+ * Some chip types are prebuilded in this project to be more easily flashed without any enviroment build error
+
 
 > We have avaliable all the *.bin builded for:
 > * ESP32 [master] branch
