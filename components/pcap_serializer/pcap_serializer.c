@@ -5,6 +5,10 @@
  * @copyright Copyright (c) 2021
  * 
  * @brief Implementation of PCAP serializer
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  */
 #include "pcap_serializer.h"
 

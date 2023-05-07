@@ -3,6 +3,10 @@
  * @author risinek (risinek@gmail.com)
  * @date 2021-04-07
  * @copyright Copyright (c) 2021
+ *
+ * @date Update 2023-05-07
+ * @note Updated by Zheng Lin Lei
+ * @note Github: https://github.com/ZhengLinLei
  * 
  * @brief Implements common methods for various attacks
  */
