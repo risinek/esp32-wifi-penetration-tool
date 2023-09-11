@@ -53,7 +53,7 @@ In case you don't want to setup whole ESP-IDF, you can use pre-build binaries in
 
 Example command (follow instructions in [esptool repo](https://github.com/espressif/esptool)):
 ```
-esptool.py -p /dev/ttyS5 -b 115200 --after hard_reset write_flash --flash_mode dio --flash_freq 40m --flash_size detect 0x8000 build/partition_table/partition-table.bin 0x1000 build/bootloader/bootloader.bin 0x10000 build/esp32-wifi-penetration-tool.bin
+esptool.py -p /dev/ttyUSB -b 115200 --after hard_reset write_flash --flash_mode dio --flash_freq 40m --flash_size detect 0x8000 partition_table/partition-table.bin 0x1000 bootloader/bootloader.bin 0x10000 esp32-wifi-penetration-tool.bin 
 ```
 
 On Windows you can use official [Flash Download Tool](https://www.espressif.com/en/support/download/other-tools).
