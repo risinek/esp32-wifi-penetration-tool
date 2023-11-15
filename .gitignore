@@ -11,3 +11,5 @@ build/partition_table/*
 sdkconfig
 sdkconfig.old
 doc/api
+build/esp32-wifi-penetration-tool.bin
+build/bootloader/bootloader.bin
