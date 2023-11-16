@@ -287,13 +287,16 @@
         document.getElementById("result-content").innerHTML += "<code>" + pmkid + "*" + mac_ap + "*" + mac_sta  + "*" + ssid  + "</code><br>";
     }
     function resultHandshake(attack_content, attack_content_size){
+        const selectedSSID = selectedApElement.querySelector('td:first-child').innerText;;
         document.getElementById("result-content").innerHTML = "";
         var pcap_link = document.createElement("a");
         pcap_link.setAttribute("href", "capture.pcap");
-        pcap_link.text = "Download PCAP file";
+        pcap_link.setAttribute("download", selectedSSID + ".pcap");
+        pcap_link.text = "Download " + selectedSSID + " PCAP file";
         var hccapx_link = document.createElement("a");
         hccapx_link.setAttribute("href", "capture.hccapx");
-        hccapx_link.text = "Download HCCAPX file";
+        hccapx_link.setAttribute("download", selectedSSID + ".hccapx");
+        hccapx_link.text = "Download " + selectedSSID + " HCCAPX file";
         document.getElementById("result-content").innerHTML += "<p>" + pcap_link.outerHTML + "</p>";
         document.getElementById("result-content").innerHTML += "<p>" + hccapx_link.outerHTML + "</p>";
         var handshakes = "";
