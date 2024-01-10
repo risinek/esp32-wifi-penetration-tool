@@ -11,7 +11,7 @@ Obviously cracking is not part of this project, as ESP32 is not sufficient to cr
 ## Features
 - **PMKID capture**
 - **WPA/WPA2 handshake capture** and parsing
-- **Deauthentication attacks** using various methods
+- **Deauthentication attacks** only works in WPA/WPA2 wifi security 
 - **Denial of Service attacks**
 - Formatting captured traffic into **PCAP format**
 - Parsing captured handshakes into **HCCAPX file** ready to be cracked by Hashcat
