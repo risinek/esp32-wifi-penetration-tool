@@ -16,6 +16,7 @@
 #include "frame_analyzer.h"
 #include "frame_analyzer_types.h"
 #include "frame_analyzer_parser.h"
+#include <netinet/in.h>
 
 /**
  * @brief Constants based on reference
